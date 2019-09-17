@@ -1,5 +1,4 @@
-['remote "s3remote"']
-url = s3://vecmap/vecmap
-region = us-east-1
+['remote "storage"']
+url = http://s3.amazonaws.com/vecmap
 [core]
-remote = s3remote
+remote = storage
