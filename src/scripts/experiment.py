@@ -43,6 +43,7 @@ experiment.observers.append(
 )
 
 
+BATCH_SIZE = 500
 
 def dropout(m, p):
     if p <= 0.0:
@@ -93,6 +94,7 @@ def run_experiment(_run, _config):
     src_output = "./data/mapped_embeddings/{}.{}.emb.{}.txt".format(_config['source_language'],_config['target_language'], _config['iteration'])  # The output source embeddings
     trg_output = "./data/mapped_embeddings/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'], _config['iteration'])  # The output target embeddings
     init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(_config['source_language'], _config['target_language'])  # the training dictionary file
+    test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(_config['source_language'], _config['target_language'])  # the test dictionary file
 
     logging.info("Loading srcfile {}".format(src_input))
     srcfile = open(src_input, encoding=_config['encoding'], errors='surrogateescape')
@@ -383,6 +385,107 @@ def run_experiment(_run, _config):
     trgfile.close()
     logging.info("Done")
 
+    srcfile = open(src_output, encoding=_config['encoding'])
+    trgfile = open(trg_output, encoding=_config['encoding'])
+    src_words, x = embeddings.read(srcfile, dtype=dtype)
+    trg_words, z = embeddings.read(trgfile, dtype=dtype)
+
+    if _config['cuda']:
+        if not supports_cupy():
+            print('ERROR: Install CuPy for CUDA support', file=sys.stderr)
+            sys.exit(-1)
+        xp = get_cupy()
+        x = xp.asarray(x)
+        z = xp.asarray(z)
+    else:
+        xp = np
+    xp.random.seed(_config['seed'])
+
+    # Length normalize embeddings so their dot product effectively computes the cosine similarity
+    if not _config['dot']:
+        embeddings.length_normalize(x)
+        embeddings.length_normalize(z)
+
+    # Build word to index map
+    src_word2ind = {word: i for i, word in enumerate(src_words)}
+    trg_word2ind = {word: i for i, word in enumerate(trg_words)}
+
+
+    # Read dictionary and compute coverage
+    f = open(test_dictionary, encoding=_config['encoding'])
+    src2trg = collections.defaultdict(set)
+    oov = set()
+    vocab = set()
+    for line in f:
+        src, trg = line.split()
+        try:
+            src_ind = src_word2ind[src]
+            trg_ind = trg_word2ind[trg]
+            src2trg[src_ind].add(trg_ind)
+            vocab.add(src)
+        except KeyError:
+            oov.add(src)
+    src = list(src2trg.keys())
+    oov -= vocab  # If one of the translation options is in the vocabulary, then the entry is not an oov
+    coverage = len(src2trg) / (len(src2trg) + len(oov))
+
+
+    # Find translations
+    translation = collections.defaultdict(int)
+    if _config['retrieval'] == 'nn':  # Standard nearest neighbor
+        for i in range(0, len(src), BATCH_SIZE):
+            j = min(i + BATCH_SIZE, len(src))
+            similarities = x[src[i:j]].dot(z.T)
+            nn = similarities.argmax(axis=1).tolist()
+            for k in range(j-i):
+                translation[src[i+k]] = nn[k]
+    elif _config['retrieval'] == 'invnn':  # Inverted nearest neighbor
+        best_rank = np.full(len(src), x.shape[0], dtype=int)
+        best_sim = np.full(len(src), -100, dtype=dtype)
+        for i in range(0, z.shape[0], BATCH_SIZE):
+            j = min(i + BATCH_SIZE, z.shape[0])
+            similarities = z[i:j].dot(x.T)
+            ind = (-similarities).argsort(axis=1)
+            ranks = asnumpy(ind.argsort(axis=1)[:, src])
+            sims = asnumpy(similarities[:, src])
+            for k in range(i, j):
+                for l in range(len(src)):
+                    rank = ranks[k-i, l]
+                    sim = sims[k-i, l]
+                    if rank < best_rank[l] or (rank == best_rank[l] and sim > best_sim[l]):
+                        best_rank[l] = rank
+                        best_sim[l] = sim
+                        translation[src[l]] = k
+    elif _config['retrieval'] == 'invsoftmax':  # Inverted softmax
+        sample = xp.arange(x.shape[0]) if _config['inv_sample'] is None else xp.random.randint(0, x.shape[0], _config['inv_sample'])
+        partition = xp.zeros(z.shape[0])
+        for i in range(0, len(sample), BATCH_SIZE):
+            j = min(i + BATCH_SIZE, len(sample))
+            partition += xp.exp(_config['inv_temperature']*z.dot(x[sample[i:j]].T)).sum(axis=1)
+        for i in range(0, len(src), BATCH_SIZE):
+            j = min(i + BATCH_SIZE, len(src))
+            p = xp.exp(_config['inv_temperature']*x[src[i:j]].dot(z.T)) / partition
+            nn = p.argmax(axis=1).tolist()
+            for k in range(j-i):
+                translation[src[i+k]] = nn[k]
+    elif _config['retrieval'] == 'csls':  # Cross-domain similarity local scaling
+        knn_sim_bwd = xp.zeros(z.shape[0])
+        for i in range(0, z.shape[0], BATCH_SIZE):
+            j = min(i + BATCH_SIZE, z.shape[0])
+            knn_sim_bwd[i:j] = topk_mean(z[i:j].dot(x.T), k=_config['neighborhood'], inplace=True)
+        for i in range(0, len(src), BATCH_SIZE):
+            j = min(i + BATCH_SIZE, len(src))
+            similarities = 2*x[src[i:j]].dot(z.T) - knn_sim_bwd  # Equivalent to the real CSLS scores for NN
+            nn = similarities.argmax(axis=1).tolist()
+            for k in range(j-i):
+                translation[src[i+k]] = nn[k]
+
+    # Compute accuracy
+    accuracy = np.mean([1 if translation[i] in src2trg[i] else 0 for i in src])
+    _run.log_scalar('coverage', coverage)
+    _run.log_scalar('accuracy', accuracy)
+    print('Coverage:{0:7.2%}  Accuracy:{1:7.2%}'.format(coverage, accuracy))
+
 
 @experiment.config
 def base_config():
@@ -428,6 +531,13 @@ def base_config():
     stochastic_initial = 0.1  # initial keep probability stochastic dictionary induction (defaults to 0.1)
     stochastic_multiplier = 2.0  # stochastic dictionary induction multiplier (defaults to 2.0)
     stochastic_interval = 50  # stochastic dictionary induction interval (defaults to 50)
+
+    # Evaluation parameters
+    retrieval = 'nn' # choices=['nn', 'invnn', 'invsoftmax', 'csls'], help='the retrieval method (nn: standard nearest neighbor; invnn: inverted nearest neighbor; invsoftmax: inverted softmax; csls: cross-domain similarity local scaling)'
+    inv_temperature = 1  # the inverse temperature (only compatible with inverted softmax)'
+    inv_sample = None  # 'use a random subset of the source vocabulary for the inverse computations (only compatible with inverted softmax)'
+    neighborhood = 10  # the neighborhood size (only compatible with csls)')
+    dot=False  # use the dot product in the similarity computations instead of the cosine')
 
 
 @experiment.named_config
