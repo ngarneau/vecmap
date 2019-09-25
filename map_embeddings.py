@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 import embeddings
 from cupy_utils import *
 
@@ -142,6 +143,7 @@ def main():
         dtype = 'float64'
 
     # Read input embeddings
+    logging.info("Loading srcfile {}".format(args.src_input))
     srcfile = open(args.src_input, encoding=args.encoding, errors='surrogateescape')
     trgfile = open(args.trg_input, encoding=args.encoding, errors='surrogateescape')
     src_words, x = embeddings.read(srcfile, dtype=dtype)
@@ -271,6 +273,7 @@ def main():
     end = not args.self_learning
     while True:
 
+        logging.info("Iteration {}".format(it))
         # Increase the keep probability if we have not improve in args.stochastic_interval iterations
         if it - last_improvement > args.stochastic_interval:
             if keep_prob >= 1.0:
@@ -419,4 +422,5 @@ def main():
 
 
 if __name__ == '__main__':
+    logging.getLogger().setLevel(logging.INFO)
     main()
