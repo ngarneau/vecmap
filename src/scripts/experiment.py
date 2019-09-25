@@ -73,6 +73,7 @@ def topk_mean(m, k, inplace=False):  # TODO Assuming that axis is 1
 
 @experiment.command
 def run_experiment(_run, _config):
+    logging.info(_config)
     # Check command line arguments
     if (_config['src_dewhiten'] is not None or _config['trg_dewhiten'] is not None) and not _config['whiten']:
         print('ERROR: De-whitening requires whitening first', file=sys.stderr)
@@ -87,12 +88,18 @@ def run_experiment(_run, _config):
         dtype = 'float64'
 
     # Read input embeddings
-    logging.info("Loading srcfile {}".format(_config['src_input']))
-    srcfile = open(_config['src_input'], encoding=_config['encoding'], errors='surrogateescape')
+    src_input = "./data/embeddings/{}.emb.txt".format(_config['source_language'])  # The input source embeddings
+    trg_input = "./data/embeddings/{}.emb.txt".format(_config['target_language'])  # The input target embeddings
+    src_output = "./data/mapped_embeddings/{}.{}.emb.{}.txt".format(_config['source_language'],_config['target_language'], _config['iteration'])  # The output source embeddings
+    trg_output = "./data/mapped_embeddings/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'], _config['iteration'])  # The output target embeddings
+    init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(_config['source_language'], _config['target_language'])  # the training dictionary file
+
+    logging.info("Loading srcfile {}".format(src_input))
+    srcfile = open(src_input, encoding=_config['encoding'], errors='surrogateescape')
     src_words, x = embeddings.read(srcfile, dtype=dtype)
 
-    logging.info("Loading target input {}".format(_config['trg_input']))
-    trgfile = open(_config['trg_input'], encoding=_config['encoding'], errors='surrogateescape')
+    logging.info("Loading target input {}".format(trg_input))
+    trgfile = open(trg_input, encoding=_config['encoding'], errors='surrogateescape')
     trg_words, z = embeddings.read(trgfile, dtype=dtype)
 
     # NumPy/CuPy management
@@ -161,7 +168,7 @@ def run_experiment(_run, _config):
             trg_indices.append(trg_word2ind[word])
     else:
         logging.info("Init dictionary")
-        f = open(_config['init_dictionary'], encoding=_config['encoding'], errors='surrogateescape')
+        f = open(init_dictionary, encoding=_config['encoding'], errors='surrogateescape')
         for line in f:
             src, trg = line.split()
             try:
@@ -220,13 +227,16 @@ def run_experiment(_run, _config):
     keep_prob = _config['stochastic_initial']
     t = time.time()
     end = not _config['self_learning']
+    logging.info("ENd: {}".format(end))
     logging.info("Beginning training loop")
     while True:
 
         logging.info("Iteration number {}".format(it))
         # Increase the keep probability if we have not improve in _config['stochastic_interval iterations
+        logging.info("Keep prob {}".format(keep_prob))
         if it - last_improvement > _config['stochastic_interval']:
             if keep_prob >= 1.0:
+                logging.info("Training will end...")
                 end = True
             keep_prob = min(1.0, _config['stochastic_multiplier']*keep_prob)
             last_improvement = it
@@ -343,59 +353,47 @@ def run_experiment(_run, _config):
 
             # Logging
             duration = time.time() - t
-            if _config['verbose']:
-                print(file=sys.stderr)
-                print('ITERATION {0} ({1:.2f}s)'.format(it, duration), file=sys.stderr)
-                print('\t- Objective:        {0:9.4f}%'.format(100 * objective), file=sys.stderr)
-                print('\t- Drop probability: {0:9.4f}%'.format(100 - 100*keep_prob), file=sys.stderr)
-                if _config['validation']:
-                    print('\t- Val. similarity:  {0:9.4f}%'.format(100 * similarity), file=sys.stderr)
-                    print('\t- Val. accuracy:    {0:9.4f}%'.format(100 * accuracy), file=sys.stderr)
-                    print('\t- Val. coverage:    {0:9.4f}%'.format(100 * validation_coverage), file=sys.stderr)
-                sys.stderr.flush()
-            if _config['log'] is not None:
+            logging.info('ITERATION {0} ({1:.2f}s)'.format(it, duration))
+            logging.info('\t- Objective:        {0:9.4f}%'.format(100 * objective))
+            logging.info('\t- Drop probability: {0:9.4f}%'.format(100 - 100*keep_prob))
+            if _config['validation']:
+                logging.info('\t- Val. similarity:  {0:9.4f}%'.format(100 * similarity))
+                logging.info('\t- Val. accuracy:    {0:9.4f}%'.format(100 * accuracy))
+                logging.info('\t- Val. coverage:    {0:9.4f}%'.format(100 * validation_coverage))
                 val = '{0:.6f}\t{1:.6f}\t{2:.6f}'.format(
-                    100 * similarity, 100 * accuracy, 100 * validation_coverage) if _config['validation'] is not None else ''
-                print('{0}\t{1:.6f}\t{2}\t{3:.6f}'.format(it, 100 * objective, val, duration), file=log)
-                log.flush()
+                    100 * similarity,
+                    100 * accuracy,
+                    100 * validation_coverage
+                ) if _config['validation'] is not None else ''
+                logging.info('{0}\t{1:.6f}\t{2}\t{3:.6f}'.format(it, 100 * objective, val, duration), file=log)
 
         t = time.time()
         it += 1
 
     # Write mapped embeddings
-    logging.info("Writing mapped embeddings to {}".format(_config['src_output']))
-    srcfile = open(_config['src_output'], mode='w', encoding=_config['encoding'])
+    logging.info("Writing mapped embeddings to {}".format(src_output))
+    srcfile = open(src_output, mode='w', encoding=_config['encoding'])
     embeddings.write(src_words, xw, srcfile)
     srcfile.close()
     logging.info("Done")
 
-    logging.info("Writing mapped embeddings to {}".format(_config['trg_output']))
-    trgfile = open(_config['trg_output'], mode='w', encoding=_config['encoding'])
+    logging.info("Writing mapped embeddings to {}".format(trg_output))
+    trgfile = open(trg_output, mode='w', encoding=_config['encoding'])
     embeddings.write(trg_words, zw, trgfile)
     trgfile.close()
     logging.info("Done")
 
 
 @experiment.config
-def config():
+def base_config():
+    logging.info("Activating base config")
     seed = 42
-    num_runs = 10
-
     iteration = 0
     source_language = "en"
     target_language = "de"
-
-    src_input = "./data/embeddings/{}.emb.txt".format(source_language)  # The input source embeddings
-    trg_input = "./data/embeddings/{}.emb.txt".format(target_language)  # The input target embeddings
-    src_output = "./data/mapped_embeddings/{}.{}.emb.{}.txt".format(source_language, target_language, iteration)  # The output source embeddings
-    trg_output = "./data/mapped_embeddings/{}.{}.emb.{}.txt".format(target_language, source_language, iteration)  # The output target embeddings
-    init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(source_language, target_language)  # the training dictionary file
-
     encoding = "utf-8"  # The character encoding for input/output 
     precision = "fp32"  # The floating-point precision 
-    cuda = False  
-    batch_size = 10000 # Batch size (defaults to 10000); does not affect results, larger is usually faster but uses more memory
-
+    cuda = False
     supervised = False  # recommended if you have a large training dictionary
     semi_supervised = False  # recommended if you have a small seed dictionary
     identical = False  # recommended if you have no seed dictionary but can rely on identical words
@@ -405,26 +403,26 @@ def config():
     acl2017 = False  # reproduce our ACL 2017 system with numeral initialization
     acl2017_seed = False  # reproduce our ACL 2017 system with a seed dictionary
     emnlp2016 = False  # reproduce our EMNLP 2016 system
-
-    init_identical = False  # use identical words as the seed dictionary
-    init_numerals = False  # use latin numerals (i.e. words matching [0-9]+) as the seed dictionary
+    num_runs = 10
+    csls = 0  # use CSLS for dictionary induction
     init_unsupervised = False  # use unsupervised initialization
-    unsupervised_vocab = 0  # restrict the vocabulary to the top k entries for unsupervised initialization
-
     normalize = []  # the normalization actions to perform in order. choices=['unit', 'center', 'unitdim', 'centeremb', 'none']
-    whiten = False  # whiten the embeddings
-    src_reweight = 0  # re-weight the source language embeddings
-    trg_reweight = 0  # re-weight the target language embeddings
+    self_learning = False  # enable self-learning
     src_dewhiten = False  # de-whiten the source language embeddings
     trg_dewhiten = False  # de-whiten the target language embeddings
+    src_reweight = 0  # re-weight the source language embeddings
+    trg_reweight = 0  # re-weight the target language embeddings
+    unsupervised_vocab = 0  # restrict the vocabulary to the top k entries for unsupervised initialization
+    vocabulary_cutoff = 0  # restrict the vocabulary to the top k entries
+    whiten = False  # whiten the embeddings
+    batch_size = 10000 # Batch size (defaults to 10000); does not affect results, larger is usually faster but uses more memory
+    init_identical = False  # use identical words as the seed dictionary
+    init_numerals = False  # use latin numerals (i.e. words matching [0-9]+) as the seed dictionary
     dim_reduction = False  # apply dimensionality reduction
     orthogonal = False  # use orthogonal constrained mapping
     unconstrained = False  # use unconstrained mapping
-
-    self_learning = False  # enable self-learning
-    vocabulary_cutoff = 0  # restrict the vocabulary to the top k entries
     direction = "union"  # the direction for dictionary induction (defaults to union)
-    csls = 0  # use CSLS for dictionary induction
+    csls = 10  # use CSLS for dictionary induction
     threshold = 0.000001  # the convergence threshold
     validation = False  # a dictionary file for validation at each iteration
     stochastic_initial = 0.1  # initial keep probability stochastic dictionary induction (defaults to 0.1)
@@ -434,6 +432,8 @@ def config():
 
 @experiment.named_config
 def supervised():
+    logging.info("Activating supervised configuration")
+    supervised=True
     normalize=['unit', 'center', 'unit']
     whiten=True
     src_reweight=0.5
@@ -472,6 +472,21 @@ def identical():
 
 @experiment.named_config
 def unsupervised():
+    init_unsupervised=True
+    unsupervised_vocab=4000
+    normalize=['unit', 'center', 'unit']
+    whiten=True
+    src_reweight=0.5
+    trg_reweight=0.5
+    src_dewhiten='src'
+    trg_dewhiten='trg'
+    self_learning=True
+    vocabulary_cutoff=20000
+    csls=10
+
+
+@experiment.named_config
+def acl2018():
     init_unsupervised=True
     unsupervised_vocab=4000
     normalize=['unit', 'center', 'unit']
@@ -525,53 +540,59 @@ def emnlp2016():
     batch_size=1000
 
 
-@experiment.automain
+@experiment.main
 def main(_config):
     logging.getLogger().setLevel(logging.INFO)
 
     os.makedirs('./data/mapped_embeddings', exist_ok=True)
 
-    named_configs = []
+    config_updates = {}
     if _config['supervised']:
-        named_configs.append('supervised')
         logging.info("Adding supervised configurations")
+        config_updates = dict(supervised(), **config_updates)
     if _config['semi_supervised']:
-        named_configs.append('semi_supervised')
         logging.info("Adding semi supervised configurations")
+        config_updates = dict(semi_supervised(), **config_updates)
     if _config['identical']:
-        named_configs.append('identical')
         logging.info("Adding identical configurations")
+        config_updates = dict(identical(), **config_updates)
     if _config['unsupervised'] or _config['acl2018']:
-        named_configs.append('unsupervised')
+        config_updates = dict(unsupervised(), **config_updates)
         logging.info("Adding unsupervised configurations")
     if _config['aaai2018']:
-        named_configs.append('aaai2018')
         logging.info("Adding aaai2018 configurations")
+        config_updates = dict(aaai2018(), **config_updates)
     if _config['acl2017']:
-        named_configs.append('acl2017')
         logging.info("Adding acl2017 configurations")
+        config_updates = dict(acl2017(), **config_updates)
     if _config['acl2017_seed']:
-        named_configs.append('acl2017_seed')
         logging.info("Adding acl2017 seed configurations")
+        config_updates = dict(acl2017_seed(), **config_updates)
     if _config['emnlp2016']:
-        named_configs.append('emnlp2016')
+        config_updates = dict(emnlp2016(), **config_updates)
         logging.info("Adding emnlp2016 configurations")
 
     language_pairs = [
-        ['en', 'de'],
         ['en', 'es'],
         ['en', 'fi'],
         ['en', 'it'],
+        ['en', 'de'],
     ]
 
     for source_language, target_language in language_pairs:
         for i in range(_config['num_runs']):
-            experiment.run(
-                'run_experiment',
-                named_configs=named_configs,
-                config_updates={
+            runtime_config_updates = {
                     'iteration': i,
                     'source_language': source_language,
                     'target_language': target_language,
                 }
+            config_updates = dict(config_updates, **runtime_config_updates)
+            experiment.run(
+                'run_experiment',
+                # named_configs=named_configs,
+                config_updates=config_updates
             )
+
+
+if __name__ == '__main__':
+    experiment.run_commandline()
