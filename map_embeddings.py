@@ -273,7 +273,6 @@ def main():
     end = not args.self_learning
     while True:
 
-        logging.info("Iteration {}".format(it))
         # Increase the keep probability if we have not improve in args.stochastic_interval iterations
         if it - last_improvement > args.stochastic_interval:
             if keep_prob >= 1.0:
