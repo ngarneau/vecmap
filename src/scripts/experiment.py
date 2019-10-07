@@ -602,32 +602,32 @@ def emnlp2016():
 def main(_config):
     logging.getLogger().setLevel(logging.INFO)
 
-    os.makedirs('./data/mapped_embeddings', exist_ok=True)
+    os.makedirs('./outpu/mapped_embeddings', exist_ok=True)
 
-    config_updates = {}
+    config_updates = _config
     if _config['supervised']:
         logging.info("Adding supervised configurations")
-        config_updates = dict(supervised(), **config_updates)
+        config_updates = dict(config_updates, **supervised())
     if _config['semi_supervised']:
         logging.info("Adding semi supervised configurations")
-        config_updates = dict(semi_supervised(), **config_updates)
+        config_updates = dict(config_updates, **semi_supervised())
     if _config['identical']:
         logging.info("Adding identical configurations")
-        config_updates = dict(identical(), **config_updates)
+        config_updates = dict(config_updates, **identical())
     if _config['unsupervised'] or _config['acl2018']:
-        config_updates = dict(unsupervised(), **config_updates)
+        config_updates = dict(config_updates, **unsupervised())
         logging.info("Adding unsupervised configurations")
     if _config['aaai2018']:
         logging.info("Adding aaai2018 configurations")
-        config_updates = dict(aaai2018(), **config_updates)
+        config_updates = dict(config_updates, **aaai2018())
     if _config['acl2017']:
         logging.info("Adding acl2017 configurations")
-        config_updates = dict(acl2017(), **config_updates)
+        config_updates = dict(config_updates, **acl2017())
     if _config['acl2017_seed']:
         logging.info("Adding acl2017 seed configurations")
-        config_updates = dict(acl2017_seed(), **config_updates)
+        config_updates = dict(config_updates, **acl2017_seed())
     if _config['emnlp2016']:
-        config_updates = dict(emnlp2016(), **config_updates)
+        config_updates = dict(config_updates, **emnlp2016())
         logging.info("Adding emnlp2016 configurations")
 
     language_pairs = [
@@ -647,7 +647,6 @@ def main(_config):
             config_updates = dict(config_updates, **runtime_config_updates)
             experiment.run(
                 'run_experiment',
-                # named_configs=named_configs,
                 config_updates=config_updates
             )
 
