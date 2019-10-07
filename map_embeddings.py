@@ -129,6 +129,8 @@ def main():
         parser.set_defaults(init_dictionary=args.emnlp2016, orthogonal=True, normalize=['unit', 'center'], batch_size=1000)
     args = parser.parse_args()
 
+    logging.info("Running with seed: {}".format(args.seed))
+
     # Check command line arguments
     if (args.src_dewhiten is not None or args.trg_dewhiten is not None) and not args.whiten:
         print('ERROR: De-whitening requires whitening first', file=sys.stderr)
