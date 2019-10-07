@@ -41,6 +41,7 @@ experiment.observers.append(
         db_name=db_name
     )
 )
+experiment.add_config('./configs/base.yaml')
 
 
 BATCH_SIZE = 500
@@ -487,59 +488,6 @@ def run_experiment(_run, _config):
     print('Coverage:{0:7.2%}  Accuracy:{1:7.2%}'.format(coverage, accuracy))
 
 
-@experiment.config
-def base_config():
-    logging.info("Activating base config")
-    seed = 42
-    iteration = 0
-    source_language = "en"
-    target_language = "de"
-    encoding = "utf-8"  # The character encoding for input/output 
-    precision = "fp32"  # The floating-point precision 
-    cuda = False
-    supervised = False  # recommended if you have a large training dictionary
-    semi_supervised = False  # recommended if you have a small seed dictionary
-    identical = False  # recommended if you have no seed dictionary but can rely on identical words
-    unsupervised = False  # recommended if you have no seed dictionary and do not want to rely on identical words
-    acl2018 = False  # reproduce our ACL 2018 system
-    aaai2018 = False  # reproduce our AAAI 2018 system
-    acl2017 = False  # reproduce our ACL 2017 system with numeral initialization
-    acl2017_seed = False  # reproduce our ACL 2017 system with a seed dictionary
-    emnlp2016 = False  # reproduce our EMNLP 2016 system
-    num_runs = 10
-    csls = 0  # use CSLS for dictionary induction
-    init_unsupervised = False  # use unsupervised initialization
-    normalize = []  # the normalization actions to perform in order. choices=['unit', 'center', 'unitdim', 'centeremb', 'none']
-    self_learning = False  # enable self-learning
-    src_dewhiten = False  # de-whiten the source language embeddings
-    trg_dewhiten = False  # de-whiten the target language embeddings
-    src_reweight = 0  # re-weight the source language embeddings
-    trg_reweight = 0  # re-weight the target language embeddings
-    unsupervised_vocab = 0  # restrict the vocabulary to the top k entries for unsupervised initialization
-    vocabulary_cutoff = 0  # restrict the vocabulary to the top k entries
-    whiten = False  # whiten the embeddings
-    batch_size = 10000 # Batch size (defaults to 10000); does not affect results, larger is usually faster but uses more memory
-    init_identical = False  # use identical words as the seed dictionary
-    init_numerals = False  # use latin numerals (i.e. words matching [0-9]+) as the seed dictionary
-    dim_reduction = False  # apply dimensionality reduction
-    orthogonal = False  # use orthogonal constrained mapping
-    unconstrained = False  # use unconstrained mapping
-    direction = "union"  # the direction for dictionary induction (defaults to union)
-    csls = 10  # use CSLS for dictionary induction
-    threshold = 0.000001  # the convergence threshold
-    validation = False  # a dictionary file for validation at each iteration
-    stochastic_initial = 0.1  # initial keep probability stochastic dictionary induction (defaults to 0.1)
-    stochastic_multiplier = 2.0  # stochastic dictionary induction multiplier (defaults to 2.0)
-    stochastic_interval = 50  # stochastic dictionary induction interval (defaults to 50)
-
-    # Evaluation parameters
-    retrieval = 'nn' # choices=['nn', 'invnn', 'invsoftmax', 'csls'], help='the retrieval method (nn: standard nearest neighbor; invnn: inverted nearest neighbor; invsoftmax: inverted softmax; csls: cross-domain similarity local scaling)'
-    inv_temperature = 1  # the inverse temperature (only compatible with inverted softmax)'
-    inv_sample = None  # 'use a random subset of the source vocabulary for the inverse computations (only compatible with inverted softmax)'
-    neighborhood = 10  # the neighborhood size (only compatible with csls)')
-    dot=False  # use the dot product in the similarity computations instead of the cosine')
-
-
 @experiment.named_config
 def supervised():
     logging.info("Activating supervised configuration")
@@ -555,6 +503,8 @@ def supervised():
 
 @experiment.named_config
 def semi_supervised():
+    logging.info("Activating semi supervised configuration")
+    semi_supervised = True
     normalize=['unit', 'center', 'unit']
     whiten=True
     src_reweight=0.5
@@ -568,6 +518,8 @@ def semi_supervised():
 
 @experiment.named_config
 def identical():
+    logging.info("Activating identical configuration")
+    identical = True
     init_identical=True
     normalize=['unit', 'center', 'unit']
     whiten=True
@@ -582,21 +534,9 @@ def identical():
 
 @experiment.named_config
 def unsupervised():
-    init_unsupervised=True
-    unsupervised_vocab=4000
-    normalize=['unit', 'center', 'unit']
-    whiten=True
-    src_reweight=0.5
-    trg_reweight=0.5
-    src_dewhiten='src'
-    trg_dewhiten='trg'
-    self_learning=True
-    vocabulary_cutoff=20000
-    csls=10
-
-
-@experiment.named_config
-def acl2018():
+    logging.info("Activating unsupervised configuration")
+    unsupervised = True
+    acl2018 = True
     init_unsupervised=True
     unsupervised_vocab=4000
     normalize=['unit', 'center', 'unit']
@@ -612,6 +552,8 @@ def acl2018():
 
 @experiment.named_config
 def aaai2018():
+    logging.info("Activating aaai2018 configuration")
+    aaai2018 = True
     normalize=['unit', 'center']
     whiten=True
     trg_reweight=1
@@ -622,6 +564,8 @@ def aaai2018():
 
 @experiment.named_config
 def acl2017():
+    logging.info("Activating acl2017 configuration")
+    acl2017 = True
     init_numerals=True
     orthogonal=True
     normalize=['unit', 'center']
@@ -634,6 +578,8 @@ def acl2017():
 
 @experiment.named_config
 def acl2017_seed():
+    logging.info("Activating acl2017_seed configuration")
+    acl2017_seed = True
     orthogonal=True
     normalize=['unit', 'center']
     self_learning=True
@@ -645,6 +591,8 @@ def acl2017_seed():
 
 @experiment.named_config
 def emnlp2016():
+    logging.info("Activating emnlp 2016 configuration")
+    emnlp2016 = True
     orthogonal=True
     normalize=['unit', 'center']
     batch_size=1000
