@@ -35,11 +35,9 @@ db_url = os.getenv('DB_URL', default='localhost')
 db_name = os.getenv('DB_NAME', default='vecmap')
 
 experiment = Experiment(exp_name)
+
 experiment.observers.append(
-    MongoObserver.create(
-        url=db_url,
-        db_name=db_name
-    )
+    MongoObserver.create(url=db_url, db_name=db_name)
 )
 experiment.add_config('./configs/base.yaml')
 
