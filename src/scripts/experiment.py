@@ -600,7 +600,7 @@ def emnlp2016():
 def main(_config):
     logging.getLogger().setLevel(logging.INFO)
 
-    os.makedirs('./outpu/mapped_embeddings', exist_ok=True)
+    os.makedirs('./output/mapped_embeddings', exist_ok=True)
 
     config_updates = _config
     if _config['supervised']:
