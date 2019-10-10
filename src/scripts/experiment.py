@@ -95,8 +95,8 @@ def run_experiment(_run, _config):
     # Read input embeddings
     src_input = "./data/embeddings/{}.emb.txt".format(_config['source_language'])  # The input source embeddings
     trg_input = "./data/embeddings/{}.emb.txt".format(_config['target_language'])  # The input target embeddings
-    src_output = "./data/mapped_embeddings/{}.{}.emb.{}.txt".format(_config['source_language'],_config['target_language'], _config['iteration'])  # The output source embeddings
-    trg_output = "./data/mapped_embeddings/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'], _config['iteration'])  # The output target embeddings
+    src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'],_config['target_language'], _config['iteration'])  # The output source embeddings
+    trg_output = "./output/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'], _config['iteration'])  # The output target embeddings
     init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(_config['source_language'], _config['target_language'])  # the training dictionary file
     test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(_config['source_language'], _config['target_language'])  # the test dictionary file
 
