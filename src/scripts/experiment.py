@@ -109,7 +109,7 @@ def run_experiment(_run, _config):
     trg_words, z = embeddings.read(trgfile, dtype=dtype)
 
     # NumPy/CuPy management
-    if _config['cuda']:
+    if _config['cuda'] is True:
         if not supports_cupy():
             print('ERROR: Install CuPy for CUDA support', file=sys.stderr)
             sys.exit(-1)
@@ -393,7 +393,7 @@ def run_experiment(_run, _config):
     src_words, x = embeddings.read(srcfile, dtype=dtype)
     trg_words, z = embeddings.read(trgfile, dtype=dtype)
 
-    if _config['cuda']:
+    if _config['cuda'] is True:
         if not supports_cupy():
             print('ERROR: Install CuPy for CUDA support', file=sys.stderr)
             sys.exit(-1)
@@ -500,14 +500,18 @@ def main(_config):
         ['en', 'fi'],
         ['en', 'it'],
     ]
+
+    config_updates = {}
+    config_updates.update(_config)  # Hack because Sacred weirdly handles the configuration
+
     for source_language, target_language in language_pairs:
         for i in range(_config['num_runs']):
-            config_updates = {
+            config_updates.update({
                 'iteration': i,
                 'source_language': source_language,
                 'target_language': target_language,
                 'seed': i
-            }
+            })
             experiment.run('run_experiment', config_updates=config_updates)
 
         # Gather here the results for the language
