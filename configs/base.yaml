@@ -17,7 +17,7 @@ emnlp2016: False  # reproduce our EMNLP 2016 system
 num_runs: 10
 csls: 0  # use CSLS for dictionary induction
 init_unsupervised: False  # use unsupervised initialization
-normalize: []  # the normalization actions to perform in order. choices=['unit', 'center', 'unitdim', 'centeremb', 'none']
+normalize: []  # the normalization actions to perform in order. choices: ['unit', 'center', 'unitdim', 'centeremb', 'none']
 self_learning: False  # enable self-learning
 src_dewhiten: False  # de-whiten the source language embeddings
 trg_dewhiten: False  # de-whiten the target language embeddings
@@ -39,9 +39,22 @@ validation: False  # a dictionary file for validation at each iteration
 stochastic_initial: 0.1  # initial keep probability stochastic dictionary induction (defaults to 0.1)
 stochastic_multiplier: 2.0  # stochastic dictionary induction multiplier (defaults to 2.0)
 stochastic_interval: 50  # stochastic dictionary induction interval (defaults to 50)
+unsupervised: True
+acl2018: True
+init_unsupervised: True
+unsupervised_vocab: 4000
+normalize: ['unit', 'center', 'unit']
+whiten: True
+src_reweight: 0.5
+trg_reweight: 0.5
+src_dewhiten: 'src'
+trg_dewhiten: 'trg'
+self_learning: True
+vocabulary_cutoff: 20000
 
 # Evaluation parameters
-retrieval: 'nn' # choices=['nn', 'invnn', 'invsoftmax', 'csls'], help='the retrieval method (nn: standard nearest neighbor; invnn: inverted nearest neighbor; invsoftmax: inverted softmax; csls: cross-domain similarity local scaling)'
+retrieval: 'csls' # choices: ['nn', 'invnn', 'invsoftmax', 'csls'], help='the retrieval method (nn: standard nearest neighbor; invnn: inverted nearest neighbor; invsoftmax: inverted softmax; csls: cross-domain similarity local scaling)'
+csls: 10
 inv_temperature: 1  # the inverse temperature (only compatible with inverted softmax)'
 inv_sample: None  # 'use a random subset of the source vocabulary for the inverse computations (only compatible with inverted softmax)'
 neighborhood: 10  # the neighborhood size (only compatible with csls)')

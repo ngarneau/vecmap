@@ -29,6 +29,8 @@ import sacred
 from sacred import Experiment
 from sacred.observers import MongoObserver
 
+from pymongo import MongoClient
+
 
 exp_name = os.getenv('EXP_NAME', default='vecmap')
 db_url = os.getenv('DB_URL', default='localhost')
@@ -40,6 +42,9 @@ experiment.observers.append(
     MongoObserver.create(url=db_url, db_name=db_name)
 )
 experiment.add_config('./configs/base.yaml')
+
+mongo_client = MongoClient(host=db_url)
+mongo_database = mongo_client[db_name]
 
 
 BATCH_SIZE = 500
@@ -228,7 +233,6 @@ def run_experiment(_run, _config):
     keep_prob = _config['stochastic_initial']
     t = time.time()
     end = not _config['self_learning']
-    logging.info("ENd: {}".format(end))
     logging.info("Beginning training loop")
     while True:
 
@@ -486,167 +490,37 @@ def run_experiment(_run, _config):
     print('Coverage:{0:7.2%}  Accuracy:{1:7.2%}'.format(coverage, accuracy))
 
 
-@experiment.named_config
-def supervised():
-    logging.info("Activating supervised configuration")
-    supervised=True
-    normalize=['unit', 'center', 'unit']
-    whiten=True
-    src_reweight=0.5
-    trg_reweight=0.5
-    src_dewhiten='src'
-    trg_dewhiten='trg'
-    batch_size=1000
-
-
-@experiment.named_config
-def semi_supervised():
-    logging.info("Activating semi supervised configuration")
-    semi_supervised = True
-    normalize=['unit', 'center', 'unit']
-    whiten=True
-    src_reweight=0.5
-    trg_reweight=0.5
-    src_dewhiten='src'
-    trg_dewhiten='trg'
-    self_learning=True
-    vocabulary_cutoff=20000
-    csls=10
-
-
-@experiment.named_config
-def identical():
-    logging.info("Activating identical configuration")
-    identical = True
-    init_identical=True
-    normalize=['unit', 'center', 'unit']
-    whiten=True
-    src_reweight=0.5
-    trg_reweight=0.5
-    src_dewhiten='src'
-    trg_dewhiten='trg'
-    self_learning=True
-    vocabulary_cutoff=20000
-    csls=10
-
-
-@experiment.named_config
-def unsupervised():
-    logging.info("Activating unsupervised configuration")
-    unsupervised = True
-    acl2018 = True
-    init_unsupervised=True
-    unsupervised_vocab=4000
-    normalize=['unit', 'center', 'unit']
-    whiten=True
-    src_reweight=0.5
-    trg_reweight=0.5
-    src_dewhiten='src'
-    trg_dewhiten='trg'
-    self_learning=True
-    vocabulary_cutoff=20000
-    csls=10
-
-
-@experiment.named_config
-def aaai2018():
-    logging.info("Activating aaai2018 configuration")
-    aaai2018 = True
-    normalize=['unit', 'center']
-    whiten=True
-    trg_reweight=1
-    src_dewhiten='src'
-    trg_dewhiten='trg'
-    batch_size=1000
-
-
-@experiment.named_config
-def acl2017():
-    logging.info("Activating acl2017 configuration")
-    acl2017 = True
-    init_numerals=True
-    orthogonal=True
-    normalize=['unit', 'center']
-    self_learning=True
-    direction='forward'
-    stochastic_initial=1.0
-    stochastic_interval=1
-    batch_size=1000
-
-
-@experiment.named_config
-def acl2017_seed():
-    logging.info("Activating acl2017_seed configuration")
-    acl2017_seed = True
-    orthogonal=True
-    normalize=['unit', 'center']
-    self_learning=True
-    direction='forward'
-    stochastic_initial=1.0
-    stochastic_interval=1
-    batch_size=1000
-
-
-@experiment.named_config
-def emnlp2016():
-    logging.info("Activating emnlp 2016 configuration")
-    emnlp2016 = True
-    orthogonal=True
-    normalize=['unit', 'center']
-    batch_size=1000
-
-
-@experiment.main
+@experiment.automain
 def main(_config):
     logging.getLogger().setLevel(logging.INFO)
-
     os.makedirs('./output/mapped_embeddings', exist_ok=True)
-
-    config_updates = _config
-    if _config['supervised']:
-        logging.info("Adding supervised configurations")
-        config_updates = dict(config_updates, **supervised())
-    if _config['semi_supervised']:
-        logging.info("Adding semi supervised configurations")
-        config_updates = dict(config_updates, **semi_supervised())
-    if _config['identical']:
-        logging.info("Adding identical configurations")
-        config_updates = dict(config_updates, **identical())
-    if _config['unsupervised'] or _config['acl2018']:
-        config_updates = dict(config_updates, **unsupervised())
-        logging.info("Adding unsupervised configurations")
-    if _config['aaai2018']:
-        logging.info("Adding aaai2018 configurations")
-        config_updates = dict(config_updates, **aaai2018())
-    if _config['acl2017']:
-        logging.info("Adding acl2017 configurations")
-        config_updates = dict(config_updates, **acl2017())
-    if _config['acl2017_seed']:
-        logging.info("Adding acl2017 seed configurations")
-        config_updates = dict(config_updates, **acl2017_seed())
-    if _config['emnlp2016']:
-        config_updates = dict(config_updates, **emnlp2016())
-        logging.info("Adding emnlp2016 configurations")
-
     language_pairs = [
+        ['en', 'de'],
         ['en', 'es'],
         ['en', 'fi'],
         ['en', 'it'],
-        ['en', 'de'],
     ]
-
     for source_language, target_language in language_pairs:
         for i in range(_config['num_runs']):
-            runtime_config_updates = {
-                    'iteration': i,
-                    'source_language': source_language,
-                    'target_language': target_language,
-                }
-            config_updates = dict(config_updates, **runtime_config_updates)
-            experiment.run(
-                'run_experiment',
-                config_updates=config_updates
-            )
+            config_updates = {
+                'iteration': i,
+                'source_language': source_language,
+                'target_language': target_language,
+                'seed': i
+            }
+            experiment.run('run_experiment', config_updates=config_updates)
+
+        # Gather here the results for the language
+        runs = mongo_database['runs']
+        accuracies = list()
+        times = list()
+        for exp in runs.find({"config.target_language": target_language}):
+            accuracies.append(exp['metrics']['accuracy'])
+            times.append((exp['stop_time'] - exp['start_time']).seconds)
+
+        print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
+
+
 
 
 if __name__ == '__main__':
