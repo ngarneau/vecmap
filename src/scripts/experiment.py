@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from typing import Dict
 import os
 import logging
 import embeddings
@@ -74,6 +75,14 @@ def topk_mean(m, k, inplace=False):  # TODO Assuming that axis is 1
         ans += m[ind0, ind1]
         m[ind0, ind1] = minimum
     return ans / k
+
+
+def is_same_configuration(config: Dict, config_filter: Dict):
+    for key, value in config_filter.items():
+        if config.get(key) != value:
+            logging.info("{} is different than {} for {}".format(config.get(key), value, key))
+            return False
+    return True
 
 
 @experiment.command
@@ -516,16 +525,29 @@ def main(_config):
 
         # Gather here the results for the language
         runs = mongo_database['runs']
+        metrics = mongo_database['metrics']
         accuracies = list()
         times = list()
-        for exp in runs.find({"config.target_language": target_language}):
-            accuracies.append(exp['metrics']['accuracy'])
-            times.append((exp['stop_time'] - exp['start_time']).seconds)
+        run_ids = list()
+
+        filter = {}
+        filter.update(_config)
+        filter['target_language'] = target_language
+        del filter['seed']
+        del filter['cuda']
+        del filter['normalize']
+        del filter['iteration']
+
+        candidate_runs = runs.find({"config.target_language": target_language, "status": "COMPLETED"})
+        for exp in candidate_runs:
+            if is_same_configuration(exp['config'], filter):
+                run_ids.append(exp['_id'])
+                minutes = ((exp['stop_time'] - exp['start_time']).seconds//60)%60
+                times.append(minutes)
+
+        for run_id in run_ids:
+            metric = metrics.find_one({"run_id": run_id, "name": "accuracy"})
+            if metric:
+                accuracies.append(metric['values'][0])
 
         print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
-
-
-
-
-if __name__ == '__main__':
-    experiment.run_commandline()
