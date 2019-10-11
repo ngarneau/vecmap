@@ -386,19 +386,19 @@ def run_experiment(_run, _config):
 
     # Write mapped embeddings
     logging.info("Writing mapped embeddings to {}".format(src_output))
-    srcfile = open(src_output, mode='w', encoding=_config['encoding'])
+    srcfile = open(src_output, mode='w', encoding=_config['encoding'], errors='surrogateescape')
     embeddings.write(src_words, xw, srcfile)
     srcfile.close()
     logging.info("Done")
 
     logging.info("Writing mapped embeddings to {}".format(trg_output))
-    trgfile = open(trg_output, mode='w', encoding=_config['encoding'])
+    trgfile = open(trg_output, mode='w', encoding=_config['encoding'], errors='surrogateescape')
     embeddings.write(trg_words, zw, trgfile)
     trgfile.close()
     logging.info("Done")
 
-    srcfile = open(src_output, encoding=_config['encoding'])
-    trgfile = open(trg_output, encoding=_config['encoding'])
+    srcfile = open(src_output, encoding=_config['encoding'], errors='surrogateescape')
+    trgfile = open(trg_output, encoding=_config['encoding'], errors='surrogateescape')
     src_words, x = embeddings.read(srcfile, dtype=dtype)
     trg_words, z = embeddings.read(trgfile, dtype=dtype)
 
@@ -424,7 +424,7 @@ def run_experiment(_run, _config):
 
 
     # Read dictionary and compute coverage
-    f = open(test_dictionary, encoding=_config['encoding'])
+    f = open(test_dictionary, encoding=_config['encoding'], errors='surrogateescape')
     src2trg = collections.defaultdict(set)
     oov = set()
     vocab = set()
