@@ -36,10 +36,12 @@ class UnsupervisedSeedDictionary(SeedDictionary):
         embeddings.normalize(xsim, self.configurations['normalize'])
         embeddings.normalize(zsim, self.configurations['normalize'])
         sim = xsim.dot(zsim.T)
+
         if self.configurations['csls'] > 0:
             knn_sim_fwd = topk_mean(sim, k=self.configurations['csls'])
             knn_sim_bwd = topk_mean(sim.T, k=self.configurations['csls'])
             sim -= knn_sim_fwd[:,self.xp.newaxis]/2 + knn_sim_bwd/2
+
         if self.configurations['direction'] == 'forward':
             src_indices = self.xp.arange(sim_size)
             trg_indices = sim.argmax(axis=1)
@@ -49,6 +51,7 @@ class UnsupervisedSeedDictionary(SeedDictionary):
         elif self.configurations['direction'] == 'union':
             src_indices = self.xp.concatenate((self.xp.arange(sim_size), sim.argmax(axis=0)))
             trg_indices = self.xp.concatenate((sim.argmax(axis=1), self.xp.arange(sim_size)))
+
         del xsim, zsim, sim
         return src_indices, trg_indices
 
