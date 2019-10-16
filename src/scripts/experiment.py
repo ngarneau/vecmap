@@ -459,12 +459,18 @@ def run_experiment(_run, _config):
 def main(_config):
     logging.getLogger().setLevel(logging.INFO)
     os.makedirs('./output/mapped_embeddings', exist_ok=True)
-    language_pairs = [
-        ['en_slim', 'de_slim'],
-        ['en', 'es'],
-        ['en', 'fi'],
-        ['en', 'it'],
-    ]
+
+    if _config['test']:
+        language_pairs = [
+            ['en_slim', 'de_slim'],
+        ]
+    else:
+        language_pairs = [
+            ['en', 'de'],
+            ['en', 'es'],
+            ['en', 'fi'],
+            ['en', 'it'],
+        ]
 
     config_updates = {}
     config_updates.update(_config)  # Hack because Sacred weirdly handles the configuration

@@ -58,3 +58,6 @@ inv_temperature: 1  # the inverse temperature (only compatible with inverted sof
 inv_sample: None  # 'use a random subset of the source vocabulary for the inverse computations (only compatible with inverted softmax)'
 neighborhood: 10  # the neighborhood size (only compatible with csls)')
 dot: False  # use the dot product in the similarity computations instead of the cosine')
+
+
+test: False
