@@ -51,6 +51,7 @@ src_dewhiten: 'src'
 trg_dewhiten: 'trg'
 self_learning: True
 vocabulary_cutoff: 20000
+experiment_name: "vecmap"
 
 # Evaluation parameters
 retrieval: 'csls' # choices: ['nn', 'invnn', 'invsoftmax', 'csls'], help='the retrieval method (nn: standard nearest neighbor; invnn: inverted nearest neighbor; invsoftmax: inverted softmax; csls: cross-domain similarity local scaling)'
