@@ -3,3 +3,4 @@ scipy
 dvc[s3]
 sacred
 pymongo
+PyYAML
