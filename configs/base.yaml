@@ -16,19 +16,16 @@ acl2017_seed: False  # reproduce our ACL 2017 system with a seed dictionary
 emnlp2016: False  # reproduce our EMNLP 2016 system
 num_runs: 10
 csls: 0  # use CSLS for dictionary induction
-init_unsupervised: False  # use unsupervised initialization
-normalize: []  # the normalization actions to perform in order. choices: ['unit', 'center', 'unitdim', 'centeremb', 'none']
-self_learning: False  # enable self-learning
-src_dewhiten: False  # de-whiten the source language embeddings
-trg_dewhiten: False  # de-whiten the target language embeddings
-src_reweight: 0  # re-weight the source language embeddings
-trg_reweight: 0  # re-weight the target language embeddings
+
+seed_dictionary_method: 'unsupervised'
+# init_unsupervised: False  # use unsupervised initialization
+# init_identical: False  # use identical words as the seed dictionary
+# init_numerals: False  # use latin numerals (i.e. words matching [0-9]+) as the seed dictionary
+
 unsupervised_vocab: 0  # restrict the vocabulary to the top k entries for unsupervised initialization
-vocabulary_cutoff: 0  # restrict the vocabulary to the top k entries
 whiten: False  # whiten the embeddings
 batch_size: 10000 # Batch size (defaults to 10000); does not affect results, larger is usually faster but uses more memory
-init_identical: False  # use identical words as the seed dictionary
-init_numerals: False  # use latin numerals (i.e. words matching [0-9]+) as the seed dictionary
+
 dim_reduction: False  # apply dimensionality reduction
 orthogonal: False  # use orthogonal constrained mapping
 unconstrained: False  # use unconstrained mapping
@@ -41,7 +38,7 @@ stochastic_multiplier: 2.0  # stochastic dictionary induction multiplier (defaul
 stochastic_interval: 50  # stochastic dictionary induction interval (defaults to 50)
 unsupervised: True
 acl2018: True
-init_unsupervised: True
+# init_unsupervised: True
 unsupervised_vocab: 4000
 normalize: ['unit', 'center', 'unit']
 whiten: True

@@ -32,6 +32,9 @@ from sacred.observers import MongoObserver
 
 from pymongo import MongoClient
 
+from src.factory.seed_dictionary import SeedDictionaryBuilderFactory
+from src.utils import topk_mean
+
 
 exp_name = os.getenv('EXP_NAME', default='vecmap')
 db_url = os.getenv('DB_URL', default='localhost')
@@ -50,6 +53,21 @@ mongo_database = mongo_client[db_name]
 
 BATCH_SIZE = 500
 
+
+class ComputeEngine:
+    def __init__(self, name, engine, seed):
+        self.name = name
+        self.engine = engine
+        self.engine.random.seed(seed)
+
+    def send_to_device(self, data):
+        if self.name == 'cupy':
+            return self.engine.asarray(data)
+        else:
+            return data
+
+
+
 def dropout(m, p):
     if p <= 0.0:
         return m
@@ -59,22 +77,6 @@ def dropout(m, p):
         return m*mask
 
 
-def topk_mean(m, k, inplace=False):  # TODO Assuming that axis is 1
-    xp = get_array_module(m)
-    n = m.shape[0]
-    ans = xp.zeros(n, dtype=m.dtype)
-    if k <= 0:
-        return ans
-    if not inplace:
-        m = xp.array(m)
-    ind0 = xp.arange(n)
-    ind1 = xp.empty(n, dtype=int)
-    minimum = m.min()
-    for i in range(k):
-        m.argmax(axis=1, out=ind1)
-        ans += m[ind0, ind1]
-        m[ind0, ind1] = minimum
-    return ans / k
 
 
 def is_same_configuration(config: Dict, config_filter: Dict):
@@ -99,6 +101,7 @@ def get_dtype(_config):
     elif _config['precision'] == 'fp64':
         return 'float64'
 
+
 def load_embeddings(embeddings_path, language, encoding, dtype):
     input_filename = embeddings_path.format(language)
     logging.info("Loading file {}".format(input_filename))
@@ -106,6 +109,20 @@ def load_embeddings(embeddings_path, language, encoding, dtype):
     words, x = embeddings.read(input_file, dtype=dtype)
     logging.info("Loaded {} words of dimension {}".format(x.shape[0], x.shape[1]))
     return words, x
+
+
+def get_compute_engine(use_cuda, seed):
+    """
+    This method will try to get cupy if the CUDA flag is activated.
+    It will break if there are some problems with cupy
+    """
+    if use_cuda:
+        if not supports_cupy():
+            logging.error('Install CuPy for CUDA support')
+            sys.exit(-1)
+        return ComputeEngine('cupy', get_cupy(), seed)
+    else:
+        return ComputeEngine('numpy', np, seed)
 
 
 @experiment.command
@@ -119,23 +136,18 @@ def run_experiment(_run, _config):
     src_words, x = load_embeddings(_config['embeddings_path'], _config['source_language'], _config['encoding'], dtype)
     trg_words, z = load_embeddings(_config['embeddings_path'], _config['target_language'], _config['encoding'], dtype)
 
+    compute_engine = get_compute_engine(_config['cuda'], _config['seed'])
+    xp = compute_engine.engine
+
+    x = compute_engine.send_to_device(x)
+    z = compute_engine.send_to_device(z)
+
     # Read input embeddings
     src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'],_config['target_language'], _config['iteration'])  # The output source embeddings
     trg_output = "./output/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'], _config['iteration'])  # The output target embeddings
     init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(_config['source_language'], _config['target_language'])  # the training dictionary file
     test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(_config['source_language'], _config['target_language'])  # the test dictionary file
 
-    # NumPy/CuPy management
-    if _config['cuda'] is True:
-        if not supports_cupy():
-            print('ERROR: Install CuPy for CUDA support', file=sys.stderr)
-            sys.exit(-1)
-        xp = get_cupy()
-        x = xp.asarray(x)
-        z = xp.asarray(z)
-    else:
-        xp = np
-    xp.random.seed(_config['seed'])
 
     # Build word to index map
     logging.info("Building word to index map")
@@ -148,80 +160,58 @@ def run_experiment(_run, _config):
     embeddings.normalize(z, _config['normalize'])
 
     # Build the seed dictionary
-    src_indices = []
-    trg_indices = []
-    if _config['init_unsupervised']:
-        sim_size = min(x.shape[0], z.shape[0]) if _config['unsupervised_vocab'] <= 0 else min(x.shape[0], z.shape[0], _config['unsupervised_vocab'])
-        u, s, vt = xp.linalg.svd(x[:sim_size], full_matrices=False)
-        xsim = (u*s).dot(u.T)
-        u, s, vt = xp.linalg.svd(z[:sim_size], full_matrices=False)
-        zsim = (u*s).dot(u.T)
-        del u, s, vt
-        xsim.sort(axis=1)
-        zsim.sort(axis=1)
-        embeddings.normalize(xsim, _config['normalize'])
-        embeddings.normalize(zsim, _config['normalize'])
-        sim = xsim.dot(zsim.T)
-        if _config['csls'] > 0:
-            knn_sim_fwd = topk_mean(sim, k=_config['csls'])
-            knn_sim_bwd = topk_mean(sim.T, k=_config['csls'])
-            sim -= knn_sim_fwd[:, xp.newaxis]/2 + knn_sim_bwd/2
-        if _config['direction'] == 'forward':
-            src_indices = xp.arange(sim_size)
-            trg_indices = sim.argmax(axis=1)
-        elif _config['direction'] == 'backward':
-            src_indices = sim.argmax(axis=0)
-            trg_indices = xp.arange(sim_size)
-        elif _config['direction'] == 'union':
-            src_indices = xp.concatenate((xp.arange(sim_size), sim.argmax(axis=0)))
-            trg_indices = xp.concatenate((sim.argmax(axis=1), xp.arange(sim_size)))
-        del xsim, zsim, sim
-    elif _config['init_numerals']:
-        numeral_regex = re.compile('^[0-9]+$')
-        src_numerals = {word for word in src_words if numeral_regex.match(word) is not None}
-        trg_numerals = {word for word in trg_words if numeral_regex.match(word) is not None}
-        numerals = src_numerals.intersection(trg_numerals)
-        for word in numerals:
-            src_indices.append(src_word2ind[word])
-            trg_indices.append(trg_word2ind[word])
-    elif _config['init_identical']:
-        identical = set(src_words).intersection(set(trg_words))
-        for word in identical:
-            src_indices.append(src_word2ind[word])
-            trg_indices.append(trg_word2ind[word])
-    else:
-        logging.info("Init dictionary")
-        f = open(init_dictionary, encoding=_config['encoding'], errors='surrogateescape')
-        for line in f:
-            src, trg = line.split()
-            try:
-                src_ind = src_word2ind[src]
-                trg_ind = trg_word2ind[trg]
-                src_indices.append(src_ind)
-                trg_indices.append(trg_ind)
-            except KeyError:
-                print('WARNING: OOV dictionary entry ({0} - {1})'.format(src, trg), file=sys.stderr)
-        logging.info("Done")
+    seed_dictionary_builder = SeedDictionaryBuilderFactory.get_seed_dictionary_builder(_config['seed_dictionary_method'], xp, _config)
+    src_indices, trg_indices = seed_dictionary_builder.get_indices(x, z)
 
-    # Read validation dictionary
-    if _config['validation']:
-        logging.info("Reading validation dict")
-        f = open(_config['validation'], encoding=_config['encoding'], errors='surrogateescape')
-        validation = collections.defaultdict(set)
-        oov = set()
-        vocab = set()
-        for line in f:
-            src, trg = line.split()
-            try:
-                src_ind = src_word2ind[src]
-                trg_ind = trg_word2ind[trg]
-                validation[src_ind].add(trg_ind)
-                vocab.add(src)
-            except KeyError:
-                oov.add(src)
-        oov -= vocab  # If one of the translation options is in the vocabulary, then the entry is not an oov
-        validation_coverage = len(validation) / (len(validation) + len(oov))
-        logging.info("Done")
+    # src_indices = []
+    # trg_indices = []
+    # if _config['init_unsupervised']:
+    # elif _config['init_numerals']:
+    #     numeral_regex = re.compile('^[0-9]+$')
+    #     src_numerals = {word for word in src_words if numeral_regex.match(word) is not None}
+    #     trg_numerals = {word for word in trg_words if numeral_regex.match(word) is not None}
+    #     numerals = src_numerals.intersection(trg_numerals)
+    #     for word in numerals:
+    #         src_indices.append(src_word2ind[word])
+    #         trg_indices.append(trg_word2ind[word])
+    # elif _config['init_identical']:
+    #     identical = set(src_words).intersection(set(trg_words))
+    #     for word in identical:
+    #         src_indices.append(src_word2ind[word])
+    #         trg_indices.append(trg_word2ind[word])
+    # else:
+    #     logging.info("Init dictionary")
+    #     f = open(init_dictionary, encoding=_config['encoding'], errors='surrogateescape')
+    #     for line in f:
+    #         src, trg = line.split()
+    #         try:
+    #             src_ind = src_word2ind[src]
+    #             trg_ind = trg_word2ind[trg]
+    #             src_indices.append(src_ind)
+    #             trg_indices.append(trg_ind)
+    #         except KeyError:
+    #             print('WARNING: OOV dictionary entry ({0} - {1})'.format(src, trg), file=sys.stderr)
+    #     logging.info("Done")
+
+    # # Read validation dictionary
+    # if _config['validation']:
+    #     logging.info("Reading validation dict")
+    #     f = open(_config['validation'], encoding=_config['encoding'], errors='surrogateescape')
+    #     validation = collections.defaultdict(set)
+    #     oov = set()
+    #     vocab = set()
+    #     for line in f:
+    #         src, trg = line.split()
+    #         try:
+    #             src_ind = src_word2ind[src]
+    #             trg_ind = trg_word2ind[trg]
+    #             validation[src_ind].add(trg_ind)
+    #             vocab.add(src)
+    #         except KeyError:
+    #             oov.add(src)
+    #     oov -= vocab  # If one of the translation options is in the vocabulary, then the entry is not an oov
+    #     validation_coverage = len(validation) / (len(validation) + len(oov))
+    #     logging.info("Done")
 
     # Allocate memory
     logging.info("Allocating memory")
@@ -512,7 +502,7 @@ def main(_config):
     logging.getLogger().setLevel(logging.INFO)
     os.makedirs('./output/mapped_embeddings', exist_ok=True)
     language_pairs = [
-        ['en', 'de'],
+        ['en_slim', 'de_slim'],
         ['en', 'es'],
         ['en', 'fi'],
         ['en', 'it'],
