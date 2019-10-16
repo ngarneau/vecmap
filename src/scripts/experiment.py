@@ -86,7 +86,6 @@ def is_same_configuration(config: Dict, config_filter: Dict):
 
 
 def whitening_arguments_validation(_config):
-    # Check command line arguments
     if (_config['src_dewhiten'] is not None or _config['trg_dewhiten'] is not None) and not _config['whiten']:
         print('ERROR: De-whitening requires whitening first', file=sys.stderr)
         sys.exit(-1)
