@@ -99,6 +99,14 @@ def get_dtype(_config):
     elif _config['precision'] == 'fp64':
         return 'float64'
 
+def load_embeddings(embeddings_path, language, encoding, dtype):
+    input_filename = embeddings_path.format(language)
+    logging.info("Loading file {}".format(input_filename))
+    input_file = open(input_filename, encoding=encoding, errors='surrogateescape')
+    words, x = embeddings.read(input_file, dtype=dtype)
+    logging.info("Loaded {} words of dimension {}".format(x.shape[0], x.shape[1]))
+    return words, x
+
 
 @experiment.command
 def run_experiment(_run, _config):
@@ -108,21 +116,14 @@ def run_experiment(_run, _config):
 
     dtype = get_dtype(_config)
 
+    src_words, x = load_embeddings(_config['embeddings_path'], _config['source_language'], _config['encoding'], dtype)
+    trg_words, z = load_embeddings(_config['embeddings_path'], _config['target_language'], _config['encoding'], dtype)
+
     # Read input embeddings
-    src_input = "./data/embeddings/{}.emb.txt".format(_config['source_language'])  # The input source embeddings
-    trg_input = "./data/embeddings/{}.emb.txt".format(_config['target_language'])  # The input target embeddings
     src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'],_config['target_language'], _config['iteration'])  # The output source embeddings
     trg_output = "./output/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'], _config['iteration'])  # The output target embeddings
     init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(_config['source_language'], _config['target_language'])  # the training dictionary file
     test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(_config['source_language'], _config['target_language'])  # the test dictionary file
-
-    logging.info("Loading srcfile {}".format(src_input))
-    srcfile = open(src_input, encoding=_config['encoding'], errors='surrogateescape')
-    src_words, x = embeddings.read(srcfile, dtype=dtype)
-
-    logging.info("Loading target input {}".format(trg_input))
-    trgfile = open(trg_input, encoding=_config['encoding'], errors='surrogateescape')
-    trg_words, z = embeddings.read(trgfile, dtype=dtype)
 
     # NumPy/CuPy management
     if _config['cuda'] is True:
