@@ -28,7 +28,7 @@ import time
 
 import sacred
 from sacred import Experiment
-from sacred.observers import MongoObserver
+from sacred.observers import MongoObserver, FileStorageObserver
 
 from pymongo import MongoClient
 
@@ -37,18 +37,22 @@ from src.utils import topk_mean
 
 
 exp_name = os.getenv('EXP_NAME', default='vecmap')
-db_url = os.getenv('DB_URL', default='localhost')
-db_name = os.getenv('DB_NAME', default='vecmap')
-
 experiment = Experiment(exp_name)
-
-experiment.observers.append(
-    MongoObserver.create(url=db_url, db_name=db_name)
-)
 experiment.add_config('./configs/base.yaml')
 
-mongo_client = MongoClient(host=db_url)
-mongo_database = mongo_client[db_name]
+if os.environ.get('DB_URL') is not None:
+    db_url = os.getenv('DB_URL', default='localhost')
+    db_name = os.getenv('DB_NAME', default='vecmap')
+    experiment.observers.append(
+        MongoObserver.create(url=db_url, db_name=db_name)
+    )
+    mongo_client = MongoClient(host=db_url)
+    mongo_database = mongo_client[db_name]
+else:
+    os.makedirs('./output/experiments', exist_ok=True)
+    experiment.observers.append(
+        FileStorageObserver.create(basedir='./output/experiments')
+    )
 
 
 BATCH_SIZE = 500
@@ -486,30 +490,33 @@ def main(_config):
             experiment.run('run_experiment', config_updates=config_updates)
 
         # Gather here the results for the language
-        runs = mongo_database['runs']
-        metrics = mongo_database['metrics']
-        accuracies = list()
-        times = list()
-        run_ids = list()
+        if os.environ.get('DB_URL') is not None:
+            runs = mongo_database['runs']
+            metrics = mongo_database['metrics']
+            accuracies = list()
+            times = list()
+            run_ids = list()
 
-        filter = {}
-        filter.update(_config)
-        filter['target_language'] = target_language
-        del filter['seed']
-        del filter['cuda']
-        del filter['normalize']
-        del filter['iteration']
+            filter = {}
+            filter.update(_config)
+            filter['target_language'] = target_language
+            del filter['seed']
+            del filter['cuda']
+            del filter['normalize']
+            del filter['iteration']
 
-        candidate_runs = runs.find({"config.target_language": target_language, "status": "COMPLETED"})
-        for exp in candidate_runs:
-            if is_same_configuration(exp['config'], filter):
-                run_ids.append(exp['_id'])
-                minutes = ((exp['stop_time'] - exp['start_time']).seconds//60)%60
-                times.append(minutes)
+            candidate_runs = runs.find({"config.target_language": target_language, "status": "COMPLETED"})
+            for exp in candidate_runs:
+                if is_same_configuration(exp['config'], filter):
+                    run_ids.append(exp['_id'])
+                    minutes = ((exp['stop_time'] - exp['start_time']).seconds//60)%60
+                    times.append(minutes)
 
-        for run_id in run_ids:
-            metric = metrics.find_one({"run_id": run_id, "name": "accuracy"})
-            if metric:
-                accuracies.append(metric['values'][0])
+            for run_id in run_ids:
+                metric = metrics.find_one({"run_id": run_id, "name": "accuracy"})
+                if metric:
+                    accuracies.append(metric['values'][0])
 
-        print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
+            print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
+        else:
+            print("Results gathering not implemented with FileStorageObserver")
