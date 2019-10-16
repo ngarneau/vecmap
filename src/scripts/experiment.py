@@ -91,19 +91,22 @@ def whitening_arguments_validation(_config):
         sys.exit(-1)
 
 
+def get_dtype(_config):
+    if _config['precision'] == 'fp16':
+        return 'float16'
+    elif _config['precision'] == 'fp32':
+        return 'float32'
+    elif _config['precision'] == 'fp64':
+        return 'float64'
+
+
 @experiment.command
 def run_experiment(_run, _config):
     logging.info(_config)
 
     whitening_arguments_validation(_config)
 
-    # Choose the right dtype for the desired precision
-    if _config['precision'] == 'fp16':
-        dtype = 'float16'
-    elif _config['precision'] == 'fp32':
-        dtype = 'float32'
-    elif _config['precision'] == 'fp64':
-        dtype = 'float64'
+    dtype = get_dtype(_config)
 
     # Read input embeddings
     src_input = "./data/embeddings/{}.emb.txt".format(_config['source_language'])  # The input source embeddings
