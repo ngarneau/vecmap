@@ -1,4 +1,4 @@
-from src.domain.seed_dictionary import UnsupervisedSeedDictionary
+from src.domain.seed_dictionary import *
 
 
 class SeedDictionaryBuilderFactory:
@@ -8,19 +8,15 @@ class SeedDictionaryBuilderFactory:
     IDENTICAL = 'identical'
     DEFAULT = 'default'
 
-    def __init__(self):
-        pass
-
     @classmethod
-    def get_seed_dictionary_builder(cls, method, xp, configurations):
+    def get_seed_dictionary_builder(cls, method, xp, src_words, trg_words, x, z, configurations):
         if method == cls.UNSUPERVISED:
-            # return unsupervised
-            return UnsupervisedSeedDictionary(xp, configurations)
+            return UnsupervisedSeedDictionary(xp, src_words, trg_words, x, z, configurations)
         elif method == cls.NUMERALS:
-            pass
+            return NumeralsSeedDictionary(xp, src_words, trg_words, x, z, configurations)
         elif method == cls.IDENTICAL:
-            pass
+            return IdenticalSeedDictionary(xp, src_words, trg_words, x, z, configurations)
         elif method == cls.DEFAULT:
-            pass
+            return DefaultSeedDictionary(xp, src_words, trg_words, x, z, configurations)
         else:
             raise("Method {} not implemented.".format(method))

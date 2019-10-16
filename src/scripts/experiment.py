@@ -160,58 +160,16 @@ def run_experiment(_run, _config):
     embeddings.normalize(z, _config['normalize'])
 
     # Build the seed dictionary
-    seed_dictionary_builder = SeedDictionaryBuilderFactory.get_seed_dictionary_builder(_config['seed_dictionary_method'], xp, _config)
-    src_indices, trg_indices = seed_dictionary_builder.get_indices(x, z)
-
-    # src_indices = []
-    # trg_indices = []
-    # if _config['init_unsupervised']:
-    # elif _config['init_numerals']:
-    #     numeral_regex = re.compile('^[0-9]+$')
-    #     src_numerals = {word for word in src_words if numeral_regex.match(word) is not None}
-    #     trg_numerals = {word for word in trg_words if numeral_regex.match(word) is not None}
-    #     numerals = src_numerals.intersection(trg_numerals)
-    #     for word in numerals:
-    #         src_indices.append(src_word2ind[word])
-    #         trg_indices.append(trg_word2ind[word])
-    # elif _config['init_identical']:
-    #     identical = set(src_words).intersection(set(trg_words))
-    #     for word in identical:
-    #         src_indices.append(src_word2ind[word])
-    #         trg_indices.append(trg_word2ind[word])
-    # else:
-    #     logging.info("Init dictionary")
-    #     f = open(init_dictionary, encoding=_config['encoding'], errors='surrogateescape')
-    #     for line in f:
-    #         src, trg = line.split()
-    #         try:
-    #             src_ind = src_word2ind[src]
-    #             trg_ind = trg_word2ind[trg]
-    #             src_indices.append(src_ind)
-    #             trg_indices.append(trg_ind)
-    #         except KeyError:
-    #             print('WARNING: OOV dictionary entry ({0} - {1})'.format(src, trg), file=sys.stderr)
-    #     logging.info("Done")
-
-    # # Read validation dictionary
-    # if _config['validation']:
-    #     logging.info("Reading validation dict")
-    #     f = open(_config['validation'], encoding=_config['encoding'], errors='surrogateescape')
-    #     validation = collections.defaultdict(set)
-    #     oov = set()
-    #     vocab = set()
-    #     for line in f:
-    #         src, trg = line.split()
-    #         try:
-    #             src_ind = src_word2ind[src]
-    #             trg_ind = trg_word2ind[trg]
-    #             validation[src_ind].add(trg_ind)
-    #             vocab.add(src)
-    #         except KeyError:
-    #             oov.add(src)
-    #     oov -= vocab  # If one of the translation options is in the vocabulary, then the entry is not an oov
-    #     validation_coverage = len(validation) / (len(validation) + len(oov))
-    #     logging.info("Done")
+    seed_dictionary_builder = SeedDictionaryBuilderFactory.get_seed_dictionary_builder(
+        _config['seed_dictionary_method'],
+        xp,
+        src_words,
+        trg_words,
+        x,
+        z,
+        _config
+    )
+    src_indices, trg_indices = seed_dictionary_builder.get_indices()
 
     # Allocate memory
     logging.info("Allocating memory")
