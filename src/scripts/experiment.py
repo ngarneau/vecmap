@@ -85,13 +85,18 @@ def is_same_configuration(config: Dict, config_filter: Dict):
     return True
 
 
-@experiment.command
-def run_experiment(_run, _config):
-    logging.info(_config)
+def whitening_arguments_validation(_config):
     # Check command line arguments
     if (_config['src_dewhiten'] is not None or _config['trg_dewhiten'] is not None) and not _config['whiten']:
         print('ERROR: De-whitening requires whitening first', file=sys.stderr)
         sys.exit(-1)
+
+
+@experiment.command
+def run_experiment(_run, _config):
+    logging.info(_config)
+
+    whitening_arguments_validation(_config)
 
     # Choose the right dtype for the desired precision
     if _config['precision'] == 'fp16':
