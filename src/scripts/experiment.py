@@ -465,13 +465,18 @@ def main(_config):
     config_updates = {}
     config_updates.update(_config)  # Hack because Sacred weirdly handles the configuration
 
+    if not _config['num_runs'] == 1 and _config['supercomputer']:
+        _config['num_runs'] = 1
+        print('Manually overriding num_runs attribute to 1 because supercomputer mode is enabled.')
+
     for source_language, target_language in language_pairs:
         for i in range(_config['num_runs']):
+            seed = _config['seed'] if _config['supercomputer'] else i
             config_updates.update({
                 'iteration': i,
                 'source_language': source_language,
                 'target_language': target_language,
-                'seed': i
+                'seed': seed
             })
             experiment.run('run_experiment', config_updates=config_updates)
 
