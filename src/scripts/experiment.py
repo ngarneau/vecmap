@@ -46,8 +46,10 @@ if os.environ.get('DB_URL') is not None:
     mongo_client = MongoClient(host=db_url)
     mongo_database = mongo_client[db_name]
 else:
-    os.makedirs('./output/experiments', exist_ok=True)
-    experiment.observers.append(FileStorageObserver.create(basedir='./output/experiments'))
+    # Hack to run on CC since we don't have acces to _config here
+    output_folder = '/project/def-lulam50/magod/vecmap/output/experiments/'
+    os.makedirs(output_folder, exist_ok=True)
+    experiment.observers.append(FileStorageObserver.create(basedir=output_folder))
 
 BATCH_SIZE = 500
 
