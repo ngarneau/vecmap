@@ -432,7 +432,7 @@ def run_experiment(_run, _config):
         knn_sim_bwd = xp.zeros(z.shape[0])
         for i in range(0, z.shape[0], BATCH_SIZE):
             j = min(i + BATCH_SIZE, z.shape[0])
-            knn_sim_bwd[i:j] = topk_mean(z[i:j].dot(x.T), k=_config['neighborhood'], inplace=True)
+            knn_sim_bwd[i:j] = topk_mean(z[i:j].dot(x.T), k=_config['csls'], inplace=True)
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
             similarities = 2 * x[src[i:j]].dot(z.T) - knn_sim_bwd  # Equivalent to the real CSLS scores for NN
