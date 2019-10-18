@@ -239,8 +239,8 @@ def run_experiment(_run, _config):
             zw = zw.dot(wz2)
 
             # STEP 3: Re-weighting
-            xw *= s**_config['src_reweight']
-            zw *= s**_config['trg_reweight']
+            xw *= s**_config['reweight']
+            zw *= s**_config['reweight']
 
             # STEP 4: De-whitening
             if _config['src_dewhiten'] == 'src':

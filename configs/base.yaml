@@ -42,8 +42,7 @@ acl2018: True
 unsupervised_vocab: 4000
 normalize: ['unit', 'center', 'unit']
 whiten: True
-src_reweight: 0.5
-trg_reweight: 0.5
+reweight: 0.5
 src_dewhiten: 'src'
 trg_dewhiten: 'trg'
 self_learning: True
