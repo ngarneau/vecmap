@@ -27,9 +27,9 @@ class UnsupervisedSeedDictionary(SeedDictionary):
     def get_indices(self):
         sim_size = min(self.x.shape[0], self.z.shape[0]) if self.configurations['unsupervised_vocab'] <= 0 else min(self.x.shape[0], self.z.shape[0], self.configurations['unsupervised_vocab'])
         u, s, vt = self.xp.linalg.svd(self.x[:sim_size], full_matrices=False)
-        xsim = (u*s).dot(u.T)
+        xsim = (u*s).dot(u.T)  # This is equivalent to Mx in the original paper
         u, s, vt = self.xp.linalg.svd(self.z[:sim_size], full_matrices=False)
-        zsim = (u*s).dot(u.T)
+        zsim = (u*s).dot(u.T)  # This is equivalent to Mz in the original paper
         del u, s, vt
         xsim.sort(axis=1)
         zsim.sort(axis=1)
