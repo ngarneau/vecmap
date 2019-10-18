@@ -7,4 +7,4 @@
 #SBATCH --output=$HOME/vecmap/run_outputs/%j.out
 
 source $HOME/venv/bin/activate
-python -m src.scripts.experiment -u with seed_dictionary_method='unsupervised' cuda=True num_runs=1
+python -m src.scripts.experiment -u with seed_dictionary_method='unsupervised' cuda=True num_runs=1 supercomputer=True
