@@ -469,7 +469,7 @@ def main(_config):
 
     if not _config['num_runs'] == 1 and _config['supercomputer']:
         _config['num_runs'] = 1
-        print('Manually overriding num_runs attribute to 1 because supercomputer mode is enabled.')
+        logging.warning('Manually overriding num_runs attribute to 1 because supercomputer mode is enabled.')
 
     for source_language, target_language in language_pairs:
         for i in range(_config['num_runs']):
