@@ -4,3 +4,4 @@ dvc[s3]
 sacred
 pymongo
 PyYAML
+mlflow
