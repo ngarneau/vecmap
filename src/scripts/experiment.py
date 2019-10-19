@@ -466,7 +466,7 @@ def main():
         ]
 
     if not configs['num_runs'] == 1 and configs['supercomputer']:
-        _config['num_runs'] = 1
+        configs['num_runs'] = 1
         print('Manually overriding num_runs attribute to 1 because supercomputer mode is enabled.')
 
     for source_language, target_language in language_pairs:
