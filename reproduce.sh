@@ -2,4 +2,4 @@
 #
 
 dvc pull
-python -m src.scripts.experiment with 'cuda='${CUDA} -u
+python -m src.scripts.experiment $@

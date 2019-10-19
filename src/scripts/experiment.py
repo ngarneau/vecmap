@@ -26,30 +26,12 @@ import re
 import sys
 import time
 
-import sacred
-from sacred import Experiment
-from sacred.observers import MongoObserver, FileStorageObserver
-
-from pymongo import MongoClient
+import mlflow
+from mlflow.tracking import MlflowClient
+import yaml
 
 from src.factory.seed_dictionary import SeedDictionaryBuilderFactory
 from src.utils import topk_mean
-
-exp_name = os.getenv('EXP_NAME', default='vecmap')
-experiment = Experiment(exp_name)
-experiment.add_config('./configs/base.yaml')
-
-if os.environ.get('DB_URL') is not None:
-    db_url = os.getenv('DB_URL', default='localhost')
-    db_name = os.getenv('DB_NAME', default='vecmap')
-    experiment.observers.append(MongoObserver.create(url=db_url, db_name=db_name))
-    mongo_client = MongoClient(host=db_url)
-    mongo_database = mongo_client[db_name]
-else:
-    # Hack to run on CC since we don't have acces to _config here
-    output_folder = '$HOME/projects/def-lulam50/magod/vecmap/output/experiments/'
-    os.makedirs(output_folder, exist_ok=True)
-    experiment.observers.append(FileStorageObserver.create(basedir=output_folder))
 
 BATCH_SIZE = 500
 
@@ -122,9 +104,10 @@ def get_compute_engine(use_cuda, seed):
         return ComputeEngine('numpy', np, seed)
 
 
-@experiment.command
-def run_experiment(_run, _config):
+def run_experiment(_config):
     logging.info(_config)
+    mlflow.log_params(_config)
+    mlflow.log_metric('test', 0.9)
 
     whitening_arguments_validation(_config)
 
@@ -442,17 +425,34 @@ def run_experiment(_run, _config):
 
     # Compute accuracy
     accuracy = np.mean([1 if translation[i] in src2trg[i] else 0 for i in src])
-    _run.log_scalar('coverage', coverage)
-    _run.log_scalar('accuracy', accuracy)
+    mlflow.log_metric('coverage', coverage)
+    mlflow.log_metric('accuracy', accuracy)
     print('Coverage:{0:7.2%}  Accuracy:{1:7.2%}'.format(coverage, accuracy))
 
 
-@experiment.automain
-def main(_config):
+def get_query_string(configs):
+    return " and ".join(["params.{}='{}'".format(config, value) for config, value in configs.items()])
+
+
+def main():
     logging.getLogger().setLevel(logging.INFO)
+
+    exp_name = os.getenv('EXP_NAME', default='vecmap')
+
+    base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
+    argument_parser = argparse.ArgumentParser()
+    for config, value in base_configs.items():
+        argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
+    options = argument_parser.parse_args()
+    configs = vars(options)
+
+    client = MlflowClient()
+    mlflow.set_experiment(exp_name)
+    experiment = client.get_experiment_by_name('vecmap')
+
     os.makedirs('./output/mapped_embeddings', exist_ok=True)
 
-    if _config['test']:
+    if configs['test']:
         language_pairs = [
             ['en_slim', 'de_slim'],
         ]
@@ -464,52 +464,47 @@ def main(_config):
             ['en', 'it'],
         ]
 
-    config_updates = {}
-    config_updates.update(_config)  # Hack because Sacred weirdly handles the configuration
-
-    if not _config['num_runs'] == 1 and _config['supercomputer']:
-        _config['num_runs'] = 1
+    if not configs['num_runs'] == 1 and configs['supercomputer']:
+        configs['num_runs'] = 1
         logging.warning('Manually overriding num_runs attribute to 1 because supercomputer mode is enabled.')
 
     for source_language, target_language in language_pairs:
-        for i in range(_config['num_runs']):
-            seed = _config['seed'] if _config['supercomputer'] else i
-            config_updates.update({
+        for i in range(configs['num_runs']):
+            seed = configs['seed'] if configs['supercomputer'] else i
+            configs.update({
                 'iteration': i,
                 'source_language': source_language,
                 'target_language': target_language,
                 'seed': seed
             })
-            experiment.run('run_experiment', config_updates=config_updates)
 
-        # Gather here the results for the language
-        if os.environ.get('DB_URL') is not None:
-            runs = mongo_database['runs']
-            metrics = mongo_database['metrics']
-            accuracies = list()
-            times = list()
-            run_ids = list()
+            try:
+                with mlflow.start_run(experiment_id=experiment.experiment_id):
+                    run_experiment(configs)
+            except KeyboardInterrupt:
+                logging.warning("Run exited.")
 
-            filter = {}
-            filter.update(_config)
-            filter['target_language'] = target_language
-            del filter['seed']
-            del filter['cuda']
-            del filter['normalize']
-            del filter['iteration']
+        filter = {}
+        filter.update(configs)
+        filter['source_language'] = source_language
+        filter['target_language'] = target_language
+        del filter['seed']
+        del filter['cuda']
+        del filter['normalize']
+        del filter['iteration']
+        del filter['num_runs']
+        query_string = get_query_string(filter)
+        runs = client.search_runs(experiment_ids=[experiment.experiment_id], filter_string=query_string)
 
-            candidate_runs = runs.find({"config.target_language": target_language, "status": "COMPLETED"})
-            for exp in candidate_runs:
-                if is_same_configuration(exp['config'], filter):
-                    run_ids.append(exp['_id'])
-                    minutes = ((exp['stop_time'] - exp['start_time']).seconds // 60) % 60
-                    times.append(minutes)
+        accuracies = list()
+        times = list()
+        for run in runs:
+            if 'accuracy' in run.data.metrics:
+                minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
+                times.append(minutes)
+                accuracies.append(run.data.metrics['accuracy'])
+        print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
 
-            for run_id in run_ids:
-                metric = metrics.find_one({"run_id": run_id, "name": "accuracy"})
-                if metric:
-                    accuracies.append(metric['values'][0])
 
-            print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
-        else:
-            print("Results gathering not implemented with FileStorageObserver")
+if __name__ == '__main__':
+    main()
