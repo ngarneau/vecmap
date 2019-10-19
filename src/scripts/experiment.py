@@ -34,7 +34,6 @@ from src.factory.seed_dictionary import SeedDictionaryBuilderFactory
 from src.utils import topk_mean
 
 
-
 BATCH_SIZE = 500
 
 
@@ -51,16 +50,13 @@ class ComputeEngine:
             return data
 
 
-
 def dropout(m, p):
     if p <= 0.0:
         return m
     else:
         xp = get_array_module(m)
         mask = xp.random.rand(*m.shape) >= p
-        return m*mask
-
-
+        return m * mask
 
 
 def is_same_configuration(config: Dict, config_filter: Dict):
@@ -128,11 +124,14 @@ def run_experiment(_config):
     z = compute_engine.send_to_device(z)
 
     # Read input embeddings
-    src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'],_config['target_language'], _config['iteration'])  # The output source embeddings
-    trg_output = "./output/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'], _config['iteration'])  # The output target embeddings
-    init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(_config['source_language'], _config['target_language'])  # the training dictionary file
-    test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(_config['source_language'], _config['target_language'])  # the test dictionary file
-
+    src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'], _config['target_language'],
+                                                    _config['iteration'])  # The output source embeddings
+    trg_output = "./output/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'],
+                                                    _config['iteration'])  # The output target embeddings
+    init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(
+        _config['source_language'], _config['target_language'])  # the training dictionary file
+    test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
+        _config['source_language'], _config['target_language'])  # the test dictionary file
 
     # Build word to index map
     logging.info("Building word to index map")
@@ -146,14 +145,7 @@ def run_experiment(_config):
 
     # Build the seed dictionary
     seed_dictionary_builder = SeedDictionaryBuilderFactory.get_seed_dictionary_builder(
-        _config['seed_dictionary_method'],
-        xp,
-        src_words,
-        trg_words,
-        x,
-        z,
-        _config
-    )
+        _config['seed_dictionary_method'], xp, src_words, trg_words, x, z, _config)
     src_indices, trg_indices = seed_dictionary_builder.get_indices()
 
     # Allocate memory
@@ -193,7 +185,7 @@ def run_experiment(_config):
             if keep_prob >= 1.0:
                 logging.info("Training will end...")
                 end = True
-            keep_prob = min(1.0, _config['stochastic_multiplier']*keep_prob)
+            keep_prob = min(1.0, _config['stochastic_multiplier'] * keep_prob)
             last_improvement = it
 
         # Update the embedding mapping
@@ -216,7 +208,8 @@ def run_experiment(_config):
             # STEP 1: Whitening
             def whitening_transformation(m):
                 u, s, vt = xp.linalg.svd(m, full_matrices=False)
-                return vt.T.dot(xp.diag(1/s)).dot(vt)
+                return vt.T.dot(xp.diag(1 / s)).dot(vt)
+
             if _config['whiten']:
                 wx1 = whitening_transformation(xw[src_indices])
                 wz1 = whitening_transformation(zw[trg_indices])
@@ -257,26 +250,26 @@ def run_experiment(_config):
                 if _config['csls'] > 0:
                     for i in range(0, trg_size, simbwd.shape[0]):
                         j = min(i + simbwd.shape[0], trg_size)
-                        zw[i:j].dot(xw[:src_size].T, out=simbwd[:j-i])
-                        knn_sim_bwd[i:j] = topk_mean(simbwd[:j-i], k=_config['csls'], inplace=True)
+                        zw[i:j].dot(xw[:src_size].T, out=simbwd[:j - i])
+                        knn_sim_bwd[i:j] = topk_mean(simbwd[:j - i], k=_config['csls'], inplace=True)
                 for i in range(0, src_size, simfwd.shape[0]):
                     j = min(i + simfwd.shape[0], src_size)
-                    xw[i:j].dot(zw[:trg_size].T, out=simfwd[:j-i])
-                    simfwd[:j-i].max(axis=1, out=best_sim_forward[i:j])
-                    simfwd[:j-i] -= knn_sim_bwd/2  # Equivalent to the real CSLS scores for NN
-                    dropout(simfwd[:j-i], 1 - keep_prob).argmax(axis=1, out=trg_indices_forward[i:j])
+                    xw[i:j].dot(zw[:trg_size].T, out=simfwd[:j - i])
+                    simfwd[:j - i].max(axis=1, out=best_sim_forward[i:j])
+                    simfwd[:j - i] -= knn_sim_bwd / 2  # Equivalent to the real CSLS scores for NN
+                    dropout(simfwd[:j - i], 1 - keep_prob).argmax(axis=1, out=trg_indices_forward[i:j])
             if _config['direction'] in ('backward', 'union'):
                 if _config['csls'] > 0:
                     for i in range(0, src_size, simfwd.shape[0]):
                         j = min(i + simfwd.shape[0], src_size)
-                        xw[i:j].dot(zw[:trg_size].T, out=simfwd[:j-i])
-                        knn_sim_fwd[i:j] = topk_mean(simfwd[:j-i], k=_config['csls'], inplace=True)
+                        xw[i:j].dot(zw[:trg_size].T, out=simfwd[:j - i])
+                        knn_sim_fwd[i:j] = topk_mean(simfwd[:j - i], k=_config['csls'], inplace=True)
                 for i in range(0, trg_size, simbwd.shape[0]):
                     j = min(i + simbwd.shape[0], trg_size)
-                    zw[i:j].dot(xw[:src_size].T, out=simbwd[:j-i])
-                    simbwd[:j-i].max(axis=1, out=best_sim_backward[i:j])
-                    simbwd[:j-i] -= knn_sim_fwd/2  # Equivalent to the real CSLS scores for NN
-                    dropout(simbwd[:j-i], 1 - keep_prob).argmax(axis=1, out=src_indices_backward[i:j])
+                    zw[i:j].dot(xw[:src_size].T, out=simbwd[:j - i])
+                    simbwd[:j - i].max(axis=1, out=best_sim_backward[i:j])
+                    simbwd[:j - i] -= knn_sim_fwd / 2  # Equivalent to the real CSLS scores for NN
+                    dropout(simbwd[:j - i], 1 - keep_prob).argmax(axis=1, out=src_indices_backward[i:j])
             if _config['direction'] == 'forward':
                 src_indices = src_indices_forward
                 trg_indices = trg_indices_forward
@@ -304,22 +297,21 @@ def run_experiment(_config):
                 xw[src].dot(zw.T, out=simval)
                 nn = asnumpy(simval.argmax(axis=1))
                 accuracy = np.mean([1 if nn[i] in validation[src[i]] else 0 for i in range(len(src))])
-                similarity = np.mean([max([simval[i, j].tolist() for j in validation[src[i]]]) for i in range(len(src))])
+                similarity = np.mean(
+                    [max([simval[i, j].tolist() for j in validation[src[i]]]) for i in range(len(src))])
 
             # Logging
             duration = time.time() - t
             logging.info('ITERATION {0} ({1:.2f}s)'.format(it, duration))
             logging.info('\t- Objective:        {0:9.4f}%'.format(100 * objective))
-            logging.info('\t- Drop probability: {0:9.4f}%'.format(100 - 100*keep_prob))
+            logging.info('\t- Drop probability: {0:9.4f}%'.format(100 - 100 * keep_prob))
             if _config['validation']:
                 logging.info('\t- Val. similarity:  {0:9.4f}%'.format(100 * similarity))
                 logging.info('\t- Val. accuracy:    {0:9.4f}%'.format(100 * accuracy))
                 logging.info('\t- Val. coverage:    {0:9.4f}%'.format(100 * validation_coverage))
                 val = '{0:.6f}\t{1:.6f}\t{2:.6f}'.format(
-                    100 * similarity,
-                    100 * accuracy,
-                    100 * validation_coverage
-                ) if _config['validation'] is not None else ''
+                    100 * similarity, 100 * accuracy, 100 *
+                    validation_coverage) if _config['validation'] is not None else ''
                 logging.info('{0}\t{1:.6f}\t{2}\t{3:.6f}'.format(it, 100 * objective, val, duration), file=log)
 
         t = time.time()
@@ -363,7 +355,6 @@ def run_experiment(_config):
     src_word2ind = {word: i for i, word in enumerate(src_words)}
     trg_word2ind = {word: i for i, word in enumerate(trg_words)}
 
-
     # Read dictionary and compute coverage
     f = open(test_dictionary, encoding=_config['encoding'], errors='surrogateescape')
     src2trg = collections.defaultdict(set)
@@ -382,7 +373,6 @@ def run_experiment(_config):
     oov -= vocab  # If one of the translation options is in the vocabulary, then the entry is not an oov
     coverage = len(src2trg) / (len(src2trg) + len(oov))
 
-
     # Find translations
     translation = collections.defaultdict(int)
     if _config['retrieval'] == 'nn':  # Standard nearest neighbor
@@ -390,8 +380,8 @@ def run_experiment(_config):
             j = min(i + BATCH_SIZE, len(src))
             similarities = x[src[i:j]].dot(z.T)
             nn = similarities.argmax(axis=1).tolist()
-            for k in range(j-i):
-                translation[src[i+k]] = nn[k]
+            for k in range(j - i):
+                translation[src[i + k]] = nn[k]
     elif _config['retrieval'] == 'invnn':  # Inverted nearest neighbor
         best_rank = np.full(len(src), x.shape[0], dtype=int)
         best_sim = np.full(len(src), -100, dtype=dtype)
@@ -403,35 +393,36 @@ def run_experiment(_config):
             sims = asnumpy(similarities[:, src])
             for k in range(i, j):
                 for l in range(len(src)):
-                    rank = ranks[k-i, l]
-                    sim = sims[k-i, l]
+                    rank = ranks[k - i, l]
+                    sim = sims[k - i, l]
                     if rank < best_rank[l] or (rank == best_rank[l] and sim > best_sim[l]):
                         best_rank[l] = rank
                         best_sim[l] = sim
                         translation[src[l]] = k
     elif _config['retrieval'] == 'invsoftmax':  # Inverted softmax
-        sample = xp.arange(x.shape[0]) if _config['inv_sample'] is None else xp.random.randint(0, x.shape[0], _config['inv_sample'])
+        sample = xp.arange(x.shape[0]) if _config['inv_sample'] is None else xp.random.randint(
+            0, x.shape[0], _config['inv_sample'])
         partition = xp.zeros(z.shape[0])
         for i in range(0, len(sample), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(sample))
-            partition += xp.exp(_config['inv_temperature']*z.dot(x[sample[i:j]].T)).sum(axis=1)
+            partition += xp.exp(_config['inv_temperature'] * z.dot(x[sample[i:j]].T)).sum(axis=1)
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
-            p = xp.exp(_config['inv_temperature']*x[src[i:j]].dot(z.T)) / partition
+            p = xp.exp(_config['inv_temperature'] * x[src[i:j]].dot(z.T)) / partition
             nn = p.argmax(axis=1).tolist()
-            for k in range(j-i):
-                translation[src[i+k]] = nn[k]
+            for k in range(j - i):
+                translation[src[i + k]] = nn[k]
     elif _config['retrieval'] == 'csls':  # Cross-domain similarity local scaling
         knn_sim_bwd = xp.zeros(z.shape[0])
         for i in range(0, z.shape[0], BATCH_SIZE):
             j = min(i + BATCH_SIZE, z.shape[0])
-            knn_sim_bwd[i:j] = topk_mean(z[i:j].dot(x.T), k=_config['neighborhood'], inplace=True)
+            knn_sim_bwd[i:j] = topk_mean(z[i:j].dot(x.T), k=_config['csls'], inplace=True)
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
-            similarities = 2*x[src[i:j]].dot(z.T) - knn_sim_bwd  # Equivalent to the real CSLS scores for NN
+            similarities = 2 * x[src[i:j]].dot(z.T) - knn_sim_bwd  # Equivalent to the real CSLS scores for NN
             nn = similarities.argmax(axis=1).tolist()
-            for k in range(j-i):
-                translation[src[i+k]] = nn[k]
+            for k in range(j - i):
+                translation[src[i + k]] = nn[k]
 
     # Compute accuracy
     accuracy = np.mean([1 if translation[i] in src2trg[i] else 0 for i in src])
@@ -474,13 +465,18 @@ def main():
             ['en', 'it'],
         ]
 
+    if not configs['num_runs'] == 1 and configs['supercomputer']:
+        _config['num_runs'] = 1
+        print('Manually overriding num_runs attribute to 1 because supercomputer mode is enabled.')
+
     for source_language, target_language in language_pairs:
         for i in range(configs['num_runs']):
+            seed = configs['seed'] if configs['supercomputer'] else i
             configs.update({
                 'iteration': i,
                 'source_language': source_language,
                 'target_language': target_language,
-                'seed': i
+                'seed': seed
             })
 
             try:
