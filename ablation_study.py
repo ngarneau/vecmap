@@ -34,8 +34,7 @@ def supercomputer_launcher(run_args, num_runs, cuda):
     for run_number in range(num_runs):
         run_args['seed'] = run_number
 
-        # subprocess.Popen(['sbatch', 'generic_beluga_launcher.sh', *run_args_formatter(run_args)])
-        print(['sbatch', 'generic_beluga_launcher.sh', *run_args_formatter(run_args)])
+        subprocess.Popen(['sbatch', 'generic_beluga_launcher.sh', *run_args_formatter(run_args)])
 
 
 def default_launcher(run_args, num_runs, cuda):
