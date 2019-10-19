@@ -23,7 +23,7 @@ ablation_dict = {
 
 
 def run_args_formatter(run_args):
-    return [' --{}={}'.format(name, value) for name, value in run_args.items()]
+    return ['--{}={}'.format(name, value) for name, value in run_args.items()]
 
 
 def supercomputer_launcher(run_args, num_runs, cuda):
