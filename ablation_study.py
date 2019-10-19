@@ -3,7 +3,7 @@ import subprocess
 from copy import deepcopy
 
 default_params = {
-    'stochastic_interval': 0.1,
+    'stochastic_initial': 0.1,
     'vocabulary_cutoff': 20000,
     'csls': 10,
     'direction': 'union',
@@ -13,7 +13,7 @@ default_params = {
 
 # {param_name: [ablated_vals]} dict
 ablation_dict = {
-    'stochastic_interval': [1.0],
+    'stochastic_initial': [1.0],
     'vocabulary_cutoff': [0],
     'csls': [0],
     'direction': ['forward'],
