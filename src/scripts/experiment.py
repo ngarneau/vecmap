@@ -505,6 +505,8 @@ def main():
                 accuracies.append(run.data.metrics['accuracy'])
         print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
 
+    logging.info('Entire experimentation completed succesfully')
+
 
 if __name__ == '__main__':
     main()
