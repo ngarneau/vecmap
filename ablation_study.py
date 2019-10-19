@@ -62,7 +62,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('num_runs', type=int, default=10, help='The number of runs to execute per configuration.')
+    parser.add_argument('--num_runs', type=int, default=10, help='The number of runs to execute per configuration.')
     parser.add_argument('--supercomputer',
                         action='store_true',
                         help='Wether or not the ablation study has to be parallelized on a supercomputer.')
