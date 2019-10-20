@@ -137,6 +137,9 @@ class RandomRawSeedDictionary(SeedDictionary):
                 src_indices.append(src_index)
                 trg_indices.append(trg_index)
 
+        src_indices = np.array(src_indices)
+        trg_indices = np.array(trg_indices)
+
         return src_indices, trg_indices
 
 
@@ -164,6 +167,9 @@ class RandomCutoffSeedDictionary(SeedDictionary):
             for trg_index, src_index in enumerate(random_mapping):
                 src_indices.append(src_index)
                 trg_indices.append(trg_index)
+
+        src_indices = np.array(src_indices)
+        trg_indices = np.array(trg_indices)
 
         print(src_indices)
 
