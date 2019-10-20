@@ -331,10 +331,10 @@ def run_experiment(_config):
         embeddings.write(trg_words, zw, trgfile)
     logging.info("Done")
 
-    srcfile = open(src_output, encoding=_config['encoding'], errors='surrogateescape')
-    trgfile = open(trg_output, encoding=_config['encoding'], errors='surrogateescape')
-    src_words, x = embeddings.read(srcfile, dtype=dtype)
-    trg_words, z = embeddings.read(trgfile, dtype=dtype)
+    with open(src_output, encoding=_config['encoding'], errors='surrogateescape') as srcfile:
+        src_words, x = embeddings.read(srcfile, dtype=dtype)
+    with open(trg_output, encoding=_config['encoding'], errors='surrogateescape') as trgfile:
+        trg_words, z = embeddings.read(trgfile, dtype=dtype)
 
     if _config['cuda'] is True:
         if not supports_cupy():
