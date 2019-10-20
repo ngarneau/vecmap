@@ -29,7 +29,7 @@ def run_args_formatter(run_args):
 
 
 def supercomputer_launcher(run_args, num_runs, cuda):
-    run_args['']
+    print('cuda is ', cuda)
     run_args['supercomputer'] = True
     run_args['num_runs'] = 1
     run_args['cuda'] = cuda
@@ -62,6 +62,7 @@ def main(args):
             run_params[ablated_param] = param_value
 
             if ablated_param == 'vocabulary_cutoff':
+                print("Stepped into the if")
                 run_launcher(run_params, num_runs, cuda=False)
             else:
                 run_launcher(run_params, num_runs, cuda)
