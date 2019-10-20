@@ -56,6 +56,8 @@ class UnsupervisedSeedDictionary(SeedDictionary):
             trg_indices = self.xp.concatenate((sim.argmax(axis=1), self.xp.arange(sim_size)))
 
         del xsim, zsim, sim
+
+        print(src_indices)
         return src_indices, trg_indices
 
 
@@ -162,5 +164,7 @@ class RandomCutoffSeedDictionary(SeedDictionary):
             for trg_index, src_index in enumerate(random_mapping):
                 src_indices.append(src_index)
                 trg_indices.append(trg_index)
+
+        print(src_indices)
 
         return src_indices, trg_indices
