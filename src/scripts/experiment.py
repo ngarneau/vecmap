@@ -27,6 +27,7 @@ import sys
 import time
 
 import mlflow
+from mlflow.tracking import MlflowClient
 import yaml
 
 from src.factory.seed_dictionary import SeedDictionaryBuilderFactory
@@ -447,6 +448,8 @@ def main():
 
     mlflow.set_tracking_uri(configs['mlflow_output_uri'])
     mlflow.set_experiment(configs['exp_name'])
+    client = MlflowClient(tracking_uri=configs['mlflow_output_uri'])
+    exp_id = mlflow.active_run().info.experiment_id
 
     os.makedirs('{}/mapped_embeddings'.format(configs['embedding_output_uri']), exist_ok=True)
 
@@ -492,7 +495,8 @@ def main():
         del filter['iteration']
         del filter['num_runs']
         query_string = get_query_string(filter)
-        runs = mlflow.search_runs(filter_string=query_string)
+
+        runs = client.search_runs(exp_id, filter_string=query_string)
 
         accuracies = list()
         times = list()
