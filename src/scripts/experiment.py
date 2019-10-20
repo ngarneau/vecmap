@@ -108,7 +108,7 @@ def run_experiment(_config):
     logging.info(_config)
     mlflow.log_params(_config)
     mlflow.log_metric('test', 0.9)
-    current_run = mlflow.active_run().run_id
+    current_run = mlflow.active_run().info.run_id
 
     whitening_arguments_validation(_config)
 
