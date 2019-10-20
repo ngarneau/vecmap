@@ -123,10 +123,12 @@ def run_experiment(_config):
     x = compute_engine.send_to_device(x)
     z = compute_engine.send_to_device(z)
 
-    src_output = "./output/{}/{}.{}.emb.{}.txt".format(current_run, _config['source_language'], _config['target_language'],
-                                                    _config['iteration'])  # The output source embeddings
-    trg_output = "./output/{}/{}.{}.emb.{}.txt".format(current_run, _config['target_language'], _config['source_language'],
-                                                    _config['iteration'])  # The output target embeddings
+    src_output = "./output/{}/{}.{}.emb.{}.txt".format(current_run, _config['source_language'],
+                                                       _config['target_language'],
+                                                       _config['iteration'])  # The output source embeddings
+    trg_output = "./output/{}/{}.{}.emb.{}.txt".format(current_run, _config['target_language'],
+                                                       _config['source_language'],
+                                                       _config['iteration'])  # The output target embeddings
     init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(
         _config['source_language'], _config['target_language'])  # the training dictionary file
     test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
@@ -503,7 +505,7 @@ def main():
                 minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
                 times.append(minutes)
                 accuracies.append(run.data.metrics['accuracy'])
-        print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
+        logging.info(' '.join([target_language, np.mean(accuracies), np.std(accuracies), np.mean(times)]))
 
     logging.info('Entire experimentation completed succesfully')
 
