@@ -1,7 +1,6 @@
 import argparse
 import subprocess
 import mlflow
-from mlflow.tracking import MlflowClient
 from copy import deepcopy
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/project/def-lulam50/magod/vecmap/output'
@@ -52,8 +51,7 @@ def default_launcher(run_args, num_runs, cuda):
 
 
 def main(args):
-    client = MlflowClient(tracking_uri=DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT)
-    client.create_experiment(EXPERIMENT_NAME)
+    mlflow.create_experiment(EXPERIMENT_NAME, DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT)
 
     run_launcher = supercomputer_launcher if args.supercomputer else default_launcher
     num_runs = args.num_runs

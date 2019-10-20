@@ -478,7 +478,7 @@ def main():
             })
 
             try:
-                with mlflow.start_run(experiment_id=experiment.experiment_id):
+                with client.create_run(experiment_id=experiment.experiment_id):
                     run_experiment(configs)
             except KeyboardInterrupt:
                 logging.warning("Run exited.")
