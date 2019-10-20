@@ -448,9 +448,6 @@ def main():
 
     client = MlflowClient(tracking_uri=configs['mlflow_output_uri'])
     experiment = client.get_experiment_by_name(configs['exp_name'])
-    if not experiment:
-        client.create_experiment(exp_name)
-    experiment = client.get_experiment_by_name(configs['exp_name'])
 
     os.makedirs('{}/mapped_embeddings'.format(configs['embedding_output_uri']), exist_ok=True)
 
