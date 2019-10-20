@@ -448,7 +448,8 @@ def main():
     options = argument_parser.parse_args()
     configs = vars(options)
 
-    client = MlflowClient(tracking_uri=configs['mlflow_output_uri'])
+    client = MlflowClient()
+    mlflow.set_tracking_uri(configs['mlflow_output_uri'])
     mlflow.set_experiment(exp_name)
     experiment = client.get_experiment_by_name('vecmap')
 
