@@ -2,8 +2,8 @@ import argparse
 import subprocess
 from copy import deepcopy
 
-DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '$HOME/projects/def-lulam50/magod/vecmap/output'
-DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = '$HOME/projects/def-lulam50/magod/vecmap/mlflow'
+DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '~/projects/def-lulam50/magod/vecmap/output'
+DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = '~/projects/def-lulam50/magod/vecmap/mlflow'
 
 default_params = {
     'stochastic_initial': 0.1,
