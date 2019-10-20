@@ -57,7 +57,6 @@ class UnsupervisedSeedDictionary(SeedDictionary):
 
         del xsim, zsim, sim
 
-        print(src_indices)
         return src_indices, trg_indices
 
 
@@ -170,7 +169,5 @@ class RandomCutoffSeedDictionary(SeedDictionary):
 
         src_indices = np.array(src_indices)
         trg_indices = np.array(trg_indices)
-
-        print(src_indices)
 
         return src_indices, trg_indices
