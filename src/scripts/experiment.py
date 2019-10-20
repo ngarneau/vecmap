@@ -505,7 +505,11 @@ def main():
                 minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
                 times.append(minutes)
                 accuracies.append(run.data.metrics['accuracy'])
-        logging.info(' '.join([target_language, np.mean(accuracies), np.std(accuracies), np.mean(times)]))
+        logging.info(' '.join(
+            [str(target_language),
+             str(np.mean(accuracies)),
+             str(np.std(accuracies)),
+             str(np.mean(times))]))
 
     logging.info('Entire experimentation completed succesfully')
 
