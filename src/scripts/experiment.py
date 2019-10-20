@@ -108,6 +108,7 @@ def run_experiment(_config):
     logging.info(_config)
     mlflow.log_params(_config)
     mlflow.log_metric('test', 0.9)
+    current_run = mlflow.active_run()
 
     whitening_arguments_validation(_config)
 
@@ -122,10 +123,9 @@ def run_experiment(_config):
     x = compute_engine.send_to_device(x)
     z = compute_engine.send_to_device(z)
 
-    # Read input embeddings
-    src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'], _config['target_language'],
+    src_output = "./output/{}/{}.{}.emb.{}.txt".format(current_run, _config['source_language'], _config['target_language'],
                                                     _config['iteration'])  # The output source embeddings
-    trg_output = "./output/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'],
+    trg_output = "./output/{}/{}.{}.emb.{}.txt".format(current_run, _config['target_language'], _config['source_language'],
                                                     _config['iteration'])  # The output target embeddings
     init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(
         _config['source_language'], _config['target_language'])  # the training dictionary file
