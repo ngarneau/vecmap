@@ -35,6 +35,7 @@ def supercomputer_launcher(run_args, num_runs, cuda):
     run_args['cuda'] = cuda
     run_args['embedding_output_uri'] = DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT
     run_args['mlflow_output_uri'] = DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT
+    run_args['exp_name'] = 'ablation_study'
 
     for run_number in range(num_runs):
         run_args['seed'] = run_number

@@ -439,8 +439,6 @@ def get_query_string(configs):
 def main():
     logging.getLogger().setLevel(logging.INFO)
 
-    exp_name = os.getenv('EXP_NAME', default='vecmap')
-
     base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
     argument_parser = argparse.ArgumentParser()
     for config, value in base_configs.items():
@@ -448,10 +446,11 @@ def main():
     options = argument_parser.parse_args()
     configs = vars(options)
 
-    client = MlflowClient()
-    mlflow.set_tracking_uri(configs['mlflow_output_uri'])
-    mlflow.set_experiment(exp_name)
-    experiment = client.get_experiment_by_name('vecmap')
+    client = MlflowClient(tracking_uri=configs['mlflow_output_uri'])
+    experiment = client.get_experiment_by_name(configs['exp_name'])
+    if not experiment:
+        client.create_experiment(exp_name)
+    experiment = client.get_experiment_by_name(configs['exp_name'])
 
     os.makedirs('{}/mapped_embeddings'.format(configs['embedding_output_uri']), exist_ok=True)
 
