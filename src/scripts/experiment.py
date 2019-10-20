@@ -27,7 +27,6 @@ import sys
 import time
 
 import mlflow
-from mlflow.tracking import MlflowClient
 import yaml
 
 from src.factory.seed_dictionary import SeedDictionaryBuilderFactory
@@ -446,8 +445,7 @@ def main():
     options = argument_parser.parse_args()
     configs = vars(options)
 
-    client = MlflowClient(tracking_uri=configs['mlflow_output_uri'])
-    experiment = client.get_experiment_by_name(configs['exp_name'])
+    mlflow.set_tracking_uri(configs['mlflow_output_uri'])
 
     os.makedirs('{}/mapped_embeddings'.format(configs['embedding_output_uri']), exist_ok=True)
 
@@ -478,7 +476,7 @@ def main():
             })
 
             try:
-                with client.create_run(experiment_id=experiment.experiment_id):
+                with mlflow.start_run():
                     run_experiment(configs)
             except KeyboardInterrupt:
                 logging.warning("Run exited.")
