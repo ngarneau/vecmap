@@ -503,6 +503,7 @@ def main():
         times = list()
         for run in runs:
             logging.info(run.data.metrics)
+            logging.info(run.info)
             if 'accuracy' in run.data.metrics:
                 minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
                 times.append(minutes)
