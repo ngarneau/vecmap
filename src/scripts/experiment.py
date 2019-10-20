@@ -129,6 +129,8 @@ def run_experiment(_config):
     trg_output = "./output/{}/{}.{}.emb.{}.txt".format(current_run, _config['target_language'],
                                                        _config['source_language'],
                                                        _config['iteration'])  # The output target embeddings
+    os.makedirs(os.path.dirname(src_output), exist_ok=True)
+    os.makedirs(os.path.dirname(trg_output), exist_ok=True)
     init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(
         _config['source_language'], _config['target_language'])  # the training dictionary file
     test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
@@ -320,15 +322,13 @@ def run_experiment(_config):
 
     # Write mapped embeddings
     logging.info("Writing mapped embeddings to {}".format(src_output))
-    srcfile = open(src_output, mode='w', encoding=_config['encoding'], errors='surrogateescape')
-    embeddings.write(src_words, xw, srcfile)
-    srcfile.close()
+    with open(src_output, mode='w', encoding=_config['encoding'], errors='surrogateescape') as srcfile:
+        embeddings.write(src_words, xw, srcfile)
     logging.info("Done")
 
     logging.info("Writing mapped embeddings to {}".format(trg_output))
-    trgfile = open(trg_output, mode='w', encoding=_config['encoding'], errors='surrogateescape')
-    embeddings.write(trg_words, zw, trgfile)
-    trgfile.close()
+    with open(trg_output, mode='w', encoding=_config['encoding'], errors='surrogateescape') as trgfile:
+        embeddings.write(trg_words, zw, trgfile)
     logging.info("Done")
 
     srcfile = open(src_output, encoding=_config['encoding'], errors='surrogateescape')
