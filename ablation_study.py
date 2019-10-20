@@ -12,14 +12,14 @@ default_params = {
 }
 
 ablation_dict = {
-    'stochastic_initial': ([1.0], ),
+    'stochastic_initial': ([1.0], None),
     'vocabulary_cutoff': ([0], {
         'cuda': False
     }),
-    'csls': ([0], ),
-    'direction': (['forward'], ),
-    'reweight': ([1.0], ),
-    'seed_dictionary_method': (['random_raw', 'random_cutoff'], )
+    'csls': ([0], None),
+    'direction': (['forward'], None),
+    'reweight': ([1.0], None),
+    'seed_dictionary_method': (['random_raw', 'random_cutoff'], None)
 }
 
 
@@ -56,7 +56,8 @@ def main(args):
         for param_value in param_values:
             run_params = deepcopy(default_params)
             run_params[ablated_param] = param_value
-            run_params.update(other_params_to_change)
+            if other_params_to_change:
+                run_params.update(other_params_to_change)
 
             run_launcher(run_params, num_runs, cuda)
 
