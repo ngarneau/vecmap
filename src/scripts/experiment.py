@@ -123,12 +123,12 @@ def run_experiment(_config):
     x = compute_engine.send_to_device(x)
     z = compute_engine.send_to_device(z)
 
-    src_output = "./output/{}/{}.{}.emb.{}.txt".format(current_run, _config['source_language'],
-                                                       _config['target_language'],
-                                                       _config['iteration'])  # The output source embeddings
-    trg_output = "./output/{}/{}.{}.emb.{}.txt".format(current_run, _config['target_language'],
-                                                       _config['source_language'],
-                                                       _config['iteration'])  # The output target embeddings
+    src_output = "{}/{}/{}.{}.emb.{}.txt".format(_config['embedding_output_uri'], current_run,
+                                                 _config['source_language'], _config['target_language'],
+                                                 _config['iteration'])  # The output source embeddings
+    trg_output = "{}/{}/{}.{}.emb.{}.txt".format(_config['embedding_output_uri'], current_run,
+                                                 _config['target_language'], _config['source_language'],
+                                                 _config['iteration'])  # The output target embeddings
     os.makedirs(os.path.dirname(src_output), exist_ok=True)
     os.makedirs(os.path.dirname(trg_output), exist_ok=True)
     init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(
@@ -448,11 +448,11 @@ def main():
     options = argument_parser.parse_args()
     configs = vars(options)
 
-    client = MlflowClient()
+    client = MlflowClient(tracking_uri=configs['mlflow_output_uri'])
     mlflow.set_experiment(exp_name)
     experiment = client.get_experiment_by_name('vecmap')
 
-    os.makedirs('./output/mapped_embeddings', exist_ok=True)
+    os.makedirs('{}/mapped_embeddings'.format(configs['embedding_output_uri']), exist_ok=True)
 
     if configs['test']:
         language_pairs = [

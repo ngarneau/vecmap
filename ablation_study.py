@@ -2,6 +2,9 @@ import argparse
 import subprocess
 from copy import deepcopy
 
+DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '$HOME/projects/def-lulam50/magod/vecmap/output'
+DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = '$HOME/projects/def-lulam50/magod/vecmap/mlflow'
+
 default_params = {
     'stochastic_initial': 0.1,
     'vocabulary_cutoff': 20000,
@@ -26,9 +29,12 @@ def run_args_formatter(run_args):
 
 
 def supercomputer_launcher(run_args, num_runs, cuda):
+    run_args['']
     run_args['supercomputer'] = True
     run_args['num_runs'] = 1
     run_args['cuda'] = cuda
+    run_args['embedding_output_uri'] = DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT
+    run_args['mlflow_output_uri'] = DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT
 
     for run_number in range(num_runs):
         run_args['seed'] = run_number
@@ -56,7 +62,7 @@ def main(args):
             run_params[ablated_param] = param_value
 
             if ablated_param == 'vocabulary_cutoff':
-                run_launcher(run_params, num_runs, False)
+                run_launcher(run_params, num_runs, cuda=False)
             else:
                 run_launcher(run_params, num_runs, cuda)
 
