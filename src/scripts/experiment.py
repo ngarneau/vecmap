@@ -446,6 +446,7 @@ def main():
     configs = vars(options)
 
     mlflow.set_tracking_uri(configs['mlflow_output_uri'])
+    mlflow.set_experiment(configs['exp_name'])
 
     os.makedirs('{}/mapped_embeddings'.format(configs['embedding_output_uri']), exist_ok=True)
 
@@ -491,7 +492,7 @@ def main():
         del filter['iteration']
         del filter['num_runs']
         query_string = get_query_string(filter)
-        runs = client.search_runs(experiment_ids=[experiment.experiment_id], filter_string=query_string)
+        runs = mlflow.search_runs(filter_string=query_string)
 
         accuracies = list()
         times = list()
