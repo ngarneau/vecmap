@@ -51,9 +51,13 @@ def default_launcher(run_args, num_runs, cuda):
 
 
 def main(args):
-    mlflow.create_experiment(EXPERIMENT_NAME, DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT)
+    if args.supercomputer:
+        run_launcher = supercomputer_launcher
+        mlflow.set_tracking_uri(DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT)
+    else:
+        raise ValueError('Only supercomputer mode is currently supported.')
 
-    run_launcher = supercomputer_launcher if args.supercomputer else default_launcher
+    mlflow.set_experiment(EXPERIMENT_NAME)
     num_runs = args.num_runs
     cuda = args.cuda
 
