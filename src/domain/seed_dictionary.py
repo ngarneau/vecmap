@@ -70,7 +70,7 @@ class UnsupervisedSeedDictionary(SeedDictionary):
 
 
 class NumeralsSeedDictionary(SeedDictionary):
-    def __init__(self, xp, src_words, trg_words, x, z, configurations):
+    def __init__(self, src_words, trg_words):
         super().__init__(src_words, trg_words)
         self.numeral_regex = re.compile('^[0-9]+$')
 
@@ -91,7 +91,7 @@ class NumeralsSeedDictionary(SeedDictionary):
 
 
 class IdenticalSeedDictionary(SeedDictionary):
-    def __init__(self, xp, src_words, trg_words, x, z, configurations):
+    def __init__(self, src_words, trg_words):
         super().__init__(src_words, trg_words)
 
     def get_indices(self):
@@ -108,7 +108,7 @@ class IdenticalSeedDictionary(SeedDictionary):
 
 
 class DefaultSeedDictionary(SeedDictionary):
-    def __init__(self, xp, src_words, trg_words, x, z, configurations):
+    def __init__(self, src_words, trg_words, configurations):
         super().__init__(src_words, trg_words)
         self.configurations = configurations
         self.dictionary_filename = './data/dictionaries/{}-{}.train.txt'.format(configurations['source_language'],
