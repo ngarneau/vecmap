@@ -111,12 +111,13 @@ class DefaultSeedDictionary(SeedDictionary):
     def __init__(self, src_words, trg_words, configurations):
         super().__init__(src_words, trg_words)
         self.configurations = configurations
-        self.dictionary_filename = './data/dictionaries/{}-{}.train.txt'.format(configurations['source_language'],
-                                                                                configurations[
-                                                                                    'target_language'])  # the training dictionary file
+        self.training_dictionary_filename = './data/dictionaries/{}-{}.train.txt'.format(
+            configurations['source_language'],
+            configurations['target_language'])
 
     def get_indices(self):
-        dict_data = open(self.dictionary_filename, encoding=self.configurations['encoding'], errors='surrogateescape')
+        dict_data = open(self.training_dictionary_filename, encoding=self.configurations['encoding'],
+                         errors='surrogateescape')
         return self._dictionary_induction(dict_data)
 
     def _dictionary_induction(self, dict_data):

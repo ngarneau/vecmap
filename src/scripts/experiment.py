@@ -98,8 +98,6 @@ def run_experiment(_config):
                                                     _config['iteration'])  # The output source embeddings
     trg_output = "./output/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'],
                                                     _config['iteration'])  # The output target embeddings
-    init_dictionary = './data/dictionaries/{}-{}.train.txt'.format(
-        _config['source_language'], _config['target_language'])  # the training dictionary file
     test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
         _config['source_language'], _config['target_language'])  # the test dictionary file
 
