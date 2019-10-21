@@ -3,8 +3,8 @@ import subprocess
 import mlflow
 from copy import deepcopy
 
-DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/project/def-lulam50/magod/vecmap/output'
-DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/project/def-lulam50/magod/vecmap/mlflow'
+DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
+DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/mlflow'
 EXPERIMENT_NAME = 'ablation_study'
 
 default_params = {
