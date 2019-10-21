@@ -156,8 +156,6 @@ def run_experiment(_config):
     trg_size = z.shape[0] if _config['vocabulary_cutoff'] <= 0 else min(z.shape[0], _config['vocabulary_cutoff'])
     simfwd = xp.empty((_config['batch_size'], trg_size), dtype=dtype)
     simbwd = xp.empty((_config['batch_size'], src_size), dtype=dtype)
-    if _config['validation']:
-        simval = xp.empty((len(validation.keys()), z.shape[0]), dtype=dtype)
 
     best_sim_forward = xp.full(src_size, -100, dtype=dtype)
     src_indices_forward = xp.arange(src_size)
@@ -291,28 +289,11 @@ def run_experiment(_config):
                 last_improvement = it
                 best_objective = objective
 
-            # Accuracy and similarity evaluation in validation
-            if _config['validation']:
-                src = list(validation.keys())
-                xw[src].dot(zw.T, out=simval)
-                nn = asnumpy(simval.argmax(axis=1))
-                accuracy = np.mean([1 if nn[i] in validation[src[i]] else 0 for i in range(len(src))])
-                similarity = np.mean(
-                    [max([simval[i, j].tolist() for j in validation[src[i]]]) for i in range(len(src))])
-
             # Logging
             duration = time.time() - t
             logging.info('ITERATION {0} ({1:.2f}s)'.format(it, duration))
             logging.info('\t- Objective:        {0:9.4f}%'.format(100 * objective))
             logging.info('\t- Drop probability: {0:9.4f}%'.format(100 - 100 * keep_prob))
-            if _config['validation']:
-                logging.info('\t- Val. similarity:  {0:9.4f}%'.format(100 * similarity))
-                logging.info('\t- Val. accuracy:    {0:9.4f}%'.format(100 * accuracy))
-                logging.info('\t- Val. coverage:    {0:9.4f}%'.format(100 * validation_coverage))
-                val = '{0:.6f}\t{1:.6f}\t{2:.6f}'.format(
-                    100 * similarity, 100 * accuracy, 100 *
-                    validation_coverage) if _config['validation'] is not None else ''
-                logging.info('{0}\t{1:.6f}\t{2}\t{3:.6f}'.format(it, 100 * objective, val, duration), file=log)
 
         t = time.time()
         it += 1
