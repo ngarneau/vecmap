@@ -13,26 +13,23 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from typing import Dict
-import os
-import logging
-import embeddings
-from cupy_utils import *
-
 import argparse
 import collections
-import numpy as np
-import re
+import logging
+import os
 import sys
 import time
+from typing import Dict
 
 import mlflow
-from mlflow.tracking import MlflowClient
+import numpy as np
 import yaml
+from mlflow.tracking import MlflowClient
 
+import embeddings
+from cupy_utils import *
 from src.factory.seed_dictionary import SeedDictionaryBuilderFactory
-from src.utils import topk_mean
-
+from src.utils import topk_mean, set_compute_engine
 
 BATCH_SIZE = 500
 
