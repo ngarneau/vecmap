@@ -29,7 +29,7 @@ from mlflow.tracking import MlflowClient
 import embeddings
 from cupy_utils import *
 from src.factory.seed_dictionary import SeedDictionaryBuilderFactory
-from src.utils import topk_mean, set_compute_engine
+from src.utils import topk_mean, set_compute_engine, solve_dtype
 
 BATCH_SIZE = 500
 
@@ -57,15 +57,6 @@ def whitening_arguments_validation(_config):
         sys.exit(-1)
 
 
-def get_dtype(_config):
-    if _config['precision'] == 'fp16':
-        return 'float16'
-    elif _config['precision'] == 'fp32':
-        return 'float32'
-    elif _config['precision'] == 'fp64':
-        return 'float64'
-
-
 def load_embeddings(embeddings_path, language, encoding, dtype):
     input_filename = embeddings_path.format(language)
     logging.info("Loading file {}".format(input_filename))
@@ -82,7 +73,7 @@ def run_experiment(_config):
 
     whitening_arguments_validation(_config)
 
-    dtype = get_dtype(_config)
+    dtype = solve_dtype(_config)
 
     src_words, x = load_embeddings(_config['embeddings_path'], _config['source_language'], _config['encoding'], dtype)
     trg_words, z = load_embeddings(_config['embeddings_path'], _config['target_language'], _config['encoding'], dtype)

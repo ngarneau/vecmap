@@ -37,3 +37,15 @@ def set_compute_engine(use_cuda, seed):
         return CuPyEngine(get_cupy(), seed)
     else:
         return NumPyEngine(np, seed)
+
+
+def solve_dtype(_config):
+    precision = _config['precision']
+    if precision == 'fp16':
+        return 'float16'
+    elif precision == 'fp32':
+        return 'float32'
+    elif precision == 'fp64':
+        return 'float64'
+    else:
+        raise ("Method {} not implemented.".format(precision))
