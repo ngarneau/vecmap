@@ -429,7 +429,7 @@ def run_experiment(_config):
     accuracy = np.mean([1 if translation[i] in src2trg[i] else 0 for i in src])
     mlflow.log_metric('coverage', coverage)
     mlflow.log_metric('accuracy', accuracy)
-    print('Coverage:{0:7.2%}  Accuracy:{1:7.2%}'.format(coverage, accuracy))
+    logging.info('Coverage:{0:7.2%}  Accuracy:{1:7.2%}'.format(coverage, accuracy))
 
 
 def get_query_string(configs):
