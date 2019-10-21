@@ -48,4 +48,4 @@ def solve_dtype(_config):
     elif precision == 'fp64':
         return 'float64'
     else:
-        raise ("Method {} not implemented.".format(precision))
+        raise ("Precision {} is not implemented.".format(precision))
