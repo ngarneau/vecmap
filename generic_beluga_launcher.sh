@@ -8,4 +8,12 @@
 #SBATCH --mail-type=FAIL
 
 source $HOME/venv/bin/activate
+
+date
+SECONDS=0
+
 python -m src.scripts.experiment $@
+
+diff=$SECONDS
+echo "$(($diff / 60)) minutes and $(($diff % 60)) seconds elapsed."
+date
