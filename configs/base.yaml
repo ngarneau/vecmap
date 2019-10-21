@@ -58,4 +58,3 @@ test: False
 supercomputer: False
 mlflow_output_uri: 'file:./mlflow/'
 embedding_output_uri: './output'
-exp_name: 'vecmap'
