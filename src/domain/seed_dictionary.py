@@ -1,5 +1,4 @@
 import logging
-from typing import Tuple, List
 import re
 from abc import ABC, abstractmethod
 from typing import Tuple, List
@@ -19,20 +18,23 @@ class SeedDictionary(ABC):
     def get_indices(self) -> Tuple[List[int], List[int]]:
         pass
 
+
 class UnsupervisedSeedDictionary(SeedDictionary):
     def __init__(self, xp, src_words, trg_words, x, z, configurations):
         super().__init__(src_words, trg_words)
         self.xp = xp
-        self.configurations = configurations
         self.x = x
         self.z = z
+        self.configurations = configurations
 
     def get_indices(self):
-        sim_size = min(self.x.shape[0], self.z.shape[0]) if self.configurations['unsupervised_vocab'] <= 0 else min(self.x.shape[0], self.z.shape[0], self.configurations['unsupervised_vocab'])
+        sim_size = min(self.x.shape[0], self.z.shape[0]) if self.configurations['unsupervised_vocab'] <= 0 else min(
+            self.x.shape[0], self.z.shape[0], self.configurations['unsupervised_vocab'])
+
         u, s, vt = self.xp.linalg.svd(self.x[:sim_size], full_matrices=False)
-        xsim = (u*s).dot(u.T)  # This is equivalent to Mx in the original paper
+        xsim = (u * s).dot(u.T)  # This is equivalent to Mx in the original paper
         u, s, vt = self.xp.linalg.svd(self.z[:sim_size], full_matrices=False)
-        zsim = (u*s).dot(u.T)  # This is equivalent to Mz in the original paper
+        zsim = (u * s).dot(u.T)  # This is equivalent to Mz in the original paper
         del u, s, vt
         xsim.sort(axis=1)
         zsim.sort(axis=1)
@@ -43,7 +45,7 @@ class UnsupervisedSeedDictionary(SeedDictionary):
         if self.configurations['csls'] > 0:
             knn_sim_fwd = topk_mean(sim, k=self.configurations['csls'])
             knn_sim_bwd = topk_mean(sim.T, k=self.configurations['csls'])
-            sim -= knn_sim_fwd[:,self.xp.newaxis]/2 + knn_sim_bwd/2
+            sim -= knn_sim_fwd[:, self.xp.newaxis] / 2 + knn_sim_bwd / 2
 
         if self.configurations['direction'] == 'forward':
             src_indices = self.xp.arange(sim_size)
@@ -94,7 +96,9 @@ class DefaultSeedDictionary(SeedDictionary):
     def __init__(self, xp, src_words, trg_words, x, z, configurations):
         super().__init__(src_words, trg_words)
         self.configurations = configurations
-        self.dictionary_filename = './data/dictionaries/{}-{}.train.txt'.format(configurations['source_language'], configurations['target_language'])  # the training dictionary file
+        self.dictionary_filename = './data/dictionaries/{}-{}.train.txt'.format(configurations['source_language'],
+                                                                                configurations[
+                                                                                    'target_language'])  # the training dictionary file
 
     def get_indices(self):
         f = open(self.dictionary_filename, encoding=self.configurations['encoding'], errors='surrogateescape')
