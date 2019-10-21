@@ -34,19 +34,6 @@ from src.utils import topk_mean, set_compute_engine
 BATCH_SIZE = 500
 
 
-class ComputeEngine:
-    def __init__(self, name, engine, seed):
-        self.name = name
-        self.engine = engine
-        self.engine.random.seed(seed)
-
-    def send_to_device(self, data):
-        if self.name == 'cupy':
-            return self.engine.asarray(data)
-        else:
-            return data
-
-
 def dropout(m, p):
     if p <= 0.0:
         return m
@@ -87,21 +74,6 @@ def load_embeddings(embeddings_path, language, encoding, dtype):
     logging.info("Loaded {} words of dimension {}".format(x.shape[0], x.shape[1]))
     return words, x
 
-
-def get_compute_engine(use_cuda, seed):
-    """
-    This method will try to get cupy if the CUDA flag is activated.
-    It will break if there are some problems with cupy
-    """
-    if use_cuda:
-        if not supports_cupy():
-            logging.error('Install CuPy for CUDA support')
-            sys.exit(-1)
-        return ComputeEngine('cupy', get_cupy(), seed)
-    else:
-        return ComputeEngine('numpy', np, seed)
-
-
 def run_experiment(_config):
     logging.info(_config)
     mlflow.log_params(_config)
@@ -114,7 +86,7 @@ def run_experiment(_config):
     src_words, x = load_embeddings(_config['embeddings_path'], _config['source_language'], _config['encoding'], dtype)
     trg_words, z = load_embeddings(_config['embeddings_path'], _config['target_language'], _config['encoding'], dtype)
 
-    compute_engine = get_compute_engine(_config['cuda'], _config['seed'])
+    compute_engine = set_compute_engine(_config['cuda'], _config['seed'])
     xp = compute_engine.engine
 
     x = compute_engine.send_to_device(x)
