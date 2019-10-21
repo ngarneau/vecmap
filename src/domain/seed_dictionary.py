@@ -47,17 +47,25 @@ class UnsupervisedSeedDictionary(SeedDictionary):
             knn_sim_bwd = topk_mean(sim.T, k=self.configurations['csls'])
             sim -= knn_sim_fwd[:, self.xp.newaxis] / 2 + knn_sim_bwd / 2
 
-        if self.configurations['direction'] == 'forward':
-            src_indices = self.xp.arange(sim_size)
-            trg_indices = sim.argmax(axis=1)
-        elif self.configurations['direction'] == 'backward':
-            src_indices = sim.argmax(axis=0)
-            trg_indices = self.xp.arange(sim_size)
-        elif self.configurations['direction'] == 'union':
-            src_indices = self.xp.concatenate((self.xp.arange(sim_size), sim.argmax(axis=0)))
-            trg_indices = self.xp.concatenate((sim.argmax(axis=1), self.xp.arange(sim_size)))
+        src_indices, trg_indices = self._dictionary_induction(sim, sim_size)
 
         del xsim, zsim, sim
+        return src_indices, trg_indices
+
+    def _dictionary_induction(self, sim, sim_size):
+        induction_direction = self.configurations['direction']
+        if induction_direction == 'forward':
+            src_indices = self.xp.arange(sim_size)
+            trg_indices = sim.argmax(axis=1)
+        elif induction_direction == 'backward':
+            src_indices = sim.argmax(axis=0)
+            trg_indices = self.xp.arange(sim_size)
+        elif induction_direction == 'union':
+            src_indices = self.xp.concatenate((self.xp.arange(sim_size), sim.argmax(axis=0)))
+            trg_indices = self.xp.concatenate((sim.argmax(axis=1), self.xp.arange(sim_size)))
+        else:
+            raise ("Method {} not implemented.".format(induction_direction))
+
         return src_indices, trg_indices
 
 
@@ -70,6 +78,10 @@ class NumeralsSeedDictionary(SeedDictionary):
         src_numerals = {word for word in self.src_words if self.numeral_regex.match(word) is not None}
         trg_numerals = {word for word in self.trg_words if self.numeral_regex.match(word) is not None}
         numerals = src_numerals.intersection(trg_numerals)
+
+        return self._dictionary_induction(numerals)
+
+    def _dictionary_induction(self, numerals):
         src_indices = list()
         trg_indices = list()
         for word in numerals:
@@ -84,6 +96,9 @@ class IdenticalSeedDictionary(SeedDictionary):
 
     def get_indices(self):
         identical = set(self.src_words).intersection(set(self.trg_words))
+        return self._dictionary_induction(identical)
+
+    def _dictionary_induction(self, identical):
         src_indices = list()
         trg_indices = list()
         for word in identical:
@@ -101,10 +116,13 @@ class DefaultSeedDictionary(SeedDictionary):
                                                                                     'target_language'])  # the training dictionary file
 
     def get_indices(self):
-        f = open(self.dictionary_filename, encoding=self.configurations['encoding'], errors='surrogateescape')
+        dict_data = open(self.dictionary_filename, encoding=self.configurations['encoding'], errors='surrogateescape')
+        return self._dictionary_induction(dict_data)
+
+    def _dictionary_induction(self, dict_data):
         src_indices = list()
         trg_indices = list()
-        for line in f:
+        for line in dict_data:
             src, trg = line.split()
             try:
                 src_ind = self.src_word2ind[src]
