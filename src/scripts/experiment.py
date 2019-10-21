@@ -74,6 +74,7 @@ def load_embeddings(embeddings_path, language, encoding, dtype):
     logging.info("Loaded {} words of dimension {}".format(x.shape[0], x.shape[1]))
     return words, x
 
+
 def run_experiment(_config):
     logging.info(_config)
     mlflow.log_params(_config)
@@ -190,8 +191,8 @@ def run_experiment(_config):
             zw = zw.dot(wz2)
 
             # STEP 3: Re-weighting
-            xw *= s**_config['src_reweight']
-            zw *= s**_config['trg_reweight']
+            xw *= s ** _config['src_reweight']
+            zw *= s ** _config['trg_reweight']
 
             # STEP 4: De-whitening
             if _config['src_dewhiten'] == 'src':
@@ -451,7 +452,7 @@ def main():
         times = list()
         for run in runs:
             if 'accuracy' in run.data.metrics:
-                minutes = ((run.info.end_time - run.info.start_time)//60//60)%60
+                minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
                 times.append(minutes)
                 accuracies.append(run.data.metrics['accuracy'])
         print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
@@ -459,4 +460,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
