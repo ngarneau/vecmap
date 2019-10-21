@@ -1,18 +1,21 @@
 import logging
 from typing import Tuple, List
 import re
+from abc import ABC, abstractmethod
+from typing import Tuple, List
 
 import embeddings
 from src.utils import topk_mean
 
 
-class SeedDictionary:
+class SeedDictionary(ABC):
     def __init__(self, src_words, trg_words):
         self.src_words = src_words
         self.trg_words = trg_words
         self.src_word2ind = {word: ind for ind, word in enumerate(self.src_words)}
         self.trg_word2ind = {word: ind for ind, word in enumerate(self.trg_words)}
 
+    @abstractmethod
     def get_indices(self) -> Tuple[List[int], List[int]]:
         pass
 
