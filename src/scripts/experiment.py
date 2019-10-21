@@ -103,11 +103,6 @@ def run_experiment(_config):
     test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
         _config['source_language'], _config['target_language'])  # the test dictionary file
 
-    # Build word to index map
-    logging.info("Building word to index map")
-    src_word2ind = {word: i for i, word in enumerate(src_words)}
-    trg_word2ind = {word: i for i, word in enumerate(trg_words)}
-
     # STEP 0: Normalization
     logging.info("Normalize embeddings")
     embeddings.normalize(x, _config['normalize'])
