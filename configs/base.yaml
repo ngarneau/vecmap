@@ -3,7 +3,7 @@ iteration: 0
 source_language: "en"
 target_language: "de"
 encoding: "utf-8"  # The character encoding for input/output
-precision: "fp32"  # The floating-point precision
+precision: "float32"  # The floating-point precision, either float16, float32 or float64
 cuda: False
 supervised: False  # recommended if you have a large training dictionary
 semi_supervised: False  # recommended if you have a small seed dictionary

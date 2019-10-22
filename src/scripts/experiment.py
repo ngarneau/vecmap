@@ -30,7 +30,7 @@ from cupy_utils import *
 from embeddings import load_embeddings, embeddings_normalization
 from src.domain.matrix_operations import whitening_transformation
 from src.factory.seed_dictionary import SeedDictionaryFactory
-from src.utils import topk_mean, set_compute_engine, solve_dtype, output_embeddings_filename
+from src.utils import topk_mean, set_compute_engine, output_embeddings_filename
 from src.validations import whitening_arguments_validation
 
 BATCH_SIZE = 500
@@ -55,14 +55,13 @@ def run_experiment(_config):
     test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
         _config['source_language'], _config['target_language'])
 
-    dtype = solve_dtype(_config)
+    compute_engine = set_compute_engine(_config['cuda'], _config['seed'])
+    dtype = _config['precision']
 
     src_vocab, src_embedding_matrix = load_embeddings(_config['embeddings_path'], _config['source_language'],
                                                       _config['encoding'], dtype)
     trg_vocab, trg_embedding_matrix = load_embeddings(_config['embeddings_path'], _config['target_language'],
                                                       _config['encoding'], dtype)
-
-    compute_engine = set_compute_engine(_config['cuda'], _config['seed'])
 
     src_embedding_matrix = compute_engine.send_to_device(src_embedding_matrix)
     trg_embedding_matrix = compute_engine.send_to_device(trg_embedding_matrix)

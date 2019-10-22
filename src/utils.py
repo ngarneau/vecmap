@@ -38,19 +38,6 @@ def set_compute_engine(use_cuda, seed):
     else:
         return NumPyEngine(np, seed)
 
-
-def solve_dtype(_config):
-    precision = _config['precision']
-    if precision == 'fp16':
-        return 'float16'
-    elif precision == 'fp32':
-        return 'float32'
-    elif precision == 'fp64':
-        return 'float64'
-    else:
-        raise ("Precision {} is not implemented.".format(precision))
-
-
 def output_embeddings_filename(_config):
     src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'], _config['target_language'],
                                                     _config['iteration'])  # The output source embeddings
