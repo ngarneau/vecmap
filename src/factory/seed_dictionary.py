@@ -1,7 +1,7 @@
 from src.domain.seed_dictionary import *
 
 
-class SeedDictionaryBuilderFactory:
+class SeedDictionaryFactory:
     UNSUPERVISED = 'unsupervised'
     NUMERALS = 'numerals'
     IDENTICAL = 'identical'
@@ -9,7 +9,7 @@ class SeedDictionaryBuilderFactory:
 
     @classmethod
     # todo revisit the naming.
-    def get_seed_dictionary_builder(cls, method, xp, src_words, trg_words, x, z, configurations):
+    def create_seed_dictionary_builder(cls, method, xp, src_words, trg_words, x, z, configurations):
         if method == cls.UNSUPERVISED:
             return UnsupervisedSeedDictionary(xp, src_words, trg_words, x, z, configurations)
         elif method == cls.NUMERALS:
