@@ -93,11 +93,11 @@ def run_experiment(_config):
     last_improvement = 0
     keep_prob = _config['stochastic_initial']
     t = time.time()
-    end = not _config['self_learning']
+    self_learning_training = _config['self_learning']
     src_indices, trg_indices = get_seed_dictionary_indices(_config['seed_dictionary_method'], compute_engine.engine,
                                                            src_vocab, trg_vocab, src_embedding_matrix,
                                                            trg_embedding_matrix, _config)
-    while True:
+    while self_learning_training:
 
         logging.info("Iteration number {}".format(it))
         # Increase the keep probability if we have not improve in _config['stochastic_interval iterations
@@ -105,12 +105,12 @@ def run_experiment(_config):
         if it - last_improvement > _config['stochastic_interval']:
             if keep_prob >= 1.0:
                 logging.info("Training will end...")
-                end = True
+                self_learning_training = True
             keep_prob = min(1.0, _config['stochastic_multiplier'] * keep_prob)
             last_improvement = it
 
         # Update the embedding mapping
-        if _config['orthogonal'] or not end:  # orthogonal mapping
+        if _config['orthogonal'] or self_learning_training:  # orthogonal mapping
             u, s, vt = compute_engine.engine.linalg.svd(
                 trg_embedding_matrix[trg_indices].T.dot(src_embedding_matrix[src_indices]))
             w = vt.T.dot(u.T)
@@ -161,65 +161,62 @@ def run_experiment(_config):
                 zw = zw[:, :_config['dim_reduction']]
 
         # Self-learning
-        if end:
-            break
-        else:
-            # Update the training dictionary
-            if _config['direction'] in ('forward', 'union'):
-                if _config['csls'] > 0:
-                    for i in range(0, trg_size, simbwd.shape[0]):
-                        j = min(i + simbwd.shape[0], trg_size)
-                        zw[i:j].dot(xw[:src_size].T, out=simbwd[:j - i])
-                        knn_sim_bwd[i:j] = topk_mean(simbwd[:j - i], k=_config['csls'], inplace=True)
-                for i in range(0, src_size, simfwd.shape[0]):
-                    j = min(i + simfwd.shape[0], src_size)
-                    xw[i:j].dot(zw[:trg_size].T, out=simfwd[:j - i])
-                    simfwd[:j - i].max(axis=1, out=best_sim_forward[i:j])
-                    simfwd[:j - i] -= knn_sim_bwd / 2  # Equivalent to the real CSLS scores for NN
-                    dropout(simfwd[:j - i], 1 - keep_prob, compute_engine=compute_engine).argmax(axis=1,
-                                                                                                 out=trg_indices_forward[
-                                                                                                     i:j])
-            if _config['direction'] in ('backward', 'union'):
-                if _config['csls'] > 0:
-                    for i in range(0, src_size, simfwd.shape[0]):
-                        j = min(i + simfwd.shape[0], src_size)
-                        xw[i:j].dot(zw[:trg_size].T, out=simfwd[:j - i])
-                        knn_sim_fwd[i:j] = topk_mean(simfwd[:j - i], k=_config['csls'], inplace=True)
+        # Update the training dictionary
+        if _config['direction'] in ('forward', 'union'):
+            if _config['csls'] > 0:
                 for i in range(0, trg_size, simbwd.shape[0]):
                     j = min(i + simbwd.shape[0], trg_size)
                     zw[i:j].dot(xw[:src_size].T, out=simbwd[:j - i])
-                    simbwd[:j - i].max(axis=1, out=best_sim_backward[i:j])
-                    simbwd[:j - i] -= knn_sim_fwd / 2  # Equivalent to the real CSLS scores for NN
-                    dropout(simbwd[:j - i], 1 - keep_prob, compute_engine=compute_engine).argmax(axis=1,
-                                                                                                 out=src_indices_backward[
-                                                                                                     i:j])
-            if _config['direction'] == 'forward':
-                src_indices = src_indices_forward
-                trg_indices = trg_indices_forward
-            elif _config['direction'] == 'backward':
-                src_indices = src_indices_backward
-                trg_indices = trg_indices_backward
-            elif _config['direction'] == 'union':
-                src_indices = compute_engine.engine.concatenate((src_indices_forward, src_indices_backward))
-                trg_indices = compute_engine.engine.concatenate((trg_indices_forward, trg_indices_backward))
+                    knn_sim_bwd[i:j] = topk_mean(simbwd[:j - i], k=_config['csls'], inplace=True)
+            for i in range(0, src_size, simfwd.shape[0]):
+                j = min(i + simfwd.shape[0], src_size)
+                xw[i:j].dot(zw[:trg_size].T, out=simfwd[:j - i])
+                simfwd[:j - i].max(axis=1, out=best_sim_forward[i:j])
+                simfwd[:j - i] -= knn_sim_bwd / 2  # Equivalent to the real CSLS scores for NN
+                dropout(simfwd[:j - i], 1 - keep_prob, compute_engine=compute_engine).argmax(axis=1,
+                                                                                             out=trg_indices_forward[
+                                                                                                 i:j])
+        if _config['direction'] in ('backward', 'union'):
+            if _config['csls'] > 0:
+                for i in range(0, src_size, simfwd.shape[0]):
+                    j = min(i + simfwd.shape[0], src_size)
+                    xw[i:j].dot(zw[:trg_size].T, out=simfwd[:j - i])
+                    knn_sim_fwd[i:j] = topk_mean(simfwd[:j - i], k=_config['csls'], inplace=True)
+            for i in range(0, trg_size, simbwd.shape[0]):
+                j = min(i + simbwd.shape[0], trg_size)
+                zw[i:j].dot(xw[:src_size].T, out=simbwd[:j - i])
+                simbwd[:j - i].max(axis=1, out=best_sim_backward[i:j])
+                simbwd[:j - i] -= knn_sim_fwd / 2  # Equivalent to the real CSLS scores for NN
+                dropout(simbwd[:j - i], 1 - keep_prob, compute_engine=compute_engine).argmax(axis=1,
+                                                                                             out=src_indices_backward[
+                                                                                                 i:j])
+        if _config['direction'] == 'forward':
+            src_indices = src_indices_forward
+            trg_indices = trg_indices_forward
+        elif _config['direction'] == 'backward':
+            src_indices = src_indices_backward
+            trg_indices = trg_indices_backward
+        elif _config['direction'] == 'union':
+            src_indices = compute_engine.engine.concatenate((src_indices_forward, src_indices_backward))
+            trg_indices = compute_engine.engine.concatenate((trg_indices_forward, trg_indices_backward))
 
-            # Objective function evaluation
-            if _config['direction'] == 'forward':
-                objective = compute_engine.engine.mean(best_sim_forward).tolist()
-            elif _config['direction'] == 'backward':
-                objective = compute_engine.engine.mean(best_sim_backward).tolist()
-            elif _config['direction'] == 'union':
-                objective = (compute_engine.engine.mean(best_sim_forward) + compute_engine.engine.mean(
-                    best_sim_backward)).tolist() / 2
-            if objective - best_objective >= _config['threshold']:
-                last_improvement = it
-                best_objective = objective
+        # Objective function evaluation
+        if _config['direction'] == 'forward':
+            objective = compute_engine.engine.mean(best_sim_forward).tolist()
+        elif _config['direction'] == 'backward':
+            objective = compute_engine.engine.mean(best_sim_backward).tolist()
+        elif _config['direction'] == 'union':
+            objective = (compute_engine.engine.mean(best_sim_forward) + compute_engine.engine.mean(
+                best_sim_backward)).tolist() / 2
+        if objective - best_objective >= _config['threshold']:
+            last_improvement = it
+            best_objective = objective
 
-            # Logging
-            duration = time.time() - t
-            logging.info('ITERATION {0} ({1:.2f}s)'.format(it, duration))
-            logging.info('\t- Objective:        {0:9.4f}%'.format(100 * objective))
-            logging.info('\t- Drop probability: {0:9.4f}%'.format(100 - 100 * keep_prob))
+        # Logging
+        duration = time.time() - t
+        logging.info('ITERATION {0} ({1:.2f}s)'.format(it, duration))
+        logging.info('\t- Objective:        {0:9.4f}%'.format(100 * objective))
+        logging.info('\t- Drop probability: {0:9.4f}%'.format(100 - 100 * keep_prob))
 
         t = time.time()
         it += 1
