@@ -30,7 +30,7 @@ from cupy_utils import *
 from embeddings import load_embeddings
 from src.domain.matrix_operations import whitening_transformation
 from src.factory.seed_dictionary import SeedDictionaryFactory
-from src.utils import topk_mean, set_compute_engine, solve_dtype
+from src.utils import topk_mean, set_compute_engine, solve_dtype, output_embeddings_filename
 
 BATCH_SIZE = 500
 
@@ -58,21 +58,14 @@ def whitening_arguments_validation(_config):
         sys.exit(-1)
 
 
-def read_input_embeddings_filename(_config):
-    src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'], _config['target_language'],
-                                                    _config['iteration'])  # The output source embeddings
-    trg_output = "./output/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'],
-                                                    _config['iteration'])  # The output target embeddings
-    test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
-        _config['source_language'], _config['target_language'])  # the test dictionary file
-
-    return src_output, trg_output, test_dictionary
-
-
 def run_experiment(_config):
     logging.info(_config)
     mlflow.log_params(_config)
     mlflow.log_metric('test', 0.9)
+
+    src_output, trg_output = output_embeddings_filename(_config)
+    test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
+        _config['source_language'], _config['target_language'])
 
     whitening_arguments_validation(_config)
 
@@ -88,9 +81,6 @@ def run_experiment(_config):
     src_embedding_matrix = compute_engine.send_to_device(src_embedding_matrix)
     trg_embedding_matrix = compute_engine.send_to_device(trg_embedding_matrix)
 
-    # Read input embeddings
-    src_output, trg_output, test_dictionary = read_input_embeddings_filename(_config)
-
     # STEP 0: Normalization
     embeddings.nomalization_step(src_embedding_matrix, trg_embedding_matrix, )
     logging.info("Normalize embeddings")
@@ -100,7 +90,8 @@ def run_experiment(_config):
 
     # Build the seed dictionary
     seed_dictionary_builder = SeedDictionaryFactory.create_seed_dictionary_builder(
-        _config['seed_dictionary_method'], compute_engine.engine, src_vocab, trg_vocab, src_embedding_matrix, trg_embedding_matrix, _config)
+        _config['seed_dictionary_method'], compute_engine.engine, src_vocab, trg_vocab, src_embedding_matrix,
+        trg_embedding_matrix, _config)
     src_indices, trg_indices = seed_dictionary_builder.get_indices()
 
     # Allocate memory
@@ -109,7 +100,8 @@ def run_experiment(_config):
     zw = compute_engine.engine.empty_like(trg_embedding_matrix)
     src_size = src_embedding_matrix.shape[0] if _config['vocabulary_cutoff'] <= 0 else min(
         src_embedding_matrix.shape[0], _config['vocabulary_cutoff'])
-    trg_size = trg_embedding_matrix.shape[0] if _config['vocabulary_cutoff'] <= 0 else min(trg_embedding_matrix.shape[0], _config['vocabulary_cutoff'])
+    trg_size = trg_embedding_matrix.shape[0] if _config['vocabulary_cutoff'] <= 0 else min(
+        trg_embedding_matrix.shape[0], _config['vocabulary_cutoff'])
     simfwd = compute_engine.engine.empty((_config['batch_size'], trg_size), dtype=dtype)
     simbwd = compute_engine.engine.empty((_config['batch_size'], src_size), dtype=dtype)
 
@@ -144,12 +136,14 @@ def run_experiment(_config):
 
         # Update the embedding mapping
         if _config['orthogonal'] or not end:  # orthogonal mapping
-            u, s, vt = compute_engine.engine.linalg.svd(trg_embedding_matrix[trg_indices].T.dot(src_embedding_matrix[src_indices]))
+            u, s, vt = compute_engine.engine.linalg.svd(
+                trg_embedding_matrix[trg_indices].T.dot(src_embedding_matrix[src_indices]))
             w = vt.T.dot(u.T)
             src_embedding_matrix.dot(w, out=xw)
             zw[:] = trg_embedding_matrix
         elif _config['unconstrained']:  # unconstrained mapping
-            x_pseudoinv = compute_engine.engine.linalg.inv(src_embedding_matrix[src_indices].T.dot(src_embedding_matrix[src_indices])).dot(
+            x_pseudoinv = compute_engine.engine.linalg.inv(
+                src_embedding_matrix[src_indices].T.dot(src_embedding_matrix[src_indices])).dot(
                 src_embedding_matrix[src_indices].T)
             w = x_pseudoinv.dot(trg_embedding_matrix[trg_indices])
             src_embedding_matrix.dot(w, out=xw)
@@ -236,7 +230,8 @@ def run_experiment(_config):
             elif _config['direction'] == 'backward':
                 objective = compute_engine.engine.mean(best_sim_backward).tolist()
             elif _config['direction'] == 'union':
-                objective = (compute_engine.engine.mean(best_sim_forward) + compute_engine.engine.mean(best_sim_backward)).tolist() / 2
+                objective = (compute_engine.engine.mean(best_sim_forward) + compute_engine.engine.mean(
+                    best_sim_backward)).tolist() / 2
             if objective - best_objective >= _config['threshold']:
                 last_improvement = it
                 best_objective = objective
@@ -333,15 +328,18 @@ def run_experiment(_config):
                         best_sim[l] = sim
                         translation[src[l]] = k
     elif _config['retrieval'] == 'invsoftmax':  # Inverted softmax
-        sample = compute_engine.engine.arange(src_embedding_matrix.shape[0]) if _config['inv_sample'] is None else compute_engine.engine.random.randint(
+        sample = compute_engine.engine.arange(src_embedding_matrix.shape[0]) if _config[
+                                                                                    'inv_sample'] is None else compute_engine.engine.random.randint(
             0, src_embedding_matrix.shape[0], _config['inv_sample'])
         partition = compute_engine.engine.zeros(trg_embedding_matrix.shape[0])
         for i in range(0, len(sample), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(sample))
-            partition += compute_engine.engine.exp(_config['inv_temperature'] * trg_embedding_matrix.dot(src_embedding_matrix[sample[i:j]].T)).sum(axis=1)
+            partition += compute_engine.engine.exp(
+                _config['inv_temperature'] * trg_embedding_matrix.dot(src_embedding_matrix[sample[i:j]].T)).sum(axis=1)
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
-            p = compute_engine.engine.exp(_config['inv_temperature'] * src_embedding_matrix[src[i:j]].dot(trg_embedding_matrix.T)) / partition
+            p = compute_engine.engine.exp(
+                _config['inv_temperature'] * src_embedding_matrix[src[i:j]].dot(trg_embedding_matrix.T)) / partition
             nn = p.argmax(axis=1).tolist()
             for k in range(j - i):
                 translation[src[i + k]] = nn[k]
@@ -349,7 +347,8 @@ def run_experiment(_config):
         knn_sim_bwd = compute_engine.engine.zeros(trg_embedding_matrix.shape[0])
         for i in range(0, trg_embedding_matrix.shape[0], BATCH_SIZE):
             j = min(i + BATCH_SIZE, trg_embedding_matrix.shape[0])
-            knn_sim_bwd[i:j] = topk_mean(trg_embedding_matrix[i:j].dot(src_embedding_matrix.T), k=_config['csls'], inplace=True)
+            knn_sim_bwd[i:j] = topk_mean(trg_embedding_matrix[i:j].dot(src_embedding_matrix.T), k=_config['csls'],
+                                         inplace=True)
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
             similarities = 2 * src_embedding_matrix[src[i:j]].dot(

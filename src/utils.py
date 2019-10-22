@@ -49,3 +49,12 @@ def solve_dtype(_config):
         return 'float64'
     else:
         raise ("Precision {} is not implemented.".format(precision))
+
+
+def output_embeddings_filename(_config):
+    src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'], _config['target_language'],
+                                                    _config['iteration'])  # The output source embeddings
+    trg_output = "./output/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'],
+                                                    _config['iteration'])  # The output target embeddings
+
+    return src_output, trg_output
