@@ -39,8 +39,8 @@ def dropout(m, p):
     if p <= 0.0:
         return m
     else:
-        xp = get_array_module(m)
-        mask = xp.random.rand(*m.shape) >= p
+        compute_engine.engine = get_array_module(m)
+        mask = compute_engine.engine.random.rand(*m.shape) >= p
         return m * mask
 
 
@@ -84,7 +84,6 @@ def run_experiment(_config):
                                                       _config['encoding'], dtype)
 
     compute_engine = set_compute_engine(_config['cuda'], _config['seed'])
-    xp = compute_engine.engine
 
     src_embedding_matrix = compute_engine.send_to_device(src_embedding_matrix)
     trg_embedding_matrix = compute_engine.send_to_device(trg_embedding_matrix)
@@ -101,27 +100,27 @@ def run_experiment(_config):
 
     # Build the seed dictionary
     seed_dictionary_builder = SeedDictionaryFactory.create_seed_dictionary_builder(
-        _config['seed_dictionary_method'], xp, src_vocab, trg_vocab, src_embedding_matrix, trg_embedding_matrix, _config)
+        _config['seed_dictionary_method'], compute_engine.engine, src_vocab, trg_vocab, src_embedding_matrix, trg_embedding_matrix, _config)
     src_indices, trg_indices = seed_dictionary_builder.get_indices()
 
     # Allocate memory
     logging.info("Allocating memory")
-    xw = xp.empty_like(src_embedding_matrix)
-    zw = xp.empty_like(trg_embedding_matrix)
+    xw = compute_engine.engine.empty_like(src_embedding_matrix)
+    zw = compute_engine.engine.empty_like(trg_embedding_matrix)
     src_size = src_embedding_matrix.shape[0] if _config['vocabulary_cutoff'] <= 0 else min(
         src_embedding_matrix.shape[0], _config['vocabulary_cutoff'])
     trg_size = trg_embedding_matrix.shape[0] if _config['vocabulary_cutoff'] <= 0 else min(trg_embedding_matrix.shape[0], _config['vocabulary_cutoff'])
-    simfwd = xp.empty((_config['batch_size'], trg_size), dtype=dtype)
-    simbwd = xp.empty((_config['batch_size'], src_size), dtype=dtype)
+    simfwd = compute_engine.engine.empty((_config['batch_size'], trg_size), dtype=dtype)
+    simbwd = compute_engine.engine.empty((_config['batch_size'], src_size), dtype=dtype)
 
-    best_sim_forward = xp.full(src_size, -100, dtype=dtype)
-    src_indices_forward = xp.arange(src_size)
-    trg_indices_forward = xp.zeros(src_size, dtype=int)
-    best_sim_backward = xp.full(trg_size, -100, dtype=dtype)
-    src_indices_backward = xp.zeros(trg_size, dtype=int)
-    trg_indices_backward = xp.arange(trg_size)
-    knn_sim_fwd = xp.zeros(src_size, dtype=dtype)
-    knn_sim_bwd = xp.zeros(trg_size, dtype=dtype)
+    best_sim_forward = compute_engine.engine.full(src_size, -100, dtype=dtype)
+    src_indices_forward = compute_engine.engine.arange(src_size)
+    trg_indices_forward = compute_engine.engine.zeros(src_size, dtype=int)
+    best_sim_backward = compute_engine.engine.full(trg_size, -100, dtype=dtype)
+    src_indices_backward = compute_engine.engine.zeros(trg_size, dtype=int)
+    trg_indices_backward = compute_engine.engine.arange(trg_size)
+    knn_sim_fwd = compute_engine.engine.zeros(src_size, dtype=dtype)
+    knn_sim_bwd = compute_engine.engine.zeros(trg_size, dtype=dtype)
 
     # Training loop
     best_objective = objective = -100.
@@ -145,12 +144,12 @@ def run_experiment(_config):
 
         # Update the embedding mapping
         if _config['orthogonal'] or not end:  # orthogonal mapping
-            u, s, vt = xp.linalg.svd(trg_embedding_matrix[trg_indices].T.dot(src_embedding_matrix[src_indices]))
+            u, s, vt = compute_engine.engine.linalg.svd(trg_embedding_matrix[trg_indices].T.dot(src_embedding_matrix[src_indices]))
             w = vt.T.dot(u.T)
             src_embedding_matrix.dot(w, out=xw)
             zw[:] = trg_embedding_matrix
         elif _config['unconstrained']:  # unconstrained mapping
-            x_pseudoinv = xp.linalg.inv(src_embedding_matrix[src_indices].T.dot(src_embedding_matrix[src_indices])).dot(
+            x_pseudoinv = compute_engine.engine.linalg.inv(src_embedding_matrix[src_indices].T.dot(src_embedding_matrix[src_indices])).dot(
                 src_embedding_matrix[src_indices].T)
             w = x_pseudoinv.dot(trg_embedding_matrix[trg_indices])
             src_embedding_matrix.dot(w, out=xw)
@@ -162,13 +161,13 @@ def run_experiment(_config):
             zw[:] = trg_embedding_matrix
 
             if _config['whiten']:
-                wx1 = whitening_transformation(xw[src_indices], compute_engine=xp)
-                wz1 = whitening_transformation(zw[trg_indices], compute_engine=xp)
+                wx1 = whitening_transformation(xw[src_indices], compute_engine=compute_engine.engine)
+                wz1 = whitening_transformation(zw[trg_indices], compute_engine=compute_engine.engine)
                 xw = xw.dot(wx1)
                 zw = zw.dot(wz1)
 
             # STEP 2: Orthogonal mapping
-            wx2, s, wz2_t = xp.linalg.svd(xw[src_indices].T.dot(zw[trg_indices]))
+            wx2, s, wz2_t = compute_engine.engine.linalg.svd(xw[src_indices].T.dot(zw[trg_indices]))
             wz2 = wz2_t.T
             xw = xw.dot(wx2)
             zw = zw.dot(wz2)
@@ -179,13 +178,13 @@ def run_experiment(_config):
 
             # STEP 4: De-whitening
             if _config['src_dewhiten'] == 'src':
-                xw = xw.dot(wx2.T.dot(xp.linalg.inv(wx1)).dot(wx2))
+                xw = xw.dot(wx2.T.dot(compute_engine.engine.linalg.inv(wx1)).dot(wx2))
             elif _config['src_dewhiten'] == 'trg':
-                xw = xw.dot(wz2.T.dot(xp.linalg.inv(wz1)).dot(wz2))
+                xw = xw.dot(wz2.T.dot(compute_engine.engine.linalg.inv(wz1)).dot(wz2))
             if _config['trg_dewhiten'] == 'src':
-                zw = zw.dot(wx2.T.dot(xp.linalg.inv(wx1)).dot(wx2))
+                zw = zw.dot(wx2.T.dot(compute_engine.engine.linalg.inv(wx1)).dot(wx2))
             elif _config['trg_dewhiten'] == 'trg':
-                zw = zw.dot(wz2.T.dot(xp.linalg.inv(wz1)).dot(wz2))
+                zw = zw.dot(wz2.T.dot(compute_engine.engine.linalg.inv(wz1)).dot(wz2))
 
             # STEP 5: Dimensionality reduction
             if _config['dim_reduction'] > 0:
@@ -228,16 +227,16 @@ def run_experiment(_config):
                 src_indices = src_indices_backward
                 trg_indices = trg_indices_backward
             elif _config['direction'] == 'union':
-                src_indices = xp.concatenate((src_indices_forward, src_indices_backward))
-                trg_indices = xp.concatenate((trg_indices_forward, trg_indices_backward))
+                src_indices = compute_engine.engine.concatenate((src_indices_forward, src_indices_backward))
+                trg_indices = compute_engine.engine.concatenate((trg_indices_forward, trg_indices_backward))
 
             # Objective function evaluation
             if _config['direction'] == 'forward':
-                objective = xp.mean(best_sim_forward).tolist()
+                objective = compute_engine.engine.mean(best_sim_forward).tolist()
             elif _config['direction'] == 'backward':
-                objective = xp.mean(best_sim_backward).tolist()
+                objective = compute_engine.engine.mean(best_sim_backward).tolist()
             elif _config['direction'] == 'union':
-                objective = (xp.mean(best_sim_forward) + xp.mean(best_sim_backward)).tolist() / 2
+                objective = (compute_engine.engine.mean(best_sim_forward) + compute_engine.engine.mean(best_sim_backward)).tolist() / 2
             if objective - best_objective >= _config['threshold']:
                 last_improvement = it
                 best_objective = objective
@@ -273,12 +272,12 @@ def run_experiment(_config):
         if not supports_cupy():
             print('ERROR: Install CuPy for CUDA support', file=sys.stderr)
             sys.exit(-1)
-        xp = get_cupy()
-        src_embedding_matrix = xp.asarray(src_embedding_matrix)
-        trg_embedding_matrix = xp.asarray(trg_embedding_matrix)
+        compute_engine.engine = get_cupy()
+        src_embedding_matrix = compute_engine.engine.asarray(src_embedding_matrix)
+        trg_embedding_matrix = compute_engine.engine.asarray(trg_embedding_matrix)
     else:
-        xp = np
-    xp.random.seed(_config['seed'])
+        compute_engine.engine = np
+    compute_engine.engine.random.seed(_config['seed'])
 
     # Length normalize embeddings so their dot product effectively computes the cosine similarity
     if not _config['dot']:
@@ -334,20 +333,20 @@ def run_experiment(_config):
                         best_sim[l] = sim
                         translation[src[l]] = k
     elif _config['retrieval'] == 'invsoftmax':  # Inverted softmax
-        sample = xp.arange(src_embedding_matrix.shape[0]) if _config['inv_sample'] is None else xp.random.randint(
+        sample = compute_engine.engine.arange(src_embedding_matrix.shape[0]) if _config['inv_sample'] is None else compute_engine.engine.random.randint(
             0, src_embedding_matrix.shape[0], _config['inv_sample'])
-        partition = xp.zeros(trg_embedding_matrix.shape[0])
+        partition = compute_engine.engine.zeros(trg_embedding_matrix.shape[0])
         for i in range(0, len(sample), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(sample))
-            partition += xp.exp(_config['inv_temperature'] * trg_embedding_matrix.dot(src_embedding_matrix[sample[i:j]].T)).sum(axis=1)
+            partition += compute_engine.engine.exp(_config['inv_temperature'] * trg_embedding_matrix.dot(src_embedding_matrix[sample[i:j]].T)).sum(axis=1)
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
-            p = xp.exp(_config['inv_temperature'] * src_embedding_matrix[src[i:j]].dot(trg_embedding_matrix.T)) / partition
+            p = compute_engine.engine.exp(_config['inv_temperature'] * src_embedding_matrix[src[i:j]].dot(trg_embedding_matrix.T)) / partition
             nn = p.argmax(axis=1).tolist()
             for k in range(j - i):
                 translation[src[i + k]] = nn[k]
     elif _config['retrieval'] == 'csls':  # Cross-domain similarity local scaling
-        knn_sim_bwd = xp.zeros(trg_embedding_matrix.shape[0])
+        knn_sim_bwd = compute_engine.engine.zeros(trg_embedding_matrix.shape[0])
         for i in range(0, trg_embedding_matrix.shape[0], BATCH_SIZE):
             j = min(i + BATCH_SIZE, trg_embedding_matrix.shape[0])
             knn_sim_bwd[i:j] = topk_mean(trg_embedding_matrix[i:j].dot(src_embedding_matrix.T), k=_config['csls'], inplace=True)
