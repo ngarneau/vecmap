@@ -28,7 +28,7 @@ from mlflow.tracking import MlflowClient
 
 import embeddings
 from cupy_utils import *
-from src.factory.seed_dictionary import SeedDictionaryBuilderFactory
+from src.factory.seed_dictionary import SeedDictionaryFactory
 from src.utils import topk_mean, set_compute_engine, solve_dtype
 
 BATCH_SIZE = 500
@@ -57,13 +57,15 @@ def whitening_arguments_validation(_config):
         sys.exit(-1)
 
 
-def load_embeddings(embeddings_path, language, encoding, dtype):
-    input_filename = embeddings_path.format(language)
-    logging.info("Loading file {}".format(input_filename))
-    input_file = open(input_filename, encoding=encoding, errors='surrogateescape')
-    words, x = embeddings.read(input_file, dtype=dtype)
-    logging.info("Loaded {} words of dimension {}".format(x.shape[0], x.shape[1]))
-    return words, x
+def read_input_embeddings_filename(_config):
+    src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'], _config['target_language'],
+                                                    _config['iteration'])  # The output source embeddings
+    trg_output = "./output/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'],
+                                                    _config['iteration'])  # The output target embeddings
+    test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
+        _config['source_language'], _config['target_language'])  # the test dictionary file
+
+    return src_output, trg_output, test_dictionary
 
 
 def run_experiment(_config):
@@ -75,8 +77,10 @@ def run_experiment(_config):
 
     dtype = solve_dtype(_config)
 
-    src_words, x = load_embeddings(_config['embeddings_path'], _config['source_language'], _config['encoding'], dtype)
-    trg_words, z = load_embeddings(_config['embeddings_path'], _config['target_language'], _config['encoding'], dtype)
+    src_words, x = embeddings.load_embeddings(_config['embeddings_path'], _config['source_language'],
+                                              _config['encoding'], dtype)
+    trg_words, z = embeddings.load_embeddings(_config['embeddings_path'], _config['target_language'],
+                                              _config['encoding'], dtype)
 
     compute_engine = set_compute_engine(_config['cuda'], _config['seed'])
     xp = compute_engine.engine
@@ -85,12 +89,7 @@ def run_experiment(_config):
     z = compute_engine.send_to_device(z)
 
     # Read input embeddings
-    src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'], _config['target_language'],
-                                                    _config['iteration'])  # The output source embeddings
-    trg_output = "./output/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'],
-                                                    _config['iteration'])  # The output target embeddings
-    test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
-        _config['source_language'], _config['target_language'])  # the test dictionary file
+    src_output, trg_output, test_dictionary = read_input_embeddings_filename(_config)
 
     # STEP 0: Normalization
     logging.info("Normalize embeddings")
@@ -98,7 +97,7 @@ def run_experiment(_config):
     embeddings.normalize(z, _config['normalize'])
 
     # Build the seed dictionary
-    seed_dictionary_builder = SeedDictionaryBuilderFactory.get_seed_dictionary_builder(
+    seed_dictionary_builder = SeedDictionaryFactory.create_seed_dictionary_builder(
         _config['seed_dictionary_method'], xp, src_words, trg_words, x, z, _config)
     src_indices, trg_indices = seed_dictionary_builder.get_indices()
 
