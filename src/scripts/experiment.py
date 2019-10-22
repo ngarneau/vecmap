@@ -26,9 +26,9 @@ import numpy as np
 import yaml
 from mlflow.tracking import MlflowClient
 
-import embeddings
 from cupy_utils import *
-from src.domain.matrix import whitening_transformation
+from embeddings import load_embeddings
+from src.domain.matrix_operations import whitening_transformation
 from src.factory.seed_dictionary import SeedDictionaryFactory
 from src.utils import topk_mean, set_compute_engine, solve_dtype
 
@@ -78,36 +78,39 @@ def run_experiment(_config):
 
     dtype = solve_dtype(_config)
 
-    src_words, x = embeddings.load_embeddings(_config['embeddings_path'], _config['source_language'],
-                                              _config['encoding'], dtype)
-    trg_words, z = embeddings.load_embeddings(_config['embeddings_path'], _config['target_language'],
-                                              _config['encoding'], dtype)
+    src_vocab, src_embedding_matrix = load_embeddings(_config['embeddings_path'], _config['source_language'],
+                                                      _config['encoding'], dtype)
+    trg_vocab, trg_embedding_matrix = load_embeddings(_config['embeddings_path'], _config['target_language'],
+                                                      _config['encoding'], dtype)
 
     compute_engine = set_compute_engine(_config['cuda'], _config['seed'])
     xp = compute_engine.engine
 
-    x = compute_engine.send_to_device(x)
-    z = compute_engine.send_to_device(z)
+    src_embedding_matrix = compute_engine.send_to_device(src_embedding_matrix)
+    trg_embedding_matrix = compute_engine.send_to_device(trg_embedding_matrix)
 
     # Read input embeddings
     src_output, trg_output, test_dictionary = read_input_embeddings_filename(_config)
 
     # STEP 0: Normalization
+    embeddings.nomalization_step(src_embedding_matrix, trg_embedding_matrix, )
     logging.info("Normalize embeddings")
-    embeddings.normalize(x, _config['normalize'])
-    embeddings.normalize(z, _config['normalize'])
+
+    embeddings.normalize(src_embedding_matrix, _config['normalize'])
+    embeddings.normalize(trg_embedding_matrix, _config['normalize'])
 
     # Build the seed dictionary
     seed_dictionary_builder = SeedDictionaryFactory.create_seed_dictionary_builder(
-        _config['seed_dictionary_method'], xp, src_words, trg_words, x, z, _config)
+        _config['seed_dictionary_method'], xp, src_vocab, trg_vocab, src_embedding_matrix, trg_embedding_matrix, _config)
     src_indices, trg_indices = seed_dictionary_builder.get_indices()
 
     # Allocate memory
     logging.info("Allocating memory")
-    xw = xp.empty_like(x)
-    zw = xp.empty_like(z)
-    src_size = x.shape[0] if _config['vocabulary_cutoff'] <= 0 else min(x.shape[0], _config['vocabulary_cutoff'])
-    trg_size = z.shape[0] if _config['vocabulary_cutoff'] <= 0 else min(z.shape[0], _config['vocabulary_cutoff'])
+    xw = xp.empty_like(src_embedding_matrix)
+    zw = xp.empty_like(trg_embedding_matrix)
+    src_size = src_embedding_matrix.shape[0] if _config['vocabulary_cutoff'] <= 0 else min(
+        src_embedding_matrix.shape[0], _config['vocabulary_cutoff'])
+    trg_size = trg_embedding_matrix.shape[0] if _config['vocabulary_cutoff'] <= 0 else min(trg_embedding_matrix.shape[0], _config['vocabulary_cutoff'])
     simfwd = xp.empty((_config['batch_size'], trg_size), dtype=dtype)
     simbwd = xp.empty((_config['batch_size'], src_size), dtype=dtype)
 
@@ -142,20 +145,21 @@ def run_experiment(_config):
 
         # Update the embedding mapping
         if _config['orthogonal'] or not end:  # orthogonal mapping
-            u, s, vt = xp.linalg.svd(z[trg_indices].T.dot(x[src_indices]))
+            u, s, vt = xp.linalg.svd(trg_embedding_matrix[trg_indices].T.dot(src_embedding_matrix[src_indices]))
             w = vt.T.dot(u.T)
-            x.dot(w, out=xw)
-            zw[:] = z
+            src_embedding_matrix.dot(w, out=xw)
+            zw[:] = trg_embedding_matrix
         elif _config['unconstrained']:  # unconstrained mapping
-            x_pseudoinv = xp.linalg.inv(x[src_indices].T.dot(x[src_indices])).dot(x[src_indices].T)
-            w = x_pseudoinv.dot(z[trg_indices])
-            x.dot(w, out=xw)
-            zw[:] = z
+            x_pseudoinv = xp.linalg.inv(src_embedding_matrix[src_indices].T.dot(src_embedding_matrix[src_indices])).dot(
+                src_embedding_matrix[src_indices].T)
+            w = x_pseudoinv.dot(trg_embedding_matrix[trg_indices])
+            src_embedding_matrix.dot(w, out=xw)
+            zw[:] = trg_embedding_matrix
         else:  # advanced mapping
 
             # TODO xw.dot(wx2, out=xw) and alike not working
-            xw[:] = x
-            zw[:] = z
+            xw[:] = src_embedding_matrix
+            zw[:] = trg_embedding_matrix
 
             if _config['whiten']:
                 wx1 = whitening_transformation(xw[src_indices], compute_engine=xp)
@@ -250,40 +254,40 @@ def run_experiment(_config):
     # Write mapped embeddings
     logging.info("Writing mapped embeddings to {}".format(src_output))
     srcfile = open(src_output, mode='w', encoding=_config['encoding'], errors='surrogateescape')
-    embeddings.write(src_words, xw, srcfile)
+    embeddings.write(src_vocab, xw, srcfile)
     srcfile.close()
     logging.info("Done")
 
     logging.info("Writing mapped embeddings to {}".format(trg_output))
     trgfile = open(trg_output, mode='w', encoding=_config['encoding'], errors='surrogateescape')
-    embeddings.write(trg_words, zw, trgfile)
+    embeddings.write(trg_vocab, zw, trgfile)
     trgfile.close()
     logging.info("Done")
 
     srcfile = open(src_output, encoding=_config['encoding'], errors='surrogateescape')
     trgfile = open(trg_output, encoding=_config['encoding'], errors='surrogateescape')
-    src_words, x = embeddings.read(srcfile, dtype=dtype)
-    trg_words, z = embeddings.read(trgfile, dtype=dtype)
+    src_vocab, src_embedding_matrix = embeddings.read(srcfile, dtype=dtype)
+    trg_vocab, trg_embedding_matrix = embeddings.read(trgfile, dtype=dtype)
 
     if _config['cuda'] is True:
         if not supports_cupy():
             print('ERROR: Install CuPy for CUDA support', file=sys.stderr)
             sys.exit(-1)
         xp = get_cupy()
-        x = xp.asarray(x)
-        z = xp.asarray(z)
+        src_embedding_matrix = xp.asarray(src_embedding_matrix)
+        trg_embedding_matrix = xp.asarray(trg_embedding_matrix)
     else:
         xp = np
     xp.random.seed(_config['seed'])
 
     # Length normalize embeddings so their dot product effectively computes the cosine similarity
     if not _config['dot']:
-        embeddings.length_normalize(x)
-        embeddings.length_normalize(z)
+        embeddings.length_normalize(src_embedding_matrix)
+        embeddings.length_normalize(trg_embedding_matrix)
 
     # Build word to index map
-    src_word2ind = {word: i for i, word in enumerate(src_words)}
-    trg_word2ind = {word: i for i, word in enumerate(trg_words)}
+    src_word2ind = {word: i for i, word in enumerate(src_vocab)}
+    trg_word2ind = {word: i for i, word in enumerate(trg_vocab)}
 
     # Read dictionary and compute coverage
     f = open(test_dictionary, encoding=_config['encoding'], errors='surrogateescape')
@@ -308,16 +312,16 @@ def run_experiment(_config):
     if _config['retrieval'] == 'nn':  # Standard nearest neighbor
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
-            similarities = x[src[i:j]].dot(z.T)
+            similarities = src_embedding_matrix[src[i:j]].dot(trg_embedding_matrix.T)
             nn = similarities.argmax(axis=1).tolist()
             for k in range(j - i):
                 translation[src[i + k]] = nn[k]
     elif _config['retrieval'] == 'invnn':  # Inverted nearest neighbor
-        best_rank = np.full(len(src), x.shape[0], dtype=int)
+        best_rank = np.full(len(src), src_embedding_matrix.shape[0], dtype=int)
         best_sim = np.full(len(src), -100, dtype=dtype)
-        for i in range(0, z.shape[0], BATCH_SIZE):
-            j = min(i + BATCH_SIZE, z.shape[0])
-            similarities = z[i:j].dot(x.T)
+        for i in range(0, trg_embedding_matrix.shape[0], BATCH_SIZE):
+            j = min(i + BATCH_SIZE, trg_embedding_matrix.shape[0])
+            similarities = trg_embedding_matrix[i:j].dot(src_embedding_matrix.T)
             ind = (-similarities).argsort(axis=1)
             ranks = asnumpy(ind.argsort(axis=1)[:, src])
             sims = asnumpy(similarities[:, src])
@@ -330,26 +334,27 @@ def run_experiment(_config):
                         best_sim[l] = sim
                         translation[src[l]] = k
     elif _config['retrieval'] == 'invsoftmax':  # Inverted softmax
-        sample = xp.arange(x.shape[0]) if _config['inv_sample'] is None else xp.random.randint(
-            0, x.shape[0], _config['inv_sample'])
-        partition = xp.zeros(z.shape[0])
+        sample = xp.arange(src_embedding_matrix.shape[0]) if _config['inv_sample'] is None else xp.random.randint(
+            0, src_embedding_matrix.shape[0], _config['inv_sample'])
+        partition = xp.zeros(trg_embedding_matrix.shape[0])
         for i in range(0, len(sample), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(sample))
-            partition += xp.exp(_config['inv_temperature'] * z.dot(x[sample[i:j]].T)).sum(axis=1)
+            partition += xp.exp(_config['inv_temperature'] * trg_embedding_matrix.dot(src_embedding_matrix[sample[i:j]].T)).sum(axis=1)
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
-            p = xp.exp(_config['inv_temperature'] * x[src[i:j]].dot(z.T)) / partition
+            p = xp.exp(_config['inv_temperature'] * src_embedding_matrix[src[i:j]].dot(trg_embedding_matrix.T)) / partition
             nn = p.argmax(axis=1).tolist()
             for k in range(j - i):
                 translation[src[i + k]] = nn[k]
     elif _config['retrieval'] == 'csls':  # Cross-domain similarity local scaling
-        knn_sim_bwd = xp.zeros(z.shape[0])
-        for i in range(0, z.shape[0], BATCH_SIZE):
-            j = min(i + BATCH_SIZE, z.shape[0])
-            knn_sim_bwd[i:j] = topk_mean(z[i:j].dot(x.T), k=_config['csls'], inplace=True)
+        knn_sim_bwd = xp.zeros(trg_embedding_matrix.shape[0])
+        for i in range(0, trg_embedding_matrix.shape[0], BATCH_SIZE):
+            j = min(i + BATCH_SIZE, trg_embedding_matrix.shape[0])
+            knn_sim_bwd[i:j] = topk_mean(trg_embedding_matrix[i:j].dot(src_embedding_matrix.T), k=_config['csls'], inplace=True)
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
-            similarities = 2 * x[src[i:j]].dot(z.T) - knn_sim_bwd  # Equivalent to the real CSLS scores for NN
+            similarities = 2 * src_embedding_matrix[src[i:j]].dot(
+                trg_embedding_matrix.T) - knn_sim_bwd  # Equivalent to the real CSLS scores for NN
             nn = similarities.argmax(axis=1).tolist()
             for k in range(j - i):
                 translation[src[i + k]] = nn[k]
