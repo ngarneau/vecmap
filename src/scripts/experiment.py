@@ -30,7 +30,7 @@ from cupy_utils import *
 from embeddings import load_embeddings, embeddings_normalization
 from src.domain.matrix_operations import whitening_transformation
 from src.initialization import get_seed_dictionary_indices
-from src.utils import topk_mean, set_compute_engine, output_embeddings_filename
+from src.utils import topk_mean, set_compute_engine, output_embeddings_filename, compute_matrix_size
 from src.validations import whitening_arguments_validation
 
 BATCH_SIZE = 500
@@ -68,15 +68,12 @@ def run_experiment(_config):
 
     embeddings_normalization(src_embedding_matrix, trg_embedding_matrix, normalization_method=_config['normalize'])
 
-
     # Allocate memory
     logging.info("Allocating memory")
     xw = compute_engine.engine.empty_like(src_embedding_matrix)
     zw = compute_engine.engine.empty_like(trg_embedding_matrix)
-    src_size = src_embedding_matrix.shape[0] if _config['vocabulary_cutoff'] <= 0 else min(
-        src_embedding_matrix.shape[0], _config['vocabulary_cutoff'])
-    trg_size = trg_embedding_matrix.shape[0] if _config['vocabulary_cutoff'] <= 0 else min(
-        trg_embedding_matrix.shape[0], _config['vocabulary_cutoff'])
+
+    src_size, trg_size = compute_matrix_size()
     simfwd = compute_engine.engine.empty((_config['batch_size'], trg_size), dtype=dtype)
     simbwd = compute_engine.engine.empty((_config['batch_size'], src_size), dtype=dtype)
 

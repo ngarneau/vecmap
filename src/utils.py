@@ -42,3 +42,12 @@ def output_embeddings_filename(_config):
                                                     _config['iteration'])  # The output target embeddings
 
     return src_output, trg_output
+
+
+def compute_matrix_size(src_embedding_matrix, trg_embedding_matrix, _config):
+    vocabulary_cutoff = _config['vocabulary_cutoff']
+    src_size = src_embedding_matrix.shape[0] if vocabulary_cutoff <= 0 else min(
+        src_embedding_matrix.shape[0], vocabulary_cutoff)
+    trg_size = trg_embedding_matrix.shape[0] if vocabulary_cutoff <= 0 else min(
+        trg_embedding_matrix.shape[0], vocabulary_cutoff)
+    return src_size, trg_size
