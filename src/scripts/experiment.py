@@ -29,7 +29,7 @@ from mlflow.tracking import MlflowClient
 from cupy_utils import *
 from embeddings import load_embeddings, embeddings_normalization
 from src.domain.matrix_operations import whitening_transformation
-from src.factory.seed_dictionary import SeedDictionaryFactory
+from src.initialization import get_seed_dictionary_indices
 from src.utils import topk_mean, set_compute_engine, output_embeddings_filename
 from src.validations import whitening_arguments_validation
 
@@ -68,11 +68,6 @@ def run_experiment(_config):
 
     embeddings_normalization(src_embedding_matrix, trg_embedding_matrix, normalization_method=_config['normalize'])
 
-    # Build the seed dictionary
-    seed_dictionary_builder = SeedDictionaryFactory.create_seed_dictionary_builder(
-        _config['seed_dictionary_method'], compute_engine.engine, src_vocab, trg_vocab, src_embedding_matrix,
-        trg_embedding_matrix, _config)
-    src_indices, trg_indices = seed_dictionary_builder.get_indices()
 
     # Allocate memory
     logging.info("Allocating memory")
@@ -95,13 +90,16 @@ def run_experiment(_config):
     knn_sim_bwd = compute_engine.engine.zeros(trg_size, dtype=dtype)
 
     # Training loop
+    logging.info("Beginning training loop")
     best_objective = objective = -100.
     it = 1
     last_improvement = 0
     keep_prob = _config['stochastic_initial']
     t = time.time()
     end = not _config['self_learning']
-    logging.info("Beginning training loop")
+    src_indices, trg_indices = get_seed_dictionary_indices(_config['seed_dictionary_method'], compute_engine.engine,
+                                                           src_vocab, trg_vocab, src_embedding_matrix,
+                                                           trg_embedding_matrix, _config)
     while True:
 
         logging.info("Iteration number {}".format(it))
