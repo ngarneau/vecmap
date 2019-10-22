@@ -28,7 +28,7 @@ from mlflow.tracking import MlflowClient
 
 from cupy_utils import *
 from embeddings import load_embeddings, embeddings_normalization
-from src.domain.matrix_operations import whitening_transformation
+from src.domain.matrix_operations import whitening_transformation, dropout
 from src.initialization import get_seed_dictionary_indices, init_computing_engine
 from src.utils import topk_mean, output_embeddings_filename, compute_matrix_size
 from src.validations import whitening_arguments_validation
@@ -176,7 +176,9 @@ def run_experiment(_config):
                     xw[i:j].dot(zw[:trg_size].T, out=simfwd[:j - i])
                     simfwd[:j - i].max(axis=1, out=best_sim_forward[i:j])
                     simfwd[:j - i] -= knn_sim_bwd / 2  # Equivalent to the real CSLS scores for NN
-                    dropout(simfwd[:j - i], 1 - keep_prob).argmax(axis=1, out=trg_indices_forward[i:j])
+                    dropout(simfwd[:j - i], 1 - keep_prob, compute_engine=compute_engine).argmax(axis=1,
+                                                                                                 out=trg_indices_forward[
+                                                                                                     i:j])
             if _config['direction'] in ('backward', 'union'):
                 if _config['csls'] > 0:
                     for i in range(0, src_size, simfwd.shape[0]):
@@ -188,7 +190,9 @@ def run_experiment(_config):
                     zw[i:j].dot(xw[:src_size].T, out=simbwd[:j - i])
                     simbwd[:j - i].max(axis=1, out=best_sim_backward[i:j])
                     simbwd[:j - i] -= knn_sim_fwd / 2  # Equivalent to the real CSLS scores for NN
-                    dropout(simbwd[:j - i], 1 - keep_prob).argmax(axis=1, out=src_indices_backward[i:j])
+                    dropout(simbwd[:j - i], 1 - keep_prob, compute_engine=compute_engine).argmax(axis=1,
+                                                                                                 out=src_indices_backward[
+                                                                                                     i:j])
             if _config['direction'] == 'forward':
                 src_indices = src_indices_forward
                 trg_indices = trg_indices_forward
