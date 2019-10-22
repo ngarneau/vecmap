@@ -73,7 +73,7 @@ def run_experiment(_config):
     xw = compute_engine.engine.empty_like(src_embedding_matrix)
     zw = compute_engine.engine.empty_like(trg_embedding_matrix)
 
-    src_size, trg_size = compute_matrix_size()
+    src_size, trg_size = compute_matrix_size(src_embedding_matrix, trg_embedding_matrix, _config['vocabulary_cutoff'])
     simfwd = compute_engine.engine.empty((_config['batch_size'], trg_size), dtype=dtype)
     simbwd = compute_engine.engine.empty((_config['batch_size'], src_size), dtype=dtype)
 
