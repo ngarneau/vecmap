@@ -12,10 +12,20 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import logging
+
+import numpy as np
 
 from cupy_utils import *
 
-import numpy as np
+
+def load_embeddings(embeddings_path, language, encoding, dtype):
+    input_filename = embeddings_path.format(language)
+    logging.info("Loading file {}".format(input_filename))
+    input_file = open(input_filename, encoding=encoding, errors='surrogateescape')
+    words, matrix = read(input_file, dtype=dtype)
+    logging.info("Loaded {} words of dimension {}".format(matrix.shape[0], matrix.shape[1]))
+    return words, matrix
 
 
 def read(file, threshold=0, vocabulary=None, dtype='float'):
@@ -44,7 +54,7 @@ def write(words, matrix, file):
 
 def length_normalize(matrix):
     xp = get_array_module(matrix)
-    norms = xp.sqrt(xp.sum(matrix**2, axis=1))
+    norms = xp.sqrt(xp.sum(matrix ** 2, axis=1))
     norms[norms == 0] = 1
     matrix /= norms[:, xp.newaxis]
 
@@ -57,7 +67,7 @@ def mean_center(matrix):
 
 def length_normalize_dimensionwise(matrix):
     xp = get_array_module(matrix)
-    norms = xp.sqrt(xp.sum(matrix**2, axis=0))
+    norms = xp.sqrt(xp.sum(matrix ** 2, axis=0))
     norms[norms == 0] = 1
     matrix /= norms
 
