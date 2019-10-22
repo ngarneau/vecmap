@@ -27,7 +27,7 @@ import yaml
 from mlflow.tracking import MlflowClient
 
 from cupy_utils import *
-from embeddings import load_embeddings
+from embeddings import load_embeddings, embeddings_normalization
 from src.domain.matrix_operations import whitening_transformation
 from src.factory.seed_dictionary import SeedDictionaryFactory
 from src.utils import topk_mean, set_compute_engine, solve_dtype, output_embeddings_filename
@@ -49,11 +49,11 @@ def run_experiment(_config):
     mlflow.log_params(_config)
     mlflow.log_metric('test', 0.9)
 
+    whitening_arguments_validation(_config)
+
     src_output, trg_output = output_embeddings_filename(_config)
     test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
         _config['source_language'], _config['target_language'])
-
-    whitening_arguments_validation(_config)
 
     dtype = solve_dtype(_config)
 
@@ -67,12 +67,7 @@ def run_experiment(_config):
     src_embedding_matrix = compute_engine.send_to_device(src_embedding_matrix)
     trg_embedding_matrix = compute_engine.send_to_device(trg_embedding_matrix)
 
-    # STEP 0: Normalization
-    embeddings.nomalization_step(src_embedding_matrix, trg_embedding_matrix, )
-    logging.info("Normalize embeddings")
-
-    embeddings.normalize(src_embedding_matrix, _config['normalize'])
-    embeddings.normalize(trg_embedding_matrix, _config['normalize'])
+    embeddings_normalization(src_embedding_matrix, trg_embedding_matrix, normalization_method=_config['normalize'])
 
     # Build the seed dictionary
     seed_dictionary_builder = SeedDictionaryFactory.create_seed_dictionary_builder(
