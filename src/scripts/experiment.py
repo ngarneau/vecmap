@@ -35,15 +35,6 @@ from src.utils import topk_mean, set_compute_engine, solve_dtype, output_embeddi
 BATCH_SIZE = 500
 
 
-def dropout(m, p):
-    if p <= 0.0:
-        return m
-    else:
-        compute_engine.engine = get_array_module(m)
-        mask = compute_engine.engine.random.rand(*m.shape) >= p
-        return m * mask
-
-
 def is_same_configuration(config: Dict, config_filter: Dict):
     for key, value in config_filter.items():
         if config.get(key) != value:
