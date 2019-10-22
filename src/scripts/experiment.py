@@ -28,6 +28,7 @@ from mlflow.tracking import MlflowClient
 
 import embeddings
 from cupy_utils import *
+from src.domain.matrix import whitening_transformation
 from src.factory.seed_dictionary import SeedDictionaryFactory
 from src.utils import topk_mean, set_compute_engine, solve_dtype
 
@@ -156,14 +157,9 @@ def run_experiment(_config):
             xw[:] = x
             zw[:] = z
 
-            # STEP 1: Whitening
-            def whitening_transformation(m):
-                u, s, vt = xp.linalg.svd(m, full_matrices=False)
-                return vt.T.dot(xp.diag(1 / s)).dot(vt)
-
             if _config['whiten']:
-                wx1 = whitening_transformation(xw[src_indices])
-                wz1 = whitening_transformation(zw[trg_indices])
+                wx1 = whitening_transformation(xw[src_indices], compute_engine=xp)
+                wz1 = whitening_transformation(zw[trg_indices], compute_engine=xp)
                 xw = xw.dot(wx1)
                 zw = zw.dot(wz1)
 
@@ -374,7 +370,7 @@ def main():
 
     exp_name = os.getenv('EXP_NAME', default='vecmap')
 
-    base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
+    base_configs = yaml.load(open('../../configs/base.yaml'), Loader=yaml.FullLoader)
     argument_parser = argparse.ArgumentParser()
     for config, value in base_configs.items():
         argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
