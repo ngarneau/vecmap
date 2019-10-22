@@ -435,6 +435,41 @@ def get_query_string(configs):
     return " and ".join(["params.{}='{}'".format(config, value) for config, value in configs.items()])
 
 
+def override_configs(source_language, target_language, i, configs):
+    seed = configs['seed'] if configs['supercomputer'] else i
+    configs.update({
+        'iteration': i,
+        'source_language': source_language,
+        'target_language': target_language,
+        'seed': seed
+    })
+    return configs
+
+
+def create_filter(source_language, target_language, configs):
+    filter = {}
+    filter.update(configs)
+    filter['source_language'] = source_language
+    filter['target_language'] = target_language
+    del filter['seed']
+    del filter['cuda']
+    del filter['normalize']
+    del filter['iteration']
+    del filter['num_runs']
+    return filter
+
+
+def retrieve_stats(runs):
+    accuracies = list()
+    times = list()
+    for run in runs:
+        if 'accuracy' in run.data.metrics:
+            minutes = ((run.info.end_time - run.info.start_time)//60//60)%60
+            times.append(minutes)
+            accuracies.append(run.data.metrics['accuracy'])
+    return accuracies, times
+
+
 def main():
     logging.getLogger().setLevel(logging.INFO)
 
@@ -457,6 +492,7 @@ def main():
         language_pairs = [
             ['en_slim', 'de_slim'],
         ]
+        new_language_pairs = []
     else:
         language_pairs = [
             ['en', 'de'],
@@ -464,47 +500,52 @@ def main():
             ['en', 'fi'],
             ['en', 'it'],
         ]
+        new_language_pairs = [
+            ['en', 'et'],
+            ['en', 'fa'],
+            ['en', 'lv'],
+            ['en', 'tr'],
+            ['en', 'vi'],
+        ]
 
     if not configs['num_runs'] == 1 and configs['supercomputer']:
         configs['num_runs'] = 1
         print('Manually overriding num_runs attribute to 1 because supercomputer mode is enabled.')
 
+    # These are languages from the original paper.
     for source_language, target_language in language_pairs:
         for i in range(configs['num_runs']):
-            seed = configs['seed'] if configs['supercomputer'] else i
-            configs.update({
-                'iteration': i,
-                'source_language': source_language,
-                'target_language': target_language,
-                'seed': seed
-            })
-
+            configs = override_configs(source_language, target_language, i, configs)
             try:
                 with mlflow.start_run(experiment_id=experiment.experiment_id):
                     run_experiment(configs)
             except KeyboardInterrupt:
                 logging.warning("Run exited.")
 
-        filter = {}
-        filter.update(configs)
-        filter['source_language'] = source_language
-        filter['target_language'] = target_language
-        del filter['seed']
-        del filter['cuda']
-        del filter['normalize']
-        del filter['iteration']
-        del filter['num_runs']
+        filter = create_filter(source_language, target_language, configs)
         query_string = get_query_string(filter)
         runs = client.search_runs(experiment_ids=[experiment.experiment_id], filter_string=query_string)
-
-        accuracies = list()
-        times = list()
-        for run in runs:
-            if 'accuracy' in run.data.metrics:
-                minutes = ((run.info.end_time - run.info.start_time)//60//60)%60
-                times.append(minutes)
-                accuracies.append(run.data.metrics['accuracy'])
+        accuracies, times = retrieve_stats(runs)
         print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
+
+
+    # We place new language in another loop since we will create a different table.
+    # Refactoring may be needed here.
+    for source_language, target_language in new_language_pairs:
+        for i in range(configs['num_runs']):
+            configs = override_configs(source_language, target_language, i, configs)
+            try:
+                with mlflow.start_run(experiment_id=experiment.experiment_id):
+                    run_experiment(configs)
+            except KeyboardInterrupt:
+                logging.warning("Run exited.")
+
+        filter = create_filter(source_language, target_language, configs)
+        query_string = get_query_string(filter)
+        runs = client.search_runs(experiment_ids=[experiment.experiment_id], filter_string=query_string)
+        accuracies, times = retrieve_stats(runs)
+        print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
+
 
 
 if __name__ == '__main__':
