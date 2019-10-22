@@ -436,16 +436,7 @@ def get_query_string(configs):
     return " and ".join(["params.{}='{}'".format(config, value) for config, value in configs.items()])
 
 
-def main():
-    logging.getLogger().setLevel(logging.INFO)
-
-    base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
-    argument_parser = argparse.ArgumentParser()
-    for config, value in base_configs.items():
-        argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
-    options = argument_parser.parse_args()
-    configs = vars(options)
-
+def run_main(configs):
     mlflow.set_tracking_uri(configs['mlflow_output_uri'])
     mlflow.set_experiment(configs['experiment_name'])
     client = MlflowClient(tracking_uri=configs['mlflow_output_uri'])
@@ -494,6 +485,10 @@ def main():
         del filter['normalize']
         del filter['iteration']
         del filter['num_runs']
+        del filter['supercomputer']
+        del filter['embedding_output_uri']
+        del filter['mlflow_output_uri']
+        del filter['experiment_name']
         query_string = get_query_string(filter)
 
         runs = client.search_runs(exp_id, filter_string=query_string)
@@ -501,12 +496,11 @@ def main():
         accuracies = list()
         times = list()
         for run in runs:
-            logging.info(run.data.metrics)
-            logging.info(run.info)
             if 'accuracy' in run.data.metrics:
                 minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
                 times.append(minutes)
                 accuracies.append(run.data.metrics['accuracy'])
+        logging.info(query_string)
         logging.info(' '.join(
             [str(target_language),
              str(np.mean(accuracies)),
@@ -514,6 +508,18 @@ def main():
              str(np.mean(times))]))
 
     logging.info('Entire experimentation completed succesfully')
+
+
+def main():
+    logging.getLogger().setLevel(logging.INFO)
+    base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
+    argument_parser = argparse.ArgumentParser()
+    for config, value in base_configs.items():
+        argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
+    options = argument_parser.parse_args()
+    configs = vars(options)
+    run_main(configs)
+
 
 
 if __name__ == '__main__':
