@@ -31,6 +31,7 @@ from embeddings import load_embeddings
 from src.domain.matrix_operations import whitening_transformation
 from src.factory.seed_dictionary import SeedDictionaryFactory
 from src.utils import topk_mean, set_compute_engine, solve_dtype, output_embeddings_filename
+from src.validations import whitening_arguments_validation
 
 BATCH_SIZE = 500
 
@@ -41,12 +42,6 @@ def is_same_configuration(config: Dict, config_filter: Dict):
             logging.info("{} is different than {} for {}".format(config.get(key), value, key))
             return False
     return True
-
-
-def whitening_arguments_validation(_config):
-    if (_config['src_dewhiten'] is not None or _config['trg_dewhiten'] is not None) and not _config['whiten']:
-        print('ERROR: De-whitening requires whitening first', file=sys.stderr)
-        sys.exit(-1)
 
 
 def run_experiment(_config):
