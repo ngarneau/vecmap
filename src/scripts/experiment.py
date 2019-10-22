@@ -29,8 +29,8 @@ from mlflow.tracking import MlflowClient
 from cupy_utils import *
 from embeddings import load_embeddings, embeddings_normalization
 from src.domain.matrix_operations import whitening_transformation
-from src.initialization import get_seed_dictionary_indices
-from src.utils import topk_mean, set_compute_engine, output_embeddings_filename, compute_matrix_size
+from src.initialization import get_seed_dictionary_indices, init_computing_engine
+from src.utils import topk_mean, output_embeddings_filename, compute_matrix_size
 from src.validations import whitening_arguments_validation
 
 BATCH_SIZE = 500
@@ -55,7 +55,7 @@ def run_experiment(_config):
     test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
         _config['source_language'], _config['target_language'])
 
-    compute_engine = set_compute_engine(_config['cuda'], _config['seed'])
+    compute_engine = init_computing_engine(_config['cuda'], _config['seed'])
     dtype = _config['precision']
 
     src_vocab, src_embedding_matrix = load_embeddings(_config['embeddings_path'], _config['source_language'],
