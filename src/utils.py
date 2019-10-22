@@ -1,6 +1,3 @@
-import logging
-import sys
-
 import numpy as np
 
 from cupy_utils import *
@@ -32,11 +29,11 @@ def set_compute_engine(use_cuda, seed):
     """
     if use_cuda:
         if not supports_cupy():
-            logging.error('Install CuPy for CUDA support')
-            sys.exit(-1)
+            raise ImportError("Install CuPy for CUDA support.")
         return CuPyEngine(get_cupy(), seed)
     else:
         return NumPyEngine(np, seed)
+
 
 def output_embeddings_filename(_config):
     src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'], _config['target_language'],
