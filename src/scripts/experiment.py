@@ -25,6 +25,7 @@ import numpy as np
 import re
 import sys
 import time
+import datetime
 
 import mlflow
 from mlflow.tracking import MlflowClient
@@ -436,6 +437,72 @@ def get_query_string(configs):
     return " and ".join(["params.{}='{}'".format(config, value) for config, value in configs.items()])
 
 
+def override_configs(source_language, target_language, i, configs):
+    seed = configs['seed'] if configs['supercomputer'] else i
+    configs.update({
+        'iteration': i,
+        'source_language': source_language,
+        'target_language': target_language,
+        'seed': seed
+    })
+    return configs
+
+
+def create_filter(source_language, target_language, configs):
+    filter = {}
+    filter.update(configs)
+    filter['source_language'] = source_language
+    filter['target_language'] = target_language
+    del filter['seed']
+    del filter['cuda']
+    del filter['normalize']
+    del filter['iteration']
+    del filter['num_runs']
+    return filter
+
+
+def retrieve_stats(runs):
+    accuracies = list()
+    coverages = list()
+    times = list()
+    for run in runs:
+        if 'accuracy' in run.data.metrics:
+            minutes = ((run.info.end_time - run.info.start_time)//60//60)%60
+            times.append(minutes)
+            accuracies.append(run.data.metrics['accuracy'])
+            coverages.append(run.data.metrics['coverage'])
+    return accuracies, coverages, times
+
+
+class MlFlowHandler(logging.FileHandler):
+    def emit(self, record):
+        super(MlFlowHandler, self).emit(record)
+        mlflow.log_artifact(self.baseFilename)
+
+
+def configure_logging(path_to_log_directory, log_level):
+    """
+    Configure logger
+
+    :param path_to_log_directory:  path to directory to write log file in
+    :return:
+    """
+    logger = logging.getLogger()
+    logger.setLevel(log_level)
+    formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(message)s')
+
+    log_filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f') + '.log'
+    fh = MlFlowHandler(filename=os.path.join(path_to_log_directory, log_filename))
+    fh.setLevel(log_level)
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+
+    sh = logging.StreamHandler(sys.stdout)
+    sh.setLevel(log_level)
+    sh.setFormatter(formatter)
+    logger.addHandler(sh) 
+
+
 def run_main(configs):
     mlflow.set_tracking_uri(configs['mlflow_output_uri'])
     mlflow.set_experiment(configs['experiment_name'])
@@ -444,10 +511,15 @@ def run_main(configs):
 
     os.makedirs('{}/mapped_embeddings'.format(configs['embedding_output_uri']), exist_ok=True)
 
+    logging_path = './output/logs'
+    os.makedirs(logging_path, exist_ok=True)
+    configure_logging(logging_path, logging.INFO)
+
     if configs['test']:
         language_pairs = [
             ['en_slim', 'de_slim'],
         ]
+        new_language_pairs = []
     else:
         language_pairs = [
             ['en', 'de'],
@@ -455,72 +527,76 @@ def run_main(configs):
             ['en', 'fi'],
             ['en', 'it'],
         ]
+        new_language_pairs = [
+            ['en', 'et'],
+            ['en', 'fa'],
+            ['en', 'lv'],
+            ['en', 'tr'],
+            ['en', 'vi'],
+        ]
 
     if not configs['num_runs'] == 1 and configs['supercomputer']:
         configs['num_runs'] = 1
         logging.warning('Manually overriding num_runs attribute to 1 because supercomputer mode is enabled.')
 
+    # These are languages from the original paper.
     for source_language, target_language in language_pairs:
         for i in range(configs['num_runs']):
-            seed = configs['seed'] if configs['supercomputer'] else i
-            configs.update({
-                'iteration': i,
-                'source_language': source_language,
-                'target_language': target_language,
-                'seed': seed
-            })
+            configs = override_configs(source_language, target_language, i, configs)
+            try:
+                with mlflow.start_run(experiment_id=experiment.experiment_id):
+                    run_experiment(configs)
+            except KeyboardInterrupt:
+                logging.warning("Run exited.")
 
+        filter = create_filter(source_language, target_language, configs)
+        query_string = get_query_string(filter)
+        runs = client.search_runs(experiment_ids=[experiment.experiment_id], filter_string=query_string)
+        accuracies, coverages, times = retrieve_stats(runs)
+        logging.info("Accuracies: {}".format(accuracies))
+        logging.info("Coverages: {}".format(coverages))
+        if len(accuracies) > 0:
+            logging.info("Language: {}, Mean Acc: {}, Std Acc: {}, Max Acc: {}, Min acc: {}, Mean Time: {}".format(
+                target_language,
+                np.mean(accuracies),
+                np.std(accuracies),
+                max(accuracies),
+                min(accuracies),
+                np.mean(times)
+            ))
+        else:
+            logging.warning("Found no accuracies: {}".format(target_language))
+
+
+    # We place new language in another loop since we will create a different table.
+    # Refactoring may be needed here.
+    for source_language, target_language in new_language_pairs:
+        for i in range(configs['num_runs']):
+            configs = override_configs(source_language, target_language, i, configs)
             try:
                 with mlflow.start_run():
                     run_experiment(configs)
             except KeyboardInterrupt:
                 logging.warning("Run exited.")
 
-        filter = {}
-        filter.update(configs)
-        filter['source_language'] = source_language
-        filter['target_language'] = target_language
-        del filter['seed']
-        del filter['cuda']
-        del filter['normalize']
-        del filter['iteration']
-        del filter['num_runs']
-        del filter['supercomputer']
-        del filter['embedding_output_uri']
-        del filter['mlflow_output_uri']
-        del filter['experiment_name']
+        filter = create_filter(source_language, target_language, configs)
         query_string = get_query_string(filter)
-
-        runs = client.search_runs(exp_id, filter_string=query_string)
-
-        accuracies = list()
-        times = list()
-        for run in runs:
-            if 'accuracy' in run.data.metrics:
-                minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
-                times.append(minutes)
-                accuracies.append(run.data.metrics['accuracy'])
-        logging.info(query_string)
-        logging.info(' '.join(
-            [str(target_language),
-             str(np.mean(accuracies)),
-             str(np.std(accuracies)),
-             str(np.mean(times))]))
-
-    logging.info('Entire experimentation completed succesfully')
-
-
-def main():
-    logging.getLogger().setLevel(logging.INFO)
-    base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
-    argument_parser = argparse.ArgumentParser()
-    for config, value in base_configs.items():
-        argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
-    options = argument_parser.parse_args()
-    configs = vars(options)
-    run_main(configs)
-
+        runs = client.search_runs(experiment_ids=[experiment.experiment_id], filter_string=query_string)
+        accuracies, coverages, times = retrieve_stats(runs)
+        logging.info("Accuracies: {}".format(accuracies))
+        logging.info("Coverages: {}".format(coverages))
+        if len(accuracies) > 0:
+            logging.info("Language: {}, Mean Acc: {}, Std Acc: {}, Max Acc: {}, Min acc: {}, Mean Time: {}".format(
+                target_language,
+                np.mean(accuracies),
+                np.std(accuracies),
+                max(accuracies),
+                min(accuracies),
+                np.mean(times)
+            ))
+        else:
+            logging.warning("Found no accuracies: {}".format(target_language))
 
 
 if __name__ == '__main__':
-    main()
+    run_main()
