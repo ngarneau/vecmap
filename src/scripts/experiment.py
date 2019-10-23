@@ -544,7 +544,7 @@ def run_main(configs):
         for i in range(configs['num_runs']):
             configs = override_configs(source_language, target_language, i, configs)
             try:
-                with mlflow.start_run(experiment_id=experiment.experiment_id):
+                with mlflow.start_run(experiment_id=exp_id):
                     run_experiment(configs)
             except KeyboardInterrupt:
                 logging.warning("Run exited.")
@@ -599,4 +599,10 @@ def run_main(configs):
 
 
 if __name__ == '__main__':
-    run_main()
+    base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
+    argument_parser = argparse.ArgumentParser()
+    for config, value in base_configs.items():
+        argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
+    options = argument_parser.parse_args()
+    configs = vars(options)
+    run_main(configs)
