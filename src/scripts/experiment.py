@@ -477,10 +477,32 @@ class MlFlowHandler(logging.FileHandler):
         mlflow.log_artifact(self.baseFilename)
 
 
+def configure_logging(path_to_log_directory, log_level):
+    """
+    Configure logger
+
+    :param path_to_log_directory:  path to directory to write log file in
+    :return:
+    """
+    logger = logging.getLogger()
+    logger.setLevel(log_level)
+    formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(message)s')
+
+    log_filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f') + '.log'
+    fh = MlFlowHandler(filename=os.path.join(path_to_log_directory, log_filename))
+    fh.setLevel(log_level)
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+
+    sh = logging.StreamHandler(sys.stdout)
+    sh.setLevel(log_level)
+    sh.setFormatter(formatter)
+    logger.addHandler(sh) 
+
+
 def main():
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-
 
     exp_name = os.getenv('EXP_NAME', default='vecmap')
 
@@ -497,11 +519,9 @@ def main():
 
     os.makedirs('./output/mapped_embeddings', exist_ok=True)
 
-    os.makedirs('./output/logs', exist_ok=True)
-    log_filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f') + '.log'
-    fh = MlFlowHandler('./output/logs/' + log_filename)
-    fh.setLevel(logging.INFO)
-    logger.addHandler(fh)
+    logging_path = './output/logs'
+    os.makedirs(logging_path, exist_ok=True)
+    configure_logging(logging_path, logging.INFO)
 
     if configs['test']:
         language_pairs = [
