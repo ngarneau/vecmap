@@ -428,7 +428,7 @@ def run_experiment(_config):
     accuracy = np.mean([1 if translation[i] in src2trg[i] else 0 for i in src])
     mlflow.log_metric('coverage', coverage)
     mlflow.log_metric('accuracy', accuracy)
-    print('Coverage:{0:7.2%}  Accuracy:{1:7.2%}'.format(coverage, accuracy))
+    logging.info('Coverage:{0:7.2%}  Accuracy:{1:7.2%}'.format(coverage, accuracy))
 
 
 def get_query_string(configs):
@@ -557,7 +557,15 @@ def main():
         query_string = get_query_string(filter)
         runs = client.search_runs(experiment_ids=[experiment.experiment_id], filter_string=query_string)
         accuracies, times = retrieve_stats(runs)
-        print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
+        logging.info("Accuracies: {}".format(accuracies))
+        logging.info("Language: {}, Mean Acc: {}, Std Acc: {}, Max Acc: {}, Min acc: {}, Mean Time: {}".format(
+            target_language,
+            np.mean(accuracies),
+            np.std(accuracies),
+            max(accuracies),
+            min(accuracies),
+            np.mean(times)
+        ))
 
 
 
