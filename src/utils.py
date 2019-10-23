@@ -16,3 +16,7 @@ def topk_mean(m, k, inplace=False):  # TODO Assuming that axis is 1
         ans += m[ind0, ind1]
         m[ind0, ind1] = minimum
     return ans / k
+
+
+def get_ml_query_string(configs):
+    return " and ".join(["params.{}='{}'".format(config, value) for config, value in configs.items()])

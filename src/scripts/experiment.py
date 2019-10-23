@@ -32,7 +32,7 @@ from mlflow.tracking import MlflowClient
 import yaml
 
 from src.factory.seed_dictionary import SeedDictionaryBuilderFactory
-from src.utils import topk_mean
+from src.utils import topk_mean, get_ml_query_string
 
 BATCH_SIZE = 500
 
@@ -433,10 +433,6 @@ def run_experiment(_config):
     logging.info('Coverage:{0:7.2%}  Accuracy:{1:7.2%}'.format(coverage, accuracy))
 
 
-def get_query_string(configs):
-    return " and ".join(["params.{}='{}'".format(config, value) for config, value in configs.items()])
-
-
 def override_configs(source_language, target_language, i, configs):
     seed = configs['seed'] if configs['supercomputer'] else i
     configs.update({
@@ -550,8 +546,8 @@ def run_main(configs):
                 logging.warning("Run exited.")
 
         filter = create_filter(source_language, target_language, configs)
-        query_string = get_query_string(filter)
-        runs = client.search_runs(experiment_ids=[experiment.experiment_id], filter_string=query_string)
+        query_string = get_ml_query_string(filter)
+        runs = client.search_runs(experiment_ids=[exp_id], filter_string=query_string)
         accuracies, coverages, times = retrieve_stats(runs)
         logging.info("Accuracies: {}".format(accuracies))
         logging.info("Coverages: {}".format(coverages))
@@ -580,8 +576,8 @@ def run_main(configs):
                 logging.warning("Run exited.")
 
         filter = create_filter(source_language, target_language, configs)
-        query_string = get_query_string(filter)
-        runs = client.search_runs(experiment_ids=[experiment.experiment_id], filter_string=query_string)
+        query_string = get_ml_query_string(filter)
+        runs = client.search_runs(experiment_ids=[exp_id], filter_string=query_string)
         accuracies, coverages, times = retrieve_stats(runs)
         logging.info("Accuracies: {}".format(accuracies))
         logging.info("Coverages: {}".format(coverages))
