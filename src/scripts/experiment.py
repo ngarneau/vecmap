@@ -498,7 +498,7 @@ def main():
     os.makedirs('./output/mapped_embeddings', exist_ok=True)
 
     os.makedirs('./output/logs', exist_ok=True)
-    log_filename = datetime.datetime.now().strftime('%Y-%m-%d') + '.log'
+    log_filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f') + '.log'
     fh = MlFlowHandler('./output/logs/' + log_filename)
     fh.setLevel(logging.INFO)
     logger.addHandler(fh)
