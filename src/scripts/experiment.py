@@ -470,8 +470,16 @@ def retrieve_stats(runs):
     return accuracies, times
 
 
+class MlFlowHandler(logging.FileHandler):
+    def emit(self, record):
+        super(MlFlowHandler, self).emit(record)
+        mlflow.log_artifact(self.baseFilename)
+
+
 def main():
-    logging.getLogger().setLevel(logging.INFO)
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
 
     exp_name = os.getenv('EXP_NAME', default='vecmap')
 
@@ -487,6 +495,11 @@ def main():
     experiment = client.get_experiment_by_name('vecmap')
 
     os.makedirs('./output/mapped_embeddings', exist_ok=True)
+
+    os.makedirs('./output/logs', exist_ok=True)
+    fh = MlFlowHandler('./output/logs')
+    fh.setLevel(logging.INFO)
+    logger.addHandler(fh)
 
     if configs['test']:
         language_pairs = [
