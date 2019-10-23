@@ -25,6 +25,7 @@ import numpy as np
 import re
 import sys
 import time
+import datetime
 
 import mlflow
 from mlflow.tracking import MlflowClient
@@ -497,7 +498,8 @@ def main():
     os.makedirs('./output/mapped_embeddings', exist_ok=True)
 
     os.makedirs('./output/logs', exist_ok=True)
-    fh = MlFlowHandler('./output/logs')
+    log_filename = datetime.datetime.now().strftime('%Y-%m-%d') + '.log'
+    fh = MlFlowHandler('./output/logs/' + log_filename)
     fh.setLevel(logging.INFO)
     logger.addHandler(fh)
 
