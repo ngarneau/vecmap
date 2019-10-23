@@ -462,13 +462,15 @@ def create_filter(source_language, target_language, configs):
 
 def retrieve_stats(runs):
     accuracies = list()
+    coverages = list()
     times = list()
     for run in runs:
         if 'accuracy' in run.data.metrics:
             minutes = ((run.info.end_time - run.info.start_time)//60//60)%60
             times.append(minutes)
             accuracies.append(run.data.metrics['accuracy'])
-    return accuracies, times
+            coverages.append(run.data.metrics['coverage'])
+    return accuracies, coverages, times
 
 
 class MlFlowHandler(logging.FileHandler):
@@ -560,8 +562,20 @@ def main():
         filter = create_filter(source_language, target_language, configs)
         query_string = get_query_string(filter)
         runs = client.search_runs(experiment_ids=[experiment.experiment_id], filter_string=query_string)
-        accuracies, times = retrieve_stats(runs)
-        print(target_language, np.mean(accuracies), np.std(accuracies), np.mean(times))
+        accuracies, coverages, times = retrieve_stats(runs)
+        logging.info("Accuracies: {}".format(accuracies))
+        logging.info("Coverages: {}".format(coverages))
+        if len(accuracies) > 0:
+            logging.info("Language: {}, Mean Acc: {}, Std Acc: {}, Max Acc: {}, Min acc: {}, Mean Time: {}".format(
+                target_language,
+                np.mean(accuracies),
+                np.std(accuracies),
+                max(accuracies),
+                min(accuracies),
+                np.mean(times)
+            ))
+        else:
+            logging.warning("Found no accuracies: {}".format(target_language))
 
 
     # We place new language in another loop since we will create a different table.
@@ -578,8 +592,9 @@ def main():
         filter = create_filter(source_language, target_language, configs)
         query_string = get_query_string(filter)
         runs = client.search_runs(experiment_ids=[experiment.experiment_id], filter_string=query_string)
-        accuracies, times = retrieve_stats(runs)
+        accuracies, coverages, times = retrieve_stats(runs)
         logging.info("Accuracies: {}".format(accuracies))
+        logging.info("Coverages: {}".format(coverages))
         if len(accuracies) > 0:
             logging.info("Language: {}, Mean Acc: {}, Std Acc: {}, Max Acc: {}, Min acc: {}, Mean Time: {}".format(
                 target_language,
