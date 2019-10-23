@@ -560,14 +560,17 @@ def main():
         runs = client.search_runs(experiment_ids=[experiment.experiment_id], filter_string=query_string)
         accuracies, times = retrieve_stats(runs)
         logging.info("Accuracies: {}".format(accuracies))
-        logging.info("Language: {}, Mean Acc: {}, Std Acc: {}, Max Acc: {}, Min acc: {}, Mean Time: {}".format(
-            target_language,
-            np.mean(accuracies),
-            np.std(accuracies),
-            max(accuracies),
-            min(accuracies),
-            np.mean(times)
-        ))
+        if len(accuracies) > 0:
+            logging.info("Language: {}, Mean Acc: {}, Std Acc: {}, Max Acc: {}, Min acc: {}, Mean Time: {}".format(
+                target_language,
+                np.mean(accuracies),
+                np.std(accuracies),
+                max(accuracies),
+                min(accuracies),
+                np.mean(times)
+            ))
+        else:
+            logging.warning("Found no accuracies: {}".format(target_language))
 
 
 
