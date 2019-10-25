@@ -6,7 +6,7 @@ from copy import deepcopy
 import sys
 import yaml
 
-from src.scripts.experiment import run_main
+from src.scripts.main_loop import run_main
 from src.domain.table import get_table1, get_table2
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
