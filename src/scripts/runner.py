@@ -42,6 +42,19 @@ def default_launcher(run_args, num_runs, cuda):
     run_main(run_args)
 
 
+def run_experiment_for_table(table):
+    for name, experiment_cls in table.get_experiments():
+        experiment = experiment_cls(base_configs)
+        mlflow.set_experiment(experiment.EXPERIMENT_NAME)
+        logging.info("Running experiment: {}".format(experiment.EXPERIMENT_NAME))
+        for config in experiment.get_parameters_combinations():
+            if 'vocabulary_cutoff' in experiment.EXPERIMENT_NAME:
+                run_launcher(config, num_runs, cuda=False)
+            else:
+                run_launcher(config, num_runs, cuda)
+            logging.info("Done running experiment: {} with override {}".format(experiment.EXPERIMENT_NAME, config))
+
+
 def main(args):
     if args.supercomputer:
         run_launcher = supercomputer_launcher
@@ -58,22 +71,10 @@ def main(args):
 
     # Run table1 experiments
     table1 = get_table1()
-    for name, experiment_cls in table1.get_experiments():
-        experiment = experiment_cls(base_configs)
-        mlflow.set_experiment(experiment.EXPERIMENT_NAME)
-        for config in experiment.get_parameters_combinations():
-            run_launcher(config, num_runs, cuda)
+    run_experiment_for_table(table1)
 
-    # Run table2 experiments
     table2 = get_table2()
-    for name, experiment_cls in table2.get_experiments():
-        experiment = experiment_cls(base_configs)
-        mlflow.set_experiment(experiment.EXPERIMENT_NAME)
-        for config in experiment.get_parameters_combinations():
-            if 'vocabulary_cutoff' in experiment.EXPERIMENT_NAME:
-                run_launcher(config, num_runs, cuda=False)
-            else:
-                run_launcher(config, num_runs, cuda)
+    run_experiment_for_table(table2)
 
 
 if __name__ == '__main__':
