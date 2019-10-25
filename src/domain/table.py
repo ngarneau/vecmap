@@ -1,5 +1,7 @@
 from typing import Dict, List, Iterable, Tuple
 
+import mlflow
+
 from src.domain.experiment import *
 
 class Table:
@@ -19,8 +21,8 @@ class Table1(Table):
     ORIGINAL_RESULTS = {}  # TODO: store results in the same way we retrieve them
 
     def write(self, output_path):
-        # TODO
-        pass
+        experiment = self.experiments['Reproduced Results']
+        runs = experiment.get_runs()
 
 
 class Table2(Table1):
@@ -29,17 +31,17 @@ class Table2(Table1):
         pass
 
 
-def get_table1():
-    return Table1({"Reproduced Results": OriginalExperiment})
+def get_table1(configs):
+    return Table1({"Reproduced Results": OriginalExperiment(configs)})
 
-def get_table2():
+def get_table2(configs):
     return Table2({
-        "Full System": OriginalExperiment,
-        "Unsup. Init (Random)": RandomSeedDictionaryAblationExperiment,
-        "Unsup. Init (Random Cutoff)": RandomCutoffSeedDictionaryAblationExperiment,
-        "Stochastic ": StochasticAblationExperiment,
-        "Cutoff (k=100k)": VocabularyCutOffAblationExperiment,
-        "CSLS": CSLSAblationExperiment,
-        "Bidrectional": DirectionAblationExperiment,
-        "Re-weighting": ReweightAblationExperiment,
+        "Full System": OriginalExperiment(configs),
+        "Unsup. Init (Random)": RandomSeedDictionaryAblationExperiment(configs),
+        "Unsup. Init (Random Cutoff)": RandomCutoffSeedDictionaryAblationExperiment(configs),
+        "Stochastic ": StochasticAblationExperiment(configs),
+        "Cutoff (k=100k)": VocabularyCutOffAblationExperiment(configs),
+        "CSLS": CSLSAblationExperiment(configs),
+        "Bidrectional": DirectionAblationExperiment(configs),
+        "Re-weighting": ReweightAblationExperiment(configs),
     })

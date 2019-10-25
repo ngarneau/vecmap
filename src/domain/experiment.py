@@ -1,3 +1,5 @@
+import mlflow
+from mlflow.tracking import MlflowClient
 
 class Experiment:
 
@@ -8,6 +10,11 @@ class Experiment:
 
     def __init__(self, base_config):
         self.base_config = base_config
+        self.mlflow_client = MlflowClient(tracking_uri=base_config['mlflow_output_uri'])
+
+    def get_runs(self):
+        mlflow_experiment = self.mlflow_client.get_experiment_by_name(self.EXPERIMENT_NAME)
+        return self.client.search_runs(experiment_ids=[mlflow_experiment.experiment_id])
 
     def get_parameters_combinations(self):
         run_params = self.base_config

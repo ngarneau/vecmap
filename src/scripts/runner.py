@@ -45,15 +45,13 @@ def default_launcher(run_args, num_runs, cuda):
 
 
 class Launcher:
-    def __init__(self, run_launcher, base_configs, num_runs, cuda):
+    def __init__(self, run_launcher, num_runs, cuda):
         self.run_launcher = run_launcher
-        self.base_configs = base_configs
         self.num_runs = num_runs
         self.cuda = cuda
 
     def run_experiment_for_table(self, table):
-        for name, experiment_cls in table.get_experiments():
-            experiment = experiment_cls(self.base_configs)
+        for name, experiment in table.get_experiments():
             mlflow.set_experiment(experiment.EXPERIMENT_NAME)
             logging.info("Running experiment: {}".format(experiment.EXPERIMENT_NAME))
             for config in experiment.get_parameters_combinations():
@@ -76,13 +74,13 @@ def main(args):
     cuda = args.cuda
     base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
 
-    launcher = Launcher(run_launcher, base_configs, num_runs, cuda)
+    launcher = Launcher(run_launcher, num_runs, cuda)
 
     # Run table1 experiments
-    table1 = get_table1()
+    table1 = get_table1(base_configs)
     launcher.run_experiment_for_table(table1)
 
-    table2 = get_table2()
+    table2 = get_table2(base_configs)
     launcher.run_experiment_for_table(table2)
 
 
