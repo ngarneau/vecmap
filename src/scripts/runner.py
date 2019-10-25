@@ -7,30 +7,13 @@ import sys
 import yaml
 
 from src.scripts.experiment import run_main
+from src.domain.table import get_table1, get_table2
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
 DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/mlflow'
 DEFAULT_LOCAL_EMBEDDING_OUTPUT = 'output'
 DEFAULT_LOCAL_MLFLOW_OUTPUT = 'mlruns'
 EXPERIMENT_NAME = 'ablation_study'
-
-default_params = {
-    'stochastic_initial': 0.1,
-    'vocabulary_cutoff': 20000,
-    'csls': 10,
-    'direction': 'union',
-    'reweight': 0.5,
-    'seed_dictionary_method': 'unsupervised'
-}
-
-ablation_dict = {
-    'stochastic_initial': [1.0],
-    'vocabulary_cutoff': [0],
-    'csls': [0],
-    'direction': ['forward'],
-    'reweight': [1.0],
-    'seed_dictionary_method': ['random_raw', 'random_cutoff']
-}
 
 
 def run_args_formatter(run_args):
@@ -57,7 +40,6 @@ def default_launcher(run_args, num_runs, cuda):
     run_args['mlflow_output_uri'] = DEFAULT_LOCAL_MLFLOW_OUTPUT
     run_args['experiment_name'] = EXPERIMENT_NAME
     run_main(run_args)
-    # subprocess.call(['python', '-m', 'src.scripts.experiment', *run_args_formatter(run_args)], stdout=sys.stdout, stderr=sys.stderr)
 
 
 def main(args):
@@ -68,26 +50,30 @@ def main(args):
         run_launcher = default_launcher
         mlflow.set_tracking_uri(DEFAULT_LOCAL_MLFLOW_OUTPUT)
 
-    mlflow.set_experiment(EXPERIMENT_NAME)
     num_runs = args.num_runs
     cuda = args.cuda
 
     # Reproduce original run
     base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
-    run_launcher(base_configs, num_runs, cuda)
 
-    # Ablated runs
-    for ablated_param, param_values in ablation_dict.items():
-        logging.info("Ablated param: {}".format(ablated_param))
-        for param_value in param_values:
-            logging.info("Param value: {}".format(param_value))
-            run_params = deepcopy(base_configs)
-            run_params[ablated_param] = param_value
+    # Run table1 experiments
+    table1 = get_table1()
+    for name, experiment_cls in table1.get_experiments():
+        experiment = experiment_cls(base_configs)
+        mlflow.set_experiment(experiment.EXPERIMENT_NAME)
+        for config in experiment.get_parameters_combinations():
+            run_launcher(config, num_runs, cuda)
 
-            if ablated_param == 'vocabulary_cutoff':
-                run_launcher(run_params, num_runs, cuda=False)
+    # Run table2 experiments
+    table2 = get_table2()
+    for name, experiment_cls in table2.get_experiments():
+        experiment = experiment_cls(base_configs)
+        mlflow.set_experiment(experiment.EXPERIMENT_NAME)
+        for config in experiment.get_parameters_combinations():
+            if 'vocabulary_cutoff' in experiment.EXPERIMENT_NAME:
+                run_launcher(config, num_runs, cuda=False)
             else:
-                run_launcher(run_params, num_runs, cuda)
+                run_launcher(config, num_runs, cuda)
 
 
 if __name__ == '__main__':
