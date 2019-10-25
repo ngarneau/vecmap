@@ -42,17 +42,26 @@ def default_launcher(run_args, num_runs, cuda):
     run_main(run_args)
 
 
-def run_experiment_for_table(table):
-    for name, experiment_cls in table.get_experiments():
-        experiment = experiment_cls(base_configs)
-        mlflow.set_experiment(experiment.EXPERIMENT_NAME)
-        logging.info("Running experiment: {}".format(experiment.EXPERIMENT_NAME))
-        for config in experiment.get_parameters_combinations():
-            if 'vocabulary_cutoff' in experiment.EXPERIMENT_NAME:
-                run_launcher(config, num_runs, cuda=False)
-            else:
-                run_launcher(config, num_runs, cuda)
-            logging.info("Done running experiment: {} with override {}".format(experiment.EXPERIMENT_NAME, config))
+
+
+class Launcher:
+    def __init__(self, run_launcher, base_configs, num_runs, cuda):
+        self.run_launcher = run_launcher
+        self.base_configs = base_configs
+        self.num_runs = num_runs
+        self.cuda = cuda
+
+    def run_experiment_for_table(self, table):
+        for name, experiment_cls in table.get_experiments():
+            experiment = experiment_cls(self.base_configs)
+            mlflow.set_experiment(experiment.EXPERIMENT_NAME)
+            logging.info("Running experiment: {}".format(experiment.EXPERIMENT_NAME))
+            for config in experiment.get_parameters_combinations():
+                if 'vocabulary_cutoff' in experiment.EXPERIMENT_NAME:
+                    self.run_launcher(config, self.num_runs, cuda=False)
+                else:
+                    self.run_launcher(config, self.num_runs, self.cuda)
+                logging.info("Done running experiment: {} with override {}".format(experiment.EXPERIMENT_NAME, config))
 
 
 def main(args):
@@ -65,16 +74,16 @@ def main(args):
 
     num_runs = args.num_runs
     cuda = args.cuda
-
-    # Reproduce original run
     base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
+
+    launcher = Launcher(run_launcher, base_configs, num_runs, cuda)
 
     # Run table1 experiments
     table1 = get_table1()
-    run_experiment_for_table(table1)
+    launcher.run_experiment_for_table(table1)
 
     table2 = get_table2()
-    run_experiment_for_table(table2)
+    launcher.run_experiment_for_table(table2)
 
 
 if __name__ == '__main__':
