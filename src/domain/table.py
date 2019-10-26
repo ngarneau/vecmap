@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Dict, List, Iterable, Tuple
 
 import mlflow
@@ -12,6 +13,19 @@ class Table:
         for experiment_name, experiment in self.experiments.items():
             yield experiment_name, experiment
 
+    def aggregate_runs_by_language(self, runs):
+        accuracies = defaultdict(list)
+        times = defaultdict(list)
+        for run in runs:
+            minutes = ((run.info.end_time - run.info.start_time)//60//60)%60
+            languages[run.data.params['target_language']].append(run.data.metrics['accuracy'])
+            languages[run.data.params['target_language']].append(minutes)
+        return {
+            'accuracies': accuracies,
+            'times': times
+        }
+
+
     def write(self, output_path):
         raise NotImplementedError("Writing should be implemented by child class")
 
@@ -23,6 +37,7 @@ class Table1(Table):
     def write(self, output_path):
         experiment = self.experiments['Reproduced Results']
         runs = experiment.get_runs()
+        metrics = self.aggregate_runs_by_language(runs)
 
 
 class Table2(Table1):
