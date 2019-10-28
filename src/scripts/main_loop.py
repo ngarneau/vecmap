@@ -115,8 +115,12 @@ def run_experiment(_config):
 
     dtype = get_dtype(_config)
 
-    src_words, x = load_embeddings(_config['embeddings_path'], _config['source_language'], _config['encoding'], dtype)
-    trg_words, z = load_embeddings(_config['embeddings_path'], _config['target_language'], _config['encoding'], dtype)
+    if _config['test']:
+        source_language = _config['source_language'] + '_slim'
+        target_language = _config['target_language'] + '_slim'
+
+    src_words, x = load_embeddings(_config['embeddings_path'], source_language, _config['encoding'], dtype)
+    trg_words, z = load_embeddings(_config['embeddings_path'], target_language, _config['encoding'], dtype)
 
     compute_engine = get_compute_engine(_config['cuda'], _config['seed'])
     xp = compute_engine.engine
@@ -507,6 +511,12 @@ def run_main(configs):
 
 
 if __name__ == '__main__':
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(message)s')
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(formatter)
+    logger.addHandler(stream_handler)
     base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
     argument_parser = argparse.ArgumentParser()
     for config, value in base_configs.items():
