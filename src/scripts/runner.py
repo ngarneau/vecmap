@@ -62,8 +62,6 @@ def configure_logging(path_to_log_directory, log_level):
     logger.addHandler(sh) 
 
 
-
-
 class Launcher:
     def __init__(self, run_launcher, num_runs, cuda):
         self.run_launcher = run_launcher

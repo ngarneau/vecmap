@@ -1,20 +1,19 @@
-from src.domain.table import Table1
+import yaml
+
+from src.domain.table import get_table1
 
 
-def generate_table_1():
+def generate_table_1(configs):
     """
     This method generates the table 1 from the paper.
     """
-    experiment_name = "main_table"
-    client = MlflowClient()
-    experiment = client.get_experiment_by_name(experiment_name)
-    runs = client.search_runs(experiment_ids=[experiment.experiment_id])
-    table = Table1(experiment_name, runs)
-    table.write('./output/tables_and_plots')
+    table = get_table1(configs)
+    table.write('./output/tables_and_plots/table1.tex')
 
 
 def main():
-    generate_table_1()
+    base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
+    generate_table_1(base_configs)
 
 if __name__ == '__main__':
     main()

@@ -1,3 +1,4 @@
+from collections import defaultdict
 import mlflow
 from mlflow.tracking import MlflowClient
 
@@ -14,7 +15,7 @@ class Experiment:
 
     def get_runs(self):
         mlflow_experiment = self.mlflow_client.get_experiment_by_name(self.EXPERIMENT_NAME)
-        return self.client.search_runs(experiment_ids=[mlflow_experiment.experiment_id])
+        return self.mlflow_client.search_runs(experiment_ids=[mlflow_experiment.experiment_id])
 
     def get_parameters_combinations(self):
         run_params = self.base_config
@@ -52,6 +53,27 @@ class OriginalExperiment(Experiment):
 
     def __init__(self, base_config):
         super().__init__(base_config)
+
+
+    def __is_a_valid_run(self, run):
+        return (
+            run.data.params['target_language'] in self.LANGUAGE_PARAMS['target_language']
+            and run.data.params['source_language'] in self.LANGUAGE_PARAMS['source_language']
+        )
+
+    def aggregate_runs(self):
+        runs = self.get_runs()
+        accuracies = defaultdict(list)
+        times = defaultdict(list)
+        for run in runs:
+            if self.__is_a_valid_run(run):
+                minutes = ((run.info.end_time - run.info.start_time)//60//60)%60
+                accuracies[run.data.params['target_language']].append(run.data.metrics['accuracy'] * 100)
+                times[run.data.params['target_language']].append(minutes)
+        return {
+            'accuracies': accuracies,
+            'times': times
+        }
 
 
 
