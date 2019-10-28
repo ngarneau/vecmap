@@ -326,20 +326,23 @@ def run_experiment(_config):
         it += 1
 
     # Write mapped embeddings
-    logging.info("Writing mapped embeddings to {}".format(src_output))
-    with open(src_output, mode='w', encoding=_config['encoding'], errors='surrogateescape') as srcfile:
-        embeddings.write(src_words, xw, srcfile)
-    logging.info("Done")
+    # logging.info("Writing mapped embeddings to {}".format(src_output))
+    # with open(src_output, mode='w', encoding=_config['encoding'], errors='surrogateescape') as srcfile:
+    #     embeddings.write(src_words, xw, srcfile)
+    # logging.info("Done")
 
-    logging.info("Writing mapped embeddings to {}".format(trg_output))
-    with open(trg_output, mode='w', encoding=_config['encoding'], errors='surrogateescape') as trgfile:
-        embeddings.write(trg_words, zw, trgfile)
-    logging.info("Done")
+    # logging.info("Writing mapped embeddings to {}".format(trg_output))
+    # with open(trg_output, mode='w', encoding=_config['encoding'], errors='surrogateescape') as trgfile:
+    #     embeddings.write(trg_words, zw, trgfile)
+    # logging.info("Done")
 
-    with open(src_output, encoding=_config['encoding'], errors='surrogateescape') as srcfile:
-        src_words, x = embeddings.read(srcfile, dtype=dtype)
-    with open(trg_output, encoding=_config['encoding'], errors='surrogateescape') as trgfile:
-        trg_words, z = embeddings.read(trgfile, dtype=dtype)
+    # with open(src_output, encoding=_config['encoding'], errors='surrogateescape') as srcfile:
+    #     src_words, x = embeddings.read(srcfile, dtype=dtype)
+    # with open(trg_output, encoding=_config['encoding'], errors='surrogateescape') as trgfile:
+    #     trg_words, z = embeddings.read(trgfile, dtype=dtype)
+
+    x = xw
+    z = zw
 
     if _config['cuda'] is True:
         if not supports_cupy():
