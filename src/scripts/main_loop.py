@@ -118,6 +118,10 @@ def run_experiment(_config):
     if _config['test']:
         source_language = _config['source_language'] + '_slim'
         target_language = _config['target_language'] + '_slim'
+    else:
+        source_language = _config['source_language']
+        target_language = _config['target_language']
+
 
     src_words, x = load_embeddings(_config['embeddings_path'], source_language, _config['encoding'], dtype)
     trg_words, z = load_embeddings(_config['embeddings_path'], target_language, _config['encoding'], dtype)
