@@ -10,7 +10,7 @@ import yaml
 from mlflow.tracking import MlflowClient
 
 from src.scripts.main_loop import run_main
-from src.domain.table import get_table1, get_table2
+from src.domain.table import get_table1, get_table2, get_table3
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
 DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/mlflow'
@@ -103,6 +103,11 @@ def main(args):
     logging.info("Lauching experiments for Table 2")
     table2 = get_table2(base_configs)
     launcher.run_experiment_for_table(table2)
+    logging.info("Done.")
+
+    logging.info("Lauching experiments for Table 3")
+    table3 = get_table3(base_configs)
+    launcher.run_experiment_for_table(table3)
     logging.info("Done.")
 
 
