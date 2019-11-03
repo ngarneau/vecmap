@@ -302,6 +302,52 @@ class Table2(Table1):
             table[15:17, col].highlight_best('low', 'bold')
 
 
+        tex = doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
+
+
+class Table3(Table):
+
+    CAPTION = 'The original results were taken from the original paper of \cite{artetxe-etal-2018-robust}. The reproduced results have been generated using the codebase of \cite{artetxe-etal-2018-robust} wrapped around the \texttt{reproduce\_original.sh} from our codebase.'
+
+    def write(self, output_path):
+        experiment = self.experiments['Other Languages']
+        metrics = experiment.aggregate_runs()
+
+        doc = Document(filename='table3', filepath=output_path, doc_type='article', options=('12pt',))
+        sec = doc.new_section('Table 3')
+        col, row = 13, 3
+        table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 12, float_format='.2f', label='original_results'))
+        table.caption = self.CAPTION
+        table.label_pos = 'bottom'
+
+        # Main header
+        table[0,1:4].multicell(bold('EN-ET'), h_align='c')
+        table[0,4:7].multicell(bold('EN-FA'), h_align='c')
+        table[0,7:10].multicell(bold('EN-LV'), h_align='c')
+        table[0,10:13].multicell(bold('EN-VI'), h_align='c')
+        table[0,1:4].add_rule(trim_left=True, trim_right='.3em')
+        table[0,4:7].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0,7:10].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0,10:13].add_rule(trim_left='.3em', trim_right=True)
+
+        # Sub header
+        table[1,1:13] = (['best', 'avg', 'time'] * 4)
+        table[1,0:13].add_rule(trim_left=True, trim_right=True)
+
+        table[2, 0] = bold('Vecmap')
+        table[2, 1] = np.max(metrics['accuracies']['et'])
+        table[2, 2] = np.average(metrics['accuracies']['et'])
+        table[2, 3] = np.average(metrics['times']['et'])
+        table[2, 4] = np.max(metrics['accuracies']['fa'])
+        table[2, 5] = np.average(metrics['accuracies']['fa'])
+        table[2, 6] = np.average(metrics['times']['fa'])
+        table[2, 7] = np.max(metrics['accuracies']['lv'])
+        table[2, 8] = np.average(metrics['accuracies']['lv'])
+        table[2, 9] = np.average(metrics['times']['lv'])
+        table[2, 10] = np.max(metrics['accuracies']['vi'])
+        table[2, 11] = np.average(metrics['accuracies']['vi'])
+        table[2, 12] = np.average(metrics['times']['vi'])
+
         tex = doc.build(save_to_disk=True, compile_to_pdf=True, show_pdf=True)
 
 
@@ -321,4 +367,4 @@ def get_table2(configs):
     })
 
 def get_table3(configs) -> Table:
-    return Table1({"Other Languages": OtherLanguagesOriginalExperiment(configs)})
+    return Table3({"Other Languages": OtherLanguagesOriginalExperiment(configs)})
