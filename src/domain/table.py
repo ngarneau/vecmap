@@ -386,4 +386,7 @@ def get_table2(configs):
     })
 
 def get_table3(configs) -> Table:
-    return Table3({"Other Languages": OtherLanguagesOriginalExperiment(configs)})
+    return Table3({
+        "Other Languages": OtherLanguagesOriginalExperiment(configs),
+        "Other Languages Stochastic": OtherLanguagesStochasticExperiment(configs),
+    })

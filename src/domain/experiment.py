@@ -151,6 +151,19 @@ class OtherLanguagesOriginalExperiment(OriginalExperiment):
         super().__init__(base_config)
 
 
+class OtherLanguagesStochasticExperiment(OriginalExperiment):
+    EXPERIMENT_NAME = 'other_languages_stochastic'
+    LANGUAGE_PARAMS = {
+        'source_language': ['en'],
+        'target_language': ['et', 'fa', 'lv', 'vi']
+    }
+    CHANGING_PARAMS = {
+        'stochastic_initial': [1.0],
+    }
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+
 class HyperparametersExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'hyperparameters'
     LANGUAGE_PARAMS = {
