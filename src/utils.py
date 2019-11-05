@@ -18,19 +18,13 @@ def topk_mean(m, k, inplace=False):  # TODO Assuming that axis is 1
         m[ind0, ind1] = minimum
     return ans / k
 
-
-def output_embeddings_filename(_config):
-    src_output = "./output/{}.{}.emb.{}.txt".format(_config['source_language'], _config['target_language'],
-                                                    _config['iteration'])  # The output source embeddings
-    trg_output = "./output/{}.{}.emb.{}.txt".format(_config['target_language'], _config['source_language'],
-                                                    _config['iteration'])  # The output target embeddings
-
-    return src_output, trg_output
-
-
 def compute_matrix_size(src_embedding_matrix, trg_embedding_matrix, vocabulary_cutoff):
     src_size = src_embedding_matrix.shape[0] if vocabulary_cutoff <= 0 else min(
         src_embedding_matrix.shape[0], vocabulary_cutoff)
     trg_size = trg_embedding_matrix.shape[0] if vocabulary_cutoff <= 0 else min(
         trg_embedding_matrix.shape[0], vocabulary_cutoff)
     return src_size, trg_size
+
+
+def get_ml_query_string(configs):
+    return " and ".join(["params.{}='{}'".format(config, value) for config, value in configs.items()])
