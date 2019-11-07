@@ -2,7 +2,7 @@ import os
 import logging
 import argparse
 import subprocess
-import mlflow
+import handler
 import sys
 import yaml
 
@@ -10,7 +10,7 @@ from src.scripts.main_loop import run_main
 from src.domain.table_generator.table import get_table1, get_table2, get_table3
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
-DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/mlflow'
+DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/handler'
 DEFAULT_LOCAL_EMBEDDING_OUTPUT = 'output'
 DEFAULT_LOCAL_MLFLOW_OUTPUT = 'mlruns'
 EXPERIMENT_NAME = 'ablation_study'
@@ -80,10 +80,10 @@ class Launcher:
 def main(args):
     if args.supercomputer:
         run_launcher = supercomputer_launcher
-        mlflow.set_tracking_uri(DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT)
+        handler.set_tracking_uri(DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT)
     else:
         run_launcher = default_launcher
-        mlflow.set_tracking_uri(DEFAULT_LOCAL_MLFLOW_OUTPUT)
+        handler.set_tracking_uri(DEFAULT_LOCAL_MLFLOW_OUTPUT)
 
     num_runs = args.num_runs
     cuda = args.cuda
