@@ -30,7 +30,7 @@ from src.cupy_utils import *
 from src.domain.embeddings import load_embeddings, embeddings_normalization, length_normalize
 from src.domain.matrix_operations import whitening_transformation, dropout
 from src.initialization import get_seed_dictionary_indices, init_computing_engine
-from src.utils import compute_matrix_size
+from src.utils import compute_matrix_size, resolve_language_source
 from src.utils import topk_mean
 from src.validations import whitening_arguments_validation
 
@@ -85,11 +85,9 @@ def run_experiment(_config):
                                                            src_words, trg_vocab, x,
                                                            z, _config)
     while True:
-
         logging.info("Iteration number {}".format(it))
-        # Increase the keep probability if we have not improve in _config['stochastic_interval iterations
         logging.info("Keep prob {}".format(keep_prob))
-        if it - last_improvement > _config['stochastic_interval']:
+        if did_not_improve(it - last_improvement, _config['stochastic_interval']):
             if keep_prob >= 1.0:
                 logging.info("Training will end...")
                 end = True
