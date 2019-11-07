@@ -37,6 +37,16 @@ from src.validations import whitening_arguments_validation
 BATCH_SIZE = 500
 
 
+def resolve_language_source(_config):
+    if _config['test']:
+        source_language = _config['source_language'] + '_slim'
+        target_language = _config['target_language'] + '_slim'
+    else:
+        source_language = _config['source_language']
+        target_language = _config['target_language']
+    return source_language, target_language
+
+
 def run_experiment(_config):
     logging.info(_config)
     mlflow.log_params(_config)
@@ -44,22 +54,12 @@ def run_experiment(_config):
 
     whitening_arguments_validation(_config)
 
-    if _config['test']:
-        source_language = _config['source_language'] + '_slim'
-        target_language = _config['target_language'] + '_slim'
-    else:
-        source_language = _config['source_language']
-        target_language = _config['target_language']
-
-    test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
-        _config['source_language'], _config['target_language'])
-
-    compute_engine = init_computing_engine(_config['cuda'], _config['seed'])
     dtype = _config['precision']
-
+    source_language, target_language = resolve_language_source(_config)
     src_words, x = load_embeddings(_config['embeddings_path'], source_language, _config['encoding'], dtype)
     trg_vocab, z = load_embeddings(_config['embeddings_path'], target_language, _config['encoding'], dtype)
 
+    compute_engine = init_computing_engine(_config['cuda'], _config['seed'])
     x = compute_engine.send_to_device(x)
     z = compute_engine.send_to_device(z)
 
@@ -245,6 +245,8 @@ def run_experiment(_config):
     trg_word2ind = {word: i for i, word in enumerate(trg_vocab)}
 
     # Read dictionary and compute coverage
+    test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
+        _config['source_language'], _config['target_language'])
     f = open(test_dictionary, encoding=_config['encoding'], errors='surrogateescape')
     src2trg = collections.defaultdict(set)
     oov = set()
