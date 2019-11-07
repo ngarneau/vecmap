@@ -2,7 +2,7 @@ import unittest
 
 import yaml
 
-from src.domain.table import get_table1, get_table2
+from src.domain.table_generator.table import get_table1, get_table2
 
 class TestTableGeneration(unittest.TestCase):
 

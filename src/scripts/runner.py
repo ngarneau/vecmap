@@ -1,16 +1,13 @@
 import os
 import logging
-import datetime
 import argparse
 import subprocess
 import mlflow
-from copy import deepcopy
 import sys
 import yaml
-from mlflow.tracking import MlflowClient
 
 from src.scripts.main_loop import run_main
-from src.domain.table import get_table1, get_table2, get_table3
+from src.domain.table_generator.table import get_table1, get_table2, get_table3
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
 DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/mlflow'
