@@ -3,7 +3,7 @@ iteration: 0
 source_language: "en"
 target_language: "de"
 encoding: "utf-8"  # The character encoding for input/output
-precision: "fp32"  # The floating-point precision
+precision: "float32"  # The floating-point precision, either float16, float32 or float64
 cuda: False
 supervised: False  # recommended if you have a large training dictionary
 semi_supervised: False  # recommended if you have a small seed dictionary
@@ -28,7 +28,6 @@ orthogonal: False  # use orthogonal constrained mapping
 unconstrained: False  # use unconstrained mapping
 direction: "union"  # the direction for dictionary induction (defaults to union)
 threshold: 0.000001  # the convergence threshold
-validation: False  # a dictionary file for validation at each iteration
 stochastic_initial: 0.1  # initial keep probability stochastic dictionary induction (defaults to 0.1)
 stochastic_multiplier: 2.0  # stochastic dictionary induction multiplier (defaults to 2.0)
 stochastic_interval: 50  # stochastic dictionary induction interval (defaults to 50)

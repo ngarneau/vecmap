@@ -1,19 +1,22 @@
 import logging
-from typing import Tuple, List
-import numpy as np
 import re
+from abc import ABC, abstractmethod
+from typing import Tuple, List
+
+import numpy as np
 
 import embeddings
 from src.utils import topk_mean
 
 
-class SeedDictionary:
+class SeedDictionary(ABC):
     def __init__(self, src_words, trg_words):
         self.src_words = src_words
         self.trg_words = trg_words
-        self.src_word2ind = {word: i for i, word in enumerate(self.src_words)}
-        self.trg_word2ind = {word: i for i, word in enumerate(self.trg_words)}
+        self.src_word2ind = {word: ind for ind, word in enumerate(self.src_words)}
+        self.trg_word2ind = {word: ind for ind, word in enumerate(self.trg_words)}
 
+    @abstractmethod
     def get_indices(self) -> Tuple[List[int], List[int]]:
         pass
 
@@ -22,18 +25,20 @@ class UnsupervisedSeedDictionary(SeedDictionary):
     def __init__(self, xp, src_words, trg_words, x, z, configurations):
         super().__init__(src_words, trg_words)
         self.xp = xp
-        self.configurations = configurations
         self.x = x
         self.z = z
+        self.configurations = configurations
 
     def get_indices(self):
         sim_size = min(self.x.shape[0], self.z.shape[0]) if self.configurations['unsupervised_vocab'] <= 0 else min(
             self.x.shape[0], self.z.shape[0], self.configurations['unsupervised_vocab'])
+
         u, s, vt = self.xp.linalg.svd(self.x[:sim_size], full_matrices=False)
         xsim = (u * s).dot(u.T)  # This is equivalent to Mx in the original paper
         u, s, vt = self.xp.linalg.svd(self.z[:sim_size], full_matrices=False)
         zsim = (u * s).dot(u.T)  # This is equivalent to Mz in the original paper
         del u, s, vt
+
         xsim.sort(axis=1)
         zsim.sort(axis=1)
         embeddings.normalize(xsim, self.configurations['normalize'])
@@ -45,23 +50,32 @@ class UnsupervisedSeedDictionary(SeedDictionary):
             knn_sim_bwd = topk_mean(sim.T, k=self.configurations['csls'])
             sim -= knn_sim_fwd[:, self.xp.newaxis] / 2 + knn_sim_bwd / 2
 
-        if self.configurations['direction'] == 'forward':
-            src_indices = self.xp.arange(sim_size)
-            trg_indices = sim.argmax(axis=1)
-        elif self.configurations['direction'] == 'backward':
-            src_indices = sim.argmax(axis=0)
-            trg_indices = self.xp.arange(sim_size)
-        elif self.configurations['direction'] == 'union':
-            src_indices = self.xp.concatenate((self.xp.arange(sim_size), sim.argmax(axis=0)))
-            trg_indices = self.xp.concatenate((sim.argmax(axis=1), self.xp.arange(sim_size)))
+        src_indices, trg_indices = self._dictionary_induction(sim, sim_size)
 
         del xsim, zsim, sim
+        return src_indices, trg_indices
+
+    def _dictionary_induction(self, sim, sim_size):
+        induction_direction = self.configurations['direction']
+        if induction_direction == 'forward':
+            src_indices = self.xp.arange(sim_size)
+            trg_indices = sim.argmax(axis=1)
+        elif induction_direction == 'backward':
+            src_indices = sim.argmax(axis=0)
+            trg_indices = self.xp.arange(sim_size)
+        elif induction_direction == 'union':
+            src_indices = self.xp.concatenate((self.xp.arange(sim_size), sim.argmax(axis=0)))
+            trg_indices = self.xp.concatenate((sim.argmax(axis=1), self.xp.arange(sim_size)))
+        else:
+            raise ("Method {} not implemented.".format(induction_direction))
+
+        del sim
 
         return src_indices, trg_indices
 
 
 class NumeralsSeedDictionary(SeedDictionary):
-    def __init__(self, xp, src_words, trg_words, x, z, configurations):
+    def __init__(self, src_words, trg_words):
         super().__init__(src_words, trg_words)
         self.numeral_regex = re.compile('^[0-9]+$')
 
@@ -69,6 +83,10 @@ class NumeralsSeedDictionary(SeedDictionary):
         src_numerals = {word for word in self.src_words if self.numeral_regex.match(word) is not None}
         trg_numerals = {word for word in self.trg_words if self.numeral_regex.match(word) is not None}
         numerals = src_numerals.intersection(trg_numerals)
+
+        return self._dictionary_induction(numerals)
+
+    def _dictionary_induction(self, numerals):
         src_indices = list()
         trg_indices = list()
         for word in numerals:
@@ -78,11 +96,14 @@ class NumeralsSeedDictionary(SeedDictionary):
 
 
 class IdenticalSeedDictionary(SeedDictionary):
-    def __init__(self, xp, src_words, trg_words, x, z, configurations):
+    def __init__(self, src_words, trg_words):
         super().__init__(src_words, trg_words)
 
     def get_indices(self):
         identical = set(self.src_words).intersection(set(self.trg_words))
+        return self._dictionary_induction(identical)
+
+    def _dictionary_induction(self, identical):
         src_indices = list()
         trg_indices = list()
         for word in identical:
@@ -92,17 +113,23 @@ class IdenticalSeedDictionary(SeedDictionary):
 
 
 class DefaultSeedDictionary(SeedDictionary):
-    def __init__(self, xp, src_words, trg_words, x, z, configurations):
+    def __init__(self, src_words, trg_words, configurations):
         super().__init__(src_words, trg_words)
         self.configurations = configurations
-        self.dictionary_filename = './data/dictionaries/{}-{}.train.txt'.format(
-            configurations['source_language'], configurations['target_language'])  # the training dictionary file
+
+        self.training_dictionary_filename = './data/dictionaries/{}-{}.train.txt'.format(
+            configurations['source_language'],
+            configurations['target_language'])
 
     def get_indices(self):
-        f = open(self.dictionary_filename, encoding=self.configurations['encoding'], errors='surrogateescape')
+        dict_data = open(self.training_dictionary_filename, encoding=self.configurations['encoding'],
+                         errors='surrogateescape')
+        return self._dictionary_induction(dict_data)
+
+    def _dictionary_induction(self, dict_data):
         src_indices = list()
         trg_indices = list()
-        for line in f:
+        for line in dict_data:
             src, trg = line.split()
             try:
                 src_ind = self.src_word2ind[src]

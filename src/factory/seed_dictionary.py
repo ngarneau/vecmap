@@ -1,8 +1,7 @@
 from src.domain.seed_dictionary import *
 
 
-class SeedDictionaryBuilderFactory:
-
+class SeedDictionaryFactory:
     UNSUPERVISED = 'unsupervised'
     NUMERALS = 'numerals'
     IDENTICAL = 'identical'
@@ -11,18 +10,19 @@ class SeedDictionaryBuilderFactory:
     DEFAULT = 'default'
 
     @classmethod
-    def get_seed_dictionary_builder(cls, method, xp, src_words, trg_words, x, z, configurations):
+    # todo revisit the naming.
+    def create_seed_dictionary_builder(cls, method, xp, src_words, trg_words, x, z, configurations):
         if method == cls.UNSUPERVISED:
             return UnsupervisedSeedDictionary(xp, src_words, trg_words, x, z, configurations)
         elif method == cls.NUMERALS:
-            return NumeralsSeedDictionary(xp, src_words, trg_words, x, z, configurations)
+            return NumeralsSeedDictionary(src_words, trg_words)
         elif method == cls.IDENTICAL:
-            return IdenticalSeedDictionary(xp, src_words, trg_words, x, z, configurations)
+            return IdenticalSeedDictionary(src_words, trg_words)
         elif method == cls.RANDOM_RAW:
             return RandomRawSeedDictionary(xp, src_words, trg_words, x, z, configurations)
         elif method == cls.RANDOM_CUTOFF:
             return RandomCutoffSeedDictionary(xp, src_words, trg_words, x, z, configurations)
         elif method == cls.DEFAULT:
-            return DefaultSeedDictionary(xp, src_words, trg_words, x, z, configurations)
+            return DefaultSeedDictionary(src_words, trg_words, configurations)
         else:
             raise ("Method {} not implemented.".format(method))
