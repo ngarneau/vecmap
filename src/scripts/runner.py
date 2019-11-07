@@ -1,13 +1,14 @@
-import os
-import logging
 import argparse
+import logging
+import os
 import subprocess
-import handler
 import sys
+
+import mlflow
 import yaml
 
-from src.scripts.main_loop import run_main
 from src.domain.table_generator.table import get_table1, get_table2, get_table3
+from src.scripts.main_loop import run_main
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
 DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/handler'
@@ -42,11 +43,10 @@ def default_launcher(run_args, num_runs, cuda):
         run_main(run_args)
 
 
-def configure_logging(path_to_log_directory, log_level):
+def configure_logging(log_level):
     """
     Configure logger
 
-    :param path_to_log_directory:  path to directory to write log file in
     :return:
     """
     logger = logging.getLogger()
@@ -56,7 +56,7 @@ def configure_logging(path_to_log_directory, log_level):
     sh = logging.StreamHandler(sys.stdout)
     sh.setLevel(log_level)
     sh.setFormatter(formatter)
-    logger.addHandler(sh) 
+    logger.addHandler(sh)
 
 
 class Launcher:
@@ -80,10 +80,10 @@ class Launcher:
 def main(args):
     if args.supercomputer:
         run_launcher = supercomputer_launcher
-        handler.set_tracking_uri(DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT)
+        mlflow.set_tracking_uri(DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT)
     else:
         run_launcher = default_launcher
-        handler.set_tracking_uri(DEFAULT_LOCAL_MLFLOW_OUTPUT)
+        mlflow.set_tracking_uri(DEFAULT_LOCAL_MLFLOW_OUTPUT)
 
     num_runs = args.num_runs
     cuda = args.cuda
@@ -111,7 +111,7 @@ def main(args):
 if __name__ == '__main__':
     logging_path = './output/logs'
     os.makedirs(logging_path, exist_ok=True)
-    configure_logging(logging_path, logging.INFO)
+    configure_logging(logging.INFO)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--num_runs', type=int, default=10, help='The number of runs to execute per configuration.')
