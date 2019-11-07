@@ -142,14 +142,16 @@ class DefaultSeedDictionary(SeedDictionary):
 
 
 class RandomRawSeedDictionary(SeedDictionary):
-    def __init__(self, xp, src_words, trg_words, x, z, configurations):
+    def __init__(self, src_words, trg_words, configurations):
         super().__init__(src_words, trg_words)
         self.configurations = configurations
 
     def get_indices(self):
+        return self._generate_indices()
+
+    def _generate_indices(self):
         src_indices = list()
         trg_indices = list()
-
         if len(self.src_words) > len(self.trg_words):
             random_mapping = np.random.randint(len(self.trg_words), size=len(self.src_words))
 
@@ -169,32 +171,12 @@ class RandomRawSeedDictionary(SeedDictionary):
         return src_indices, trg_indices
 
 
-class RandomCutoffSeedDictionary(SeedDictionary):
-    def __init__(self, xp, src_words, trg_words, x, z, configurations):
-        super().__init__(src_words, trg_words)
-        self.configurations = configurations
+class RandomCutoffSeedDictionary(RandomRawSeedDictionary):
+    def __init__(self, src_words, trg_words, configurations):
+        super().__init__(src_words, trg_words, configurations)
 
     def get_indices(self):
         self.src_words = self.src_words[:self.configurations['vocabulary_cutoff']]
         self.trg_words = self.trg_words[:self.configurations['vocabulary_cutoff']]
 
-        src_indices = list()
-        trg_indices = list()
-
-        if len(self.src_words) > len(self.trg_words):
-            random_mapping = np.random.randint(len(self.trg_words), size=len(self.src_words))
-
-            for src_index, trg_index in enumerate(random_mapping):
-                src_indices.append(src_index)
-                trg_indices.append(trg_index)
-        else:
-            random_mapping = np.random.randint(len(self.src_words), size=len(self.trg_words))
-
-            for trg_index, src_index in enumerate(random_mapping):
-                src_indices.append(src_index)
-                trg_indices.append(trg_index)
-
-        src_indices = np.array(src_indices)
-        trg_indices = np.array(trg_indices)
-
-        return src_indices, trg_indices
+        return self._generate_indices()
