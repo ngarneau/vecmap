@@ -15,20 +15,19 @@
 
 import argparse
 import collections
-import datetime
 import logging
 import os
 import sys
 import time
-from typing import Dict
 
-import mlflow
 import numpy as np
 import yaml
 from mlflow.tracking import MlflowClient
 
+import mlflow
 from cupy_utils import *
 from embeddings import load_embeddings, embeddings_normalization, length_normalize
+from mlflow.handler import get_mlflow_logging_handler
 from src.domain.matrix_operations import whitening_transformation, dropout
 from src.initialization import get_seed_dictionary_indices, init_computing_engine
 from src.utils import compute_matrix_size
@@ -36,14 +35,6 @@ from src.utils import topk_mean
 from src.validations import whitening_arguments_validation
 
 BATCH_SIZE = 500
-
-
-def is_same_configuration(config: Dict, config_filter: Dict):
-    for key, value in config_filter.items():
-        if config.get(key) != value:
-            logging.info("{} is different than {} for {}".format(config.get(key), value, key))
-            return False
-    return True
 
 
 def run_experiment(_config):
@@ -332,57 +323,6 @@ def run_experiment(_config):
     mlflow.log_metric('coverage', coverage)
     mlflow.log_metric('accuracy', accuracy)
     logging.info('Coverage:{0:7.2%}  Accuracy:{1:7.2%}'.format(coverage, accuracy))
-
-
-def override_configs(source_language, target_language, i, configs):
-    seed = configs['seed'] if configs['supercomputer'] else i
-    configs.update({
-        'iteration': i,
-        'source_language': source_language,
-        'target_language': target_language,
-        'seed': seed
-    })
-    return configs
-
-
-def create_filter(source_language, target_language, configs):
-    filter = {}
-    filter.update(configs)
-    filter['source_language'] = source_language
-    filter['target_language'] = target_language
-    del filter['seed']
-    del filter['cuda']
-    del filter['normalize']
-    del filter['iteration']
-    del filter['num_runs']
-    return filter
-
-
-def retrieve_stats(runs):
-    accuracies = list()
-    coverages = list()
-    times = list()
-    for run in runs:
-        if 'accuracy' in run.data.metrics:
-            minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
-            times.append(minutes)
-            accuracies.append(run.data.metrics['accuracy'])
-            coverages.append(run.data.metrics['coverage'])
-    return accuracies, coverages, times
-
-
-class MlFlowHandler(logging.FileHandler):
-    def emit(self, record):
-        super(MlFlowHandler, self).emit(record)
-        mlflow.log_artifact(self.baseFilename)
-
-
-def get_mlflow_logging_handler(path_to_log_directory, log_level, formatter):
-    log_filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f') + '.log'
-    fh = MlFlowHandler(filename=os.path.join(path_to_log_directory, log_filename))
-    fh.setLevel(log_level)
-    fh.setFormatter(formatter)
-    return fh
 
 
 def run_main(configs):
