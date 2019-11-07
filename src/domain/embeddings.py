@@ -16,7 +16,7 @@ import logging
 
 import numpy as np
 
-from cupy_utils import *
+from src.cupy_utils import *
 
 
 def embeddings_normalization(src_embedding_matrix, trg_embedding_matrix, normalization_method):

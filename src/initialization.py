@@ -1,6 +1,6 @@
 import numpy as np
 
-from cupy_utils import supports_cupy, get_cupy
+from src.cupy_utils import supports_cupy, get_cupy
 from src.domain.compute_engine import CuPyEngine, NumPyEngine
 from src.factory.seed_dictionary import SeedDictionaryFactory
 

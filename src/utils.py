@@ -1,4 +1,4 @@
-from cupy_utils import *
+from src.cupy_utils import *
 
 
 def topk_mean(m, k, inplace=False):  # TODO Assuming that axis is 1

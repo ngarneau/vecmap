@@ -5,7 +5,7 @@ from typing import Tuple, List
 
 import numpy as np
 
-import embeddings
+from src.domain import embeddings
 from src.utils import topk_mean
 
 

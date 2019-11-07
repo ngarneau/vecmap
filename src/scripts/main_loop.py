@@ -25,8 +25,8 @@ import yaml
 from mlflow.tracking import MlflowClient
 
 import mlflow
-from cupy_utils import *
-from embeddings import load_embeddings, embeddings_normalization, length_normalize
+from src.cupy_utils import *
+from src.domain.embeddings import load_embeddings, embeddings_normalization, length_normalize
 from mlflow.handler import get_mlflow_logging_handler
 from src.domain.matrix_operations import whitening_transformation, dropout
 from src.initialization import get_seed_dictionary_indices, init_computing_engine
