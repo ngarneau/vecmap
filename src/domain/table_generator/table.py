@@ -1,10 +1,10 @@
-from typing import Dict, List, Iterable, Tuple
+from typing import Dict, Iterable, Tuple
 
 import numpy as np
-import mlflow
-from python2latex import Document, Table as LatexTable, build, bold
+from python2latex import Document, Table as LatexTable, bold
 
 from src.domain.experiment import *
+
 
 class Table:
     def __init__(self, experiments: Dict[str, Experiment]):
@@ -19,7 +19,6 @@ class Table:
 
 
 class Table1(Table):
-
     ORIGINAL_RESULTS = {
         'de': {'best': 48.47, 'avg': 48.19, 'time': 7.3, 'successful': 1.0},
         'es': {'best': 37.60, 'avg': 37.33, 'time': 9.1, 'successful': 1.0},
@@ -35,23 +34,24 @@ class Table1(Table):
         doc = Document(filename='table1', filepath=output_path, doc_type='article', options=('12pt',))
         sec = doc.new_section('Table 1')
         col, row = 17, 4
-        table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='original_results'))
+        table = sec.new(
+            LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='original_results'))
         table.caption = self.CAPTION
         table.label_pos = 'bottom'
 
         # Main header
-        table[0,1:5].multicell(bold('EN-DE'), h_align='c')
-        table[0,5:9].multicell(bold('EN-ES'), h_align='c')
-        table[0,9:13].multicell(bold('EN-FI'), h_align='c')
-        table[0,13:17].multicell(bold('EN-IT'), h_align='c')
-        table[0,1:5].add_rule(trim_left=True, trim_right='.3em')
-        table[0,5:9].add_rule(trim_left='.3em', trim_right='.3em')
-        table[0,9:13].add_rule(trim_left='.3em', trim_right='.3em')
-        table[0,13:17].add_rule(trim_left='.3em', trim_right=True)
+        table[0, 1:5].multicell(bold('EN-DE'), h_align='c')
+        table[0, 5:9].multicell(bold('EN-ES'), h_align='c')
+        table[0, 9:13].multicell(bold('EN-FI'), h_align='c')
+        table[0, 13:17].multicell(bold('EN-IT'), h_align='c')
+        table[0, 1:5].add_rule(trim_left=True, trim_right='.3em')
+        table[0, 5:9].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0, 9:13].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0, 13:17].add_rule(trim_left='.3em', trim_right=True)
 
         # Sub header
-        table[1,1:17] = (['best', 'avg', 's', 't'] * 4)
-        table[1,0:17].add_rule(trim_left=True, trim_right=True)
+        table[1, 1:17] = (['best', 'avg', 's', 't'] * 4)
+        table[1, 0:17].add_rule(trim_left=True, trim_right=True)
 
         table[2, 0] = 'Original'
         table[2, 1] = self.ORIGINAL_RESULTS['de']['best']
@@ -74,19 +74,19 @@ class Table1(Table):
         table[3, 0] = bold('Reproduced')
         table[3, 1] = np.max(metrics['accuracies']['de'])
         table[3, 2] = np.average(metrics['accuracies']['de'])
-        table[3, 3] = np.sum(np.array(metrics['accuracies']['de']) > 1.0)/len(metrics['accuracies']['de'])
+        table[3, 3] = np.sum(np.array(metrics['accuracies']['de']) > 1.0) / len(metrics['accuracies']['de'])
         table[3, 4] = np.average(metrics['times']['de'])
         table[3, 5] = np.max(metrics['accuracies']['es'])
         table[3, 6] = np.average(metrics['accuracies']['es'])
-        table[3, 7] = np.sum(np.array(metrics['accuracies']['es']) > 1.0)/len(metrics['accuracies']['es'])
+        table[3, 7] = np.sum(np.array(metrics['accuracies']['es']) > 1.0) / len(metrics['accuracies']['es'])
         table[3, 8] = np.average(metrics['times']['es'])
         table[3, 9] = np.max(metrics['accuracies']['fi'])
         table[3, 10] = np.average(metrics['accuracies']['fi'])
-        table[3, 11] = np.sum(np.array(metrics['accuracies']['fi']) > 1.0)/len(metrics['accuracies']['fi'])
+        table[3, 11] = np.sum(np.array(metrics['accuracies']['fi']) > 1.0) / len(metrics['accuracies']['fi'])
         table[3, 12] = np.average(metrics['times']['fi'])
         table[3, 13] = np.max(metrics['accuracies']['it'])
         table[3, 14] = np.average(metrics['accuracies']['it'])
-        table[3, 15] = np.sum(np.array(metrics['accuracies']['it']) > 1.0)/len(metrics['accuracies']['it'])
+        table[3, 15] = np.sum(np.array(metrics['accuracies']['it']) > 1.0) / len(metrics['accuracies']['it'])
         table[3, 16] = np.average(metrics['times']['it'])
 
         # Columns that check for higher values
@@ -101,7 +101,6 @@ class Table1(Table):
 
 
 class Table2(Table1):
-
     ORIGINAL_RESULTS = {
         'Full System': {
             'de': {'best': 48.47, 'avg': 48.19, 'time': 7.3, 'successful': 1.0},
@@ -170,19 +169,19 @@ class Table2(Table1):
     def write_new_row(self, table, row, metrics):
         table[row, 1] = np.max(metrics['accuracies']['de'])
         table[row, 2] = np.average(metrics['accuracies']['de'])
-        table[row, 3] = np.sum(np.array(metrics['accuracies']['de']) > 1.0)/len(metrics['accuracies']['de'])
+        table[row, 3] = np.sum(np.array(metrics['accuracies']['de']) > 1.0) / len(metrics['accuracies']['de'])
         table[row, 4] = np.average(metrics['times']['de'])
         table[row, 5] = np.max(metrics['accuracies']['es'])
         table[row, 6] = np.average(metrics['accuracies']['es'])
-        table[row, 7] = np.sum(np.array(metrics['accuracies']['es']) > 1.0)/len(metrics['accuracies']['es'])
+        table[row, 7] = np.sum(np.array(metrics['accuracies']['es']) > 1.0) / len(metrics['accuracies']['es'])
         table[row, 8] = np.average(metrics['times']['es'])
         table[row, 9] = np.max(metrics['accuracies']['fi'])
         table[row, 10] = np.average(metrics['accuracies']['fi'])
-        table[row, 11] = np.sum(np.array(metrics['accuracies']['fi']) > 1.0)/len(metrics['accuracies']['fi'])
+        table[row, 11] = np.sum(np.array(metrics['accuracies']['fi']) > 1.0) / len(metrics['accuracies']['fi'])
         table[row, 12] = np.average(metrics['times']['fi'])
         table[row, 13] = np.max(metrics['accuracies']['it'])
         table[row, 14] = np.average(metrics['accuracies']['it'])
-        table[row, 15] = np.sum(np.array(metrics['accuracies']['it']) > 1.0)/len(metrics['accuracies']['it'])
+        table[row, 15] = np.sum(np.array(metrics['accuracies']['it']) > 1.0) / len(metrics['accuracies']['it'])
         table[row, 16] = np.average(metrics['times']['it'])
         return table
 
@@ -190,23 +189,24 @@ class Table2(Table1):
         doc = Document(filename='table2', filepath=output_path, doc_type='article', options=('12pt',))
         sec = doc.new_section('Table 2')
         col, row = 17, 17
-        table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='ablation_study'))
+        table = sec.new(
+            LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='ablation_study'))
         table.caption = self.CAPTION
         table.label_pos = 'bottom'
 
         # Main header
-        table[0,1:5].multicell(bold('EN-DE'), h_align='c')
-        table[0,5:9].multicell(bold('EN-ES'), h_align='c')
-        table[0,9:13].multicell(bold('EN-FI'), h_align='c')
-        table[0,13:17].multicell(bold('EN-IT'), h_align='c')
-        table[0,1:5].add_rule(trim_left=True, trim_right='.3em')
-        table[0,5:9].add_rule(trim_left='.3em', trim_right='.3em')
-        table[0,9:13].add_rule(trim_left='.3em', trim_right='.3em')
-        table[0,13:17].add_rule(trim_left='.3em', trim_right=True)
+        table[0, 1:5].multicell(bold('EN-DE'), h_align='c')
+        table[0, 5:9].multicell(bold('EN-ES'), h_align='c')
+        table[0, 9:13].multicell(bold('EN-FI'), h_align='c')
+        table[0, 13:17].multicell(bold('EN-IT'), h_align='c')
+        table[0, 1:5].add_rule(trim_left=True, trim_right='.3em')
+        table[0, 5:9].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0, 9:13].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0, 13:17].add_rule(trim_left='.3em', trim_right=True)
 
         # Sub header
-        table[1,1:17] = (['best', 'avg', 's', 't'] * 4)
-        table[1,0:17].add_rule(trim_left=True, trim_right=True)
+        table[1, 1:17] = (['best', 'avg', 's', 't'] * 4)
+        table[1, 0:17].add_rule(trim_left=True, trim_right=True)
 
         ### Full system metrics
         table[2, 0] = 'Full System'
@@ -215,7 +215,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[3, 0] = bold('Reproduced')
         table = self.write_new_row(table, 3, metrics)
-        table[3,0:17].add_rule(trim_left=True, trim_right=True)
+        table[3, 0:17].add_rule(trim_left=True, trim_right=True)
         # Columns that check for higher values
         for col in [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15]:
             table[2:4, col].highlight_best('high', 'bold')
@@ -234,7 +234,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[6, 0] = bold('Rand. Cut.')
         table = self.write_new_row(table, 6, metrics)
-        table[6,0:17].add_rule(trim_left=True, trim_right=True)
+        table[6, 0:17].add_rule(trim_left=True, trim_right=True)
         # Columns that check for higher values
         for col in [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15]:
             table[4:7, col].highlight_best('high', 'bold')
@@ -249,7 +249,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[8, 0] = bold('Reproduced')
         table = self.write_new_row(table, 8, metrics)
-        table[8,0:17].add_rule(trim_left=True, trim_right=True)
+        table[8, 0:17].add_rule(trim_left=True, trim_right=True)
         # Columns that check for higher values
         for col in [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15]:
             table[7:9, col].highlight_best('high', 'bold')
@@ -264,7 +264,7 @@ class Table2(Table1):
         # metrics = experiment.aggregate_runs()
         table[10, 0] = bold('Reproduced')
         # table = self.write_new_row(table, 10, metrics)
-        table[10,0:17].add_rule(trim_left=True, trim_right=True)
+        table[10, 0:17].add_rule(trim_left=True, trim_right=True)
         # # Columns that check for higher values
         # for col in [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15]:
         #     table[9:11, col].highlight_best('high', 'bold')
@@ -279,7 +279,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[12, 0] = bold('Reproduced')
         table = self.write_new_row(table, 12, metrics)
-        table[12,0:17].add_rule(trim_left=True, trim_right=True)
+        table[12, 0:17].add_rule(trim_left=True, trim_right=True)
         # Columns that check for higher values
         for col in [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15]:
             table[11:13, col].highlight_best('high', 'bold')
@@ -294,7 +294,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[14, 0] = bold('Reproduced')
         table = self.write_new_row(table, 14, metrics)
-        table[14,0:17].add_rule(trim_left=True, trim_right=True)
+        table[14, 0:17].add_rule(trim_left=True, trim_right=True)
         # Columns that check for higher values
         for col in [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15]:
             table[13:15, col].highlight_best('high', 'bold')
@@ -316,12 +316,10 @@ class Table2(Table1):
         for col in [4, 8, 12, 16]:
             table[15:17, col].highlight_best('low', 'bold')
 
-
         tex = doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
 
 
 class Table3(Table):
-
     CAPTION = 'The original results were taken from the original paper of \cite{artetxe-etal-2018-robust}. The reproduced results have been generated using the codebase of \cite{artetxe-etal-2018-robust} wrapped around the \texttt{reproduce\_original.sh} from our codebase.'
 
     def write(self, output_path):
@@ -331,40 +329,41 @@ class Table3(Table):
         doc = Document(filename='table3', filepath=output_path, doc_type='article', options=('12pt',))
         sec = doc.new_section('Table 3')
         col, row = 17, 3
-        table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='other_languages_results'))
+        table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f',
+                                   label='other_languages_results'))
         table.caption = self.CAPTION
         table.label_pos = 'bottom'
 
         # Main header
-        table[0,1:5].multicell(bold('EN-ET'), h_align='c')
-        table[0,5:9].multicell(bold('EN-FA'), h_align='c')
-        table[0,9:13].multicell(bold('EN-LV'), h_align='c')
-        table[0,13:17].multicell(bold('EN-VI'), h_align='c')
-        table[0,1:5].add_rule(trim_left=True, trim_right='.3em')
-        table[0,5:9].add_rule(trim_left='.3em', trim_right='.3em')
-        table[0,9:13].add_rule(trim_left='.3em', trim_right='.3em')
-        table[0,13:17].add_rule(trim_left='.3em', trim_right=True)
+        table[0, 1:5].multicell(bold('EN-ET'), h_align='c')
+        table[0, 5:9].multicell(bold('EN-FA'), h_align='c')
+        table[0, 9:13].multicell(bold('EN-LV'), h_align='c')
+        table[0, 13:17].multicell(bold('EN-VI'), h_align='c')
+        table[0, 1:5].add_rule(trim_left=True, trim_right='.3em')
+        table[0, 5:9].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0, 9:13].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0, 13:17].add_rule(trim_left='.3em', trim_right=True)
 
         # Sub header
-        table[1,1:17] = (['best', 'avg', 's', 't'] * 4)
-        table[1,0:17].add_rule(trim_left=True, trim_right=True)
+        table[1, 1:17] = (['best', 'avg', 's', 't'] * 4)
+        table[1, 0:17].add_rule(trim_left=True, trim_right=True)
 
         table[2, 0] = bold('Vecmap')
         table[2, 1] = np.max(metrics['accuracies']['et'])
         table[2, 2] = np.average(metrics['accuracies']['et'])
-        table[2, 3] = np.sum(np.array(metrics['accuracies']['et']) > 1.0)/len(metrics['accuracies']['et'])
+        table[2, 3] = np.sum(np.array(metrics['accuracies']['et']) > 1.0) / len(metrics['accuracies']['et'])
         table[2, 4] = np.average(metrics['times']['et'])
         table[2, 5] = np.max(metrics['accuracies']['fa'])
         table[2, 6] = np.average(metrics['accuracies']['fa'])
-        table[2, 7] = np.sum(np.array(metrics['accuracies']['fa']) > 1.0)/len(metrics['accuracies']['fa'])
+        table[2, 7] = np.sum(np.array(metrics['accuracies']['fa']) > 1.0) / len(metrics['accuracies']['fa'])
         table[2, 8] = np.average(metrics['times']['fa'])
         table[2, 9] = np.max(metrics['accuracies']['lv'])
         table[2, 10] = np.average(metrics['accuracies']['lv'])
-        table[2, 11] = np.sum(np.array(metrics['accuracies']['lv']) > 1.0)/len(metrics['accuracies']['lv'])
+        table[2, 11] = np.sum(np.array(metrics['accuracies']['lv']) > 1.0) / len(metrics['accuracies']['lv'])
         table[2, 12] = np.average(metrics['times']['lv'])
         table[2, 13] = np.max(metrics['accuracies']['vi'])
         table[2, 14] = np.average(metrics['accuracies']['vi'])
-        table[2, 15] = np.sum(np.array(metrics['accuracies']['vi']) > 1.0)/len(metrics['accuracies']['vi'])
+        table[2, 15] = np.sum(np.array(metrics['accuracies']['vi']) > 1.0) / len(metrics['accuracies']['vi'])
         table[2, 16] = np.average(metrics['times']['vi'])
 
         tex = doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
@@ -372,6 +371,7 @@ class Table3(Table):
 
 def get_table1(configs) -> Table:
     return Table1({"Reproduced Results": OriginalExperiment(configs)})
+
 
 def get_table2(configs):
     return Table2({
@@ -384,6 +384,7 @@ def get_table2(configs):
         "Bidrectional": DirectionAblationExperiment(configs),
         "Re-weighting": ReweightAblationExperiment(configs),
     })
+
 
 def get_table3(configs) -> Table:
     return Table3({
