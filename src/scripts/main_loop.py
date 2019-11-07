@@ -25,9 +25,9 @@ import yaml
 from mlflow.tracking import MlflowClient
 
 import mlflow
+from mlflow.handler import get_mlflow_logging_handler
 from src.cupy_utils import *
 from src.domain.embeddings import load_embeddings, embeddings_normalization, length_normalize
-from mlflow.handler import get_mlflow_logging_handler
 from src.domain.matrix_operations import whitening_transformation, dropout
 from src.initialization import get_seed_dictionary_indices, init_computing_engine
 from src.utils import compute_matrix_size
@@ -35,16 +35,6 @@ from src.utils import topk_mean
 from src.validations import whitening_arguments_validation
 
 BATCH_SIZE = 500
-
-
-def resolve_language_source(_config):
-    if _config['test']:
-        source_language = _config['source_language'] + '_slim'
-        target_language = _config['target_language'] + '_slim'
-    else:
-        source_language = _config['source_language']
-        target_language = _config['target_language']
-    return source_language, target_language
 
 
 def run_experiment(_config):
