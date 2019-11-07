@@ -79,7 +79,7 @@ def run_experiment(_config):
     it = 1
     last_improvement = 0
     keep_prob = _config['stochastic_initial']
-    t = time.time()
+    time_stamp = time.time()
     end = not _config['self_learning']
     src_indices, trg_indices = get_seed_dictionary_indices(_config['seed_dictionary_method'], compute_engine.engine,
                                                            src_words, trg_vocab, x,
@@ -201,12 +201,12 @@ def run_experiment(_config):
                 best_objective = objective
 
             # Logging
-            duration = time.time() - t
+            duration = time.time() - time_stamp
             logging.info('ITERATION {0} ({1:.2f}s)'.format(it, duration))
             logging.info('\t- Objective:        {0:9.4f}%'.format(100 * objective))
             logging.info('\t- Drop probability: {0:9.4f}%'.format(100 - 100 * keep_prob))
 
-        t = time.time()
+        time_stamp = time.time()
         it += 1
 
     x = xw
