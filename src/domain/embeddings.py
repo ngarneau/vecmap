@@ -19,7 +19,7 @@ import numpy as np
 from src.cupy_utils import *
 
 
-def embeddings_normalization(src_embedding_matrix, trg_embedding_matrix, normalization_method):
+def embeddings_normalization_step(src_embedding_matrix, trg_embedding_matrix, normalization_method):
     logging.info("Normalize embeddings")
 
     normalize(src_embedding_matrix, normalization_method)

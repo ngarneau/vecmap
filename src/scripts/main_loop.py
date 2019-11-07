@@ -27,12 +27,12 @@ from mlflow.tracking import MlflowClient
 import mlflow
 from mlflow.handler import get_mlflow_logging_handler
 from src.cupy_utils import *
-from src.domain.embeddings import load_embeddings, embeddings_normalization, length_normalize
+from src.domain.embeddings import load_embeddings, embeddings_normalization_step, length_normalize
 from src.domain.matrix_operations import whitening_transformation, dropout
 from src.initialization import get_seed_dictionary_indices, init_computing_engine
 from src.utils import compute_matrix_size, resolve_language_source
 from src.utils import topk_mean
-from src.validations import whitening_arguments_validation
+from src.validations import whitening_arguments_validation, did_not_improve
 
 BATCH_SIZE = 500
 
@@ -53,7 +53,7 @@ def run_experiment(_config):
     x = compute_engine.send_to_device(x)
     z = compute_engine.send_to_device(z)
 
-    embeddings_normalization(x, z, normalization_method=_config['normalize'])
+    embeddings_normalization_step(x, z, normalization_method=_config['normalize'])
 
     # Allocate memory
     logging.info("Allocating memory")
