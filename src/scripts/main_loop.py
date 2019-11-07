@@ -109,8 +109,6 @@ def run_experiment(_config):
             x.dot(w, out=xw)
             zw[:] = z
         else:  # advanced mapping
-
-            # TODO xw.dot(wx2, out=xw) and alike not working
             xw[:] = x
             zw[:] = z
 
