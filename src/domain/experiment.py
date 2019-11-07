@@ -1,9 +1,9 @@
 from collections import defaultdict
-import handler
-from handler.tracking import MlflowClient
+
+from mlflow.tracking import MlflowClient
+
 
 class Experiment:
-
     EXPERIMENT_NAME = 'None'
     FIXED_PARAMS = {}
     LANGUAGE_PARAMS = {}
@@ -54,11 +54,10 @@ class OriginalExperiment(Experiment):
     def __init__(self, base_config):
         super().__init__(base_config)
 
-
     def __is_a_valid_run(self, run):
         return (
-            run.data.params['target_language'] in self.LANGUAGE_PARAMS['target_language']
-            and run.data.params['source_language'] in self.LANGUAGE_PARAMS['source_language']
+                run.data.params['target_language'] in self.LANGUAGE_PARAMS['target_language']
+                and run.data.params['source_language'] in self.LANGUAGE_PARAMS['source_language']
         )
 
     def aggregate_runs(self):
@@ -67,7 +66,7 @@ class OriginalExperiment(Experiment):
         times = defaultdict(list)
         for run in runs:
             if self.__is_a_valid_run(run):
-                minutes = ((run.info.end_time - run.info.start_time)//60//60)%60
+                minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
                 accuracies[run.data.params['target_language']].append(run.data.metrics['accuracy'] * 100)
                 times[run.data.params['target_language']].append(minutes)
         return {
@@ -76,13 +75,12 @@ class OriginalExperiment(Experiment):
         }
 
 
-
-
 class StochasticAblationExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'stochastic_ablation'
     CHANGING_PARAMS = {
         'stochastic_initial': [1.0],
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -92,6 +90,7 @@ class VocabularyCutOffAblationExperiment(OriginalExperiment):
     CHANGING_PARAMS = {
         'vocabulary_cutoff': [0],
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -101,6 +100,7 @@ class CSLSAblationExperiment(OriginalExperiment):
     CHANGING_PARAMS = {
         'csls': [0],
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -110,6 +110,7 @@ class DirectionAblationExperiment(OriginalExperiment):
     CHANGING_PARAMS = {
         'direction': ['forward'],
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -119,6 +120,7 @@ class ReweightAblationExperiment(OriginalExperiment):
     CHANGING_PARAMS = {
         'reweight': [1.0],
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -128,6 +130,7 @@ class RandomSeedDictionaryAblationExperiment(OriginalExperiment):
     CHANGING_PARAMS = {
         'seed_dictionary_method': ['random_raw']
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -137,6 +140,7 @@ class RandomCutoffSeedDictionaryAblationExperiment(OriginalExperiment):
     CHANGING_PARAMS = {
         'seed_dictionary_method': ['random_cutoff']
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -147,6 +151,7 @@ class OtherLanguagesOriginalExperiment(OriginalExperiment):
         'source_language': ['en'],
         'target_language': ['et', 'fa', 'lv', 'vi']
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -160,6 +165,7 @@ class OtherLanguagesStochasticExperiment(OriginalExperiment):
     CHANGING_PARAMS = {
         'stochastic_initial': [1.0],
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -185,4 +191,3 @@ class HyperparametersExperiment(OriginalExperiment):
 
     def __init__(self, base_config):
         super().__init__(base_config)
-
