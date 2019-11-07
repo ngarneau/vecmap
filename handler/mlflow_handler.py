@@ -13,6 +13,8 @@ class MlFlowHandler(logging.FileHandler):
 
 def get_mlflow_logging_handler(path_to_log_directory, log_level, formatter):
     log_filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f') + '.log'
+    if not os.path.exists(path_to_log_directory):
+        os.makedirs(path_to_log_directory)
     fh = MlFlowHandler(filename=os.path.join(path_to_log_directory, log_filename))
     fh.setLevel(log_level)
     fh.setFormatter(formatter)
