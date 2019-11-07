@@ -22,7 +22,7 @@ import mlflow
 import yaml
 from mlflow.tracking import MlflowClient
 
-from handler.mlflow_handler import get_mlflow_logging_handler
+from src.handler.mlflow_handler import get_mlflow_logging_handler
 from src.domain.vecmap import VecMap
 from src.validations import whitening_arguments_validation
 
