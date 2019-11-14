@@ -20,10 +20,7 @@ EXPERIMENT_NAME = 'ablation_study'
 
 
 def args_formatter(run_args):
-    return [
-        '--{}="{}"'.format(name, value) if type(value) is list else '--{}={}'.format(name, value)
-        for name, value in run_args.items()
-    ]
+    return ['--{}={}'.format(name, value) for name, value in run_args.items() if name != 'normalize']
 
 
 def supercomputer_launcher(run_args, num_runs, cuda, sbatch_args={}):
@@ -35,9 +32,8 @@ def supercomputer_launcher(run_args, num_runs, cuda, sbatch_args={}):
     for run_number in range(num_runs):
         run_args['seed'] = run_number
         run_args['num_runs'] = 1  # Override the number of runs to do from the command line
-        launching_args = ' '.join(
+        subprocess.Popen(
             ['sbatch', *args_formatter(sbatch_args), 'generic_beluga_launcher.sh', *args_formatter(run_args)])
-        subprocess.Popen(launching_args, shell=True)
 
 
 def default_launcher(run_args, num_runs, cuda, sbatch_args={}):
