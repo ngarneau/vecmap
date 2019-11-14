@@ -2,6 +2,7 @@ from collections import defaultdict
 import mlflow
 from mlflow.tracking import MlflowClient
 
+
 class Experiment:
 
     EXPERIMENT_NAME = 'None'
@@ -45,21 +46,15 @@ class OriginalExperiment(Experiment):
         'reweight': 0.5,
         'seed_dictionary_method': 'unsupervised'
     }
-    LANGUAGE_PARAMS = {
-        'source_language': ['en'],
-        'target_language': ['de', 'es', 'fi', 'it']
-    }
+    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'fi', 'it']}
     CHANGING_PARAMS = {}
 
     def __init__(self, base_config):
         super().__init__(base_config)
 
-
     def __is_a_valid_run(self, run):
-        return (
-            run.data.params['target_language'] in self.LANGUAGE_PARAMS['target_language']
-            and run.data.params['source_language'] in self.LANGUAGE_PARAMS['source_language']
-        )
+        return (run.data.params['target_language'] in self.LANGUAGE_PARAMS['target_language']
+                and run.data.params['source_language'] in self.LANGUAGE_PARAMS['source_language'])
 
     def aggregate_runs(self):
         runs = self.get_runs()
@@ -67,15 +62,10 @@ class OriginalExperiment(Experiment):
         times = defaultdict(list)
         for run in runs:
             if self.__is_a_valid_run(run):
-                minutes = ((run.info.end_time - run.info.start_time)//60//60)%60
+                minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
                 accuracies[run.data.params['target_language']].append(run.data.metrics['accuracy'] * 100)
                 times[run.data.params['target_language']].append(minutes)
-        return {
-            'accuracies': accuracies,
-            'times': times
-        }
-
-
+        return {'accuracies': accuracies, 'times': times}
 
 
 class StochasticAblationExperiment(OriginalExperiment):
@@ -83,6 +73,7 @@ class StochasticAblationExperiment(OriginalExperiment):
     CHANGING_PARAMS = {
         'stochastic_initial': [1.0],
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -92,6 +83,7 @@ class VocabularyCutOffAblationExperiment(OriginalExperiment):
     CHANGING_PARAMS = {
         'vocabulary_cutoff': [1e5],
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -101,6 +93,7 @@ class CSLSAblationExperiment(OriginalExperiment):
     CHANGING_PARAMS = {
         'csls': [0],
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -110,6 +103,7 @@ class DirectionAblationExperiment(OriginalExperiment):
     CHANGING_PARAMS = {
         'direction': ['forward'],
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -119,70 +113,52 @@ class ReweightAblationExperiment(OriginalExperiment):
     CHANGING_PARAMS = {
         'reweight': [1.0],
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
 
 class RandomSeedDictionaryAblationExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'random_seed_dictionary_ablation'
-    CHANGING_PARAMS = {
-        'seed_dictionary_method': ['random_raw']
-    }
+    CHANGING_PARAMS = {'seed_dictionary_method': ['random_raw']}
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
 
 class RandomCutoffSeedDictionaryAblationExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'random_cutoff_seed_dictionary_ablation'
-    CHANGING_PARAMS = {
-        'seed_dictionary_method': ['random_cutoff']
-    }
+    CHANGING_PARAMS = {'seed_dictionary_method': ['random_cutoff']}
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
 
 class OtherLanguagesOriginalExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'other_languages_original'
-    LANGUAGE_PARAMS = {
-        'source_language': ['en'],
-        'target_language': ['et', 'fa', 'lv', 'vi']
-    }
+    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
 
 class OtherLanguagesStochasticExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'other_languages_stochastic'
-    LANGUAGE_PARAMS = {
-        'source_language': ['en'],
-        'target_language': ['et', 'fa', 'lv', 'vi']
-    }
+    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
     CHANGING_PARAMS = {
         'stochastic_initial': [1.0],
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
 
 class HyperparametersExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'hyperparameters'
-    LANGUAGE_PARAMS = {
-        'source_language': ['en'],
-        'target_language': [
-            'de',
-            'es',
-            'et',
-            'fa',
-            'fi',
-            'it'
-            'lv',
-            'vi'
-        ]
-    }
+    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'et', 'fa', 'fi', 'it' 'lv', 'vi']}
 
     # TODO Change a bunch of params here
     CHANGING_PARAMS = {}
 
     def __init__(self, base_config):
         super().__init__(base_config)
-
