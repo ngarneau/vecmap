@@ -32,7 +32,8 @@ def supercomputer_launcher(run_args, num_runs, cuda):
     for run_number in range(num_runs):
         run_args['seed'] = run_number
         run_args['num_runs'] = 1  # Override the number of runs to do from the command line
-        subprocess.Popen(['sbatch', 'generic_beluga_launcher.sh', *run_args_formatter(run_args)])
+        # subprocess.Popen(['sbatch', 'generic_beluga_launcher.sh', *run_args_formatter(run_args)])
+        print(['sbatch', 'generic_beluga_launcher.sh', *run_args_formatter(run_args)], sep=' | ')
 
 
 def default_launcher(run_args, num_runs, cuda):
@@ -59,7 +60,7 @@ def configure_logging(path_to_log_directory, log_level):
     sh = logging.StreamHandler(sys.stdout)
     sh.setLevel(log_level)
     sh.setFormatter(formatter)
-    logger.addHandler(sh) 
+    logger.addHandler(sh)
 
 
 class Launcher:
