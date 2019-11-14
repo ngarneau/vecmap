@@ -370,6 +370,10 @@ class Table3(Table):
         tex = doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
 
 
+class Table4(Table):
+    def write(self, output_path):
+        pass
+
 def get_table1(configs) -> Table:
     return Table1({"Reproduced Results": OriginalExperiment(configs)})
 
@@ -389,4 +393,9 @@ def get_table3(configs) -> Table:
     return Table3({
         "Other Languages": OtherLanguagesOriginalExperiment(configs),
         "Other Languages Stochastic": OtherLanguagesStochasticExperiment(configs),
+    })
+
+def get_table4(configs):
+    return Table4({
+        "Cutoff (k=100k)": VocabularyCutOffAblationExperiment(configs)
     })

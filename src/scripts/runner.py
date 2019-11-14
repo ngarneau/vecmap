@@ -10,7 +10,7 @@ import yaml
 from mlflow.tracking import MlflowClient
 
 from src.scripts.main_loop import run_main
-from src.domain.table import get_table1, get_table2, get_table3
+from src.domain.table import get_table1, get_table2, get_table3, get_table4
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
 DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/mlflow'
@@ -19,11 +19,11 @@ DEFAULT_LOCAL_MLFLOW_OUTPUT = 'mlruns'
 EXPERIMENT_NAME = 'ablation_study'
 
 
-def run_args_formatter(run_args):
+def args_formatter(run_args):
     return ['--{}={}'.format(name, value) for name, value in run_args.items()]
 
 
-def supercomputer_launcher(run_args, num_runs, cuda):
+def supercomputer_launcher(run_args, num_runs, cuda, sbatch_args={}):
     run_args['supercomputer'] = True
     run_args['num_runs'] = 1
     run_args['cuda'] = cuda
@@ -32,8 +32,8 @@ def supercomputer_launcher(run_args, num_runs, cuda):
     for run_number in range(num_runs):
         run_args['seed'] = run_number
         run_args['num_runs'] = 1  # Override the number of runs to do from the command line
-        # subprocess.Popen(['sbatch', 'generic_beluga_launcher.sh', *run_args_formatter(run_args)])
-        print(['sbatch', 'generic_beluga_launcher.sh', *run_args_formatter(run_args)], sep=' | ')
+        subprocess.Popen(
+            ['sbatch', *args_formatter(sbatch_args), 'generic_beluga_launcher.sh', *args_formatter(run_args)])
 
 
 def default_launcher(run_args, num_runs, cuda):
@@ -75,7 +75,8 @@ class Launcher:
             for config in experiment.get_parameters_combinations():
                 config['experiment_name'] = experiment.EXPERIMENT_NAME
                 if 'vocabulary_cutoff' in experiment.EXPERIMENT_NAME:
-                    self.run_launcher(config, self.num_runs, cuda=False)
+                    sbatch_args = {'cpus-per-task': 32, 'mem': '60G', 'time': '0-5:00'}
+                    self.run_launcher(config, self.num_runs, cuda=False, sbatch_args=sbatch_args)
                 else:
                     self.run_launcher(config, self.num_runs, self.cuda)
                 logging.info("Done running experiment: {} with override {}".format(experiment.EXPERIMENT_NAME, config))
@@ -96,19 +97,24 @@ def main(args):
     launcher = Launcher(run_launcher, num_runs, cuda)
 
     # Run table1 experiments
-    logging.info("Lauching experiments for Table 1")
-    table1 = get_table1(base_configs)
-    launcher.run_experiment_for_table(table1)
-    logging.info("Done.")
+    # logging.info("Lauching experiments for Table 1")
+    # table1 = get_table1(base_configs)
+    # launcher.run_experiment_for_table(table1)
+    # logging.info("Done.")
 
-    logging.info("Lauching experiments for Table 2")
-    table2 = get_table2(base_configs)
-    launcher.run_experiment_for_table(table2)
-    logging.info("Done.")
+    # logging.info("Lauching experiments for Table 2")
+    # table2 = get_table2(base_configs)
+    # launcher.run_experiment_for_table(table2)
+    # logging.info("Done.")
 
-    logging.info("Lauching experiments for Table 3")
-    table3 = get_table3(base_configs)
-    launcher.run_experiment_for_table(table3)
+    # logging.info("Lauching experiments for Table 3")
+    # table3 = get_table3(base_configs)
+    # launcher.run_experiment_for_table(table3)
+    # logging.info("Done.")
+
+    logging.info("Lauching experiments for Table 4")
+    table4 = get_table4(base_configs)
+    launcher.run_experiment_for_table(table4)
     logging.info("Done.")
 
 
