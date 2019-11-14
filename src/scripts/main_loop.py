@@ -410,5 +410,4 @@ if __name__ == '__main__':
         argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
     options = argument_parser.parse_args()
     configs = vars(options)
-    print(type(configs['normalize']))
     run_main(configs)
