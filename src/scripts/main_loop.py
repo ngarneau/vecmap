@@ -60,8 +60,8 @@ def run_experiment(_config):
         source_language = _config['source_language']
         target_language = _config['target_language']
 
-    test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
-        _config['source_language'], _config['target_language'])
+    test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(_config['source_language'],
+                                                                  _config['target_language'])
 
     compute_engine = init_computing_engine(_config['cuda'], _config['seed'])
     dtype = _config['precision']
@@ -101,8 +101,7 @@ def run_experiment(_config):
     t = time.time()
     end = not _config['self_learning']
     src_indices, trg_indices = get_seed_dictionary_indices(_config['seed_dictionary_method'], compute_engine.engine,
-                                                           src_words, trg_vocab, x,
-                                                           z, _config)
+                                                           src_words, trg_vocab, x, z, _config)
     while True:
 
         logging.info("Iteration number {}".format(it))
@@ -117,15 +116,12 @@ def run_experiment(_config):
 
         # Update the embedding mapping
         if _config['orthogonal'] or not end:  # orthogonal mapping
-            u, s, vt = compute_engine.engine.linalg.svd(
-                z[trg_indices].T.dot(x[src_indices]))
+            u, s, vt = compute_engine.engine.linalg.svd(z[trg_indices].T.dot(x[src_indices]))
             w = vt.T.dot(u.T)
             x.dot(w, out=xw)
             zw[:] = z
         elif _config['unconstrained']:  # unconstrained mapping
-            x_pseudoinv = compute_engine.engine.linalg.inv(
-                x[src_indices].T.dot(x[src_indices])).dot(
-                x[src_indices].T)
+            x_pseudoinv = compute_engine.engine.linalg.inv(x[src_indices].T.dot(x[src_indices])).dot(x[src_indices].T)
             w = x_pseudoinv.dot(z[trg_indices])
             x.dot(w, out=xw)
             zw[:] = z
@@ -148,8 +144,8 @@ def run_experiment(_config):
             zw = zw.dot(wz2)
 
             # STEP 3: Re-weighting
-            xw *= s ** _config['reweight']
-            zw *= s ** _config['reweight']
+            xw *= s**_config['reweight']
+            zw *= s**_config['reweight']
 
             # STEP 4: De-whitening
             if _config['src_dewhiten'] == 'src':
@@ -182,9 +178,8 @@ def run_experiment(_config):
                     xw[i:j].dot(zw[:trg_size].T, out=simfwd[:j - i])
                     simfwd[:j - i].max(axis=1, out=best_sim_forward[i:j])
                     simfwd[:j - i] -= knn_sim_bwd / 2  # Equivalent to the real CSLS scores for NN
-                    dropout(simfwd[:j - i], 1 - keep_prob, compute_engine=compute_engine).argmax(axis=1,
-                                                                                                 out=trg_indices_forward[
-                                                                                                     i:j])
+                    dropout(simfwd[:j - i], 1 - keep_prob,
+                            compute_engine=compute_engine).argmax(axis=1, out=trg_indices_forward[i:j])
             if _config['direction'] in ('backward', 'union'):
                 if _config['csls'] > 0:
                     for i in range(0, src_size, simfwd.shape[0]):
@@ -196,9 +191,8 @@ def run_experiment(_config):
                     zw[i:j].dot(xw[:src_size].T, out=simbwd[:j - i])
                     simbwd[:j - i].max(axis=1, out=best_sim_backward[i:j])
                     simbwd[:j - i] -= knn_sim_fwd / 2  # Equivalent to the real CSLS scores for NN
-                    dropout(simbwd[:j - i], 1 - keep_prob, compute_engine=compute_engine).argmax(axis=1,
-                                                                                                 out=src_indices_backward[
-                                                                                                     i:j])
+                    dropout(simbwd[:j - i], 1 - keep_prob,
+                            compute_engine=compute_engine).argmax(axis=1, out=src_indices_backward[i:j])
             if _config['direction'] == 'forward':
                 src_indices = src_indices_forward
                 trg_indices = trg_indices_forward
@@ -215,8 +209,8 @@ def run_experiment(_config):
             elif _config['direction'] == 'backward':
                 objective = compute_engine.engine.mean(best_sim_backward).tolist()
             elif _config['direction'] == 'union':
-                objective = (compute_engine.engine.mean(best_sim_forward) + compute_engine.engine.mean(
-                    best_sim_backward)).tolist() / 2
+                objective = (compute_engine.engine.mean(best_sim_forward) +
+                             compute_engine.engine.mean(best_sim_backward)).tolist() / 2
             if objective - best_objective >= _config['threshold']:
                 last_improvement = it
                 best_objective = objective
@@ -298,18 +292,16 @@ def run_experiment(_config):
                         best_sim[l] = sim
                         translation[src[l]] = k
     elif _config['retrieval'] == 'invsoftmax':  # Inverted softmax
-        sample = compute_engine.engine.arange(x.shape[0]) if _config[
-                                                                 'inv_sample'] is None else compute_engine.engine.random.randint(
-            0, x.shape[0], _config['inv_sample'])
+        sample = compute_engine.engine.arange(
+            x.shape[0]) if _config['inv_sample'] is None else compute_engine.engine.random.randint(
+                0, x.shape[0], _config['inv_sample'])
         partition = compute_engine.engine.zeros(z.shape[0])
         for i in range(0, len(sample), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(sample))
-            partition += compute_engine.engine.exp(
-                _config['inv_temperature'] * z.dot(x[sample[i:j]].T)).sum(axis=1)
+            partition += compute_engine.engine.exp(_config['inv_temperature'] * z.dot(x[sample[i:j]].T)).sum(axis=1)
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
-            p = compute_engine.engine.exp(
-                _config['inv_temperature'] * x[src[i:j]].dot(z.T)) / partition
+            p = compute_engine.engine.exp(_config['inv_temperature'] * x[src[i:j]].dot(z.T)) / partition
             nn = p.argmax(axis=1).tolist()
             for k in range(j - i):
                 translation[src[i + k]] = nn[k]
@@ -317,12 +309,10 @@ def run_experiment(_config):
         knn_sim_bwd = compute_engine.engine.zeros(z.shape[0])
         for i in range(0, z.shape[0], BATCH_SIZE):
             j = min(i + BATCH_SIZE, z.shape[0])
-            knn_sim_bwd[i:j] = topk_mean(z[i:j].dot(x.T), k=_config['csls'],
-                                         inplace=True)
+            knn_sim_bwd[i:j] = topk_mean(z[i:j].dot(x.T), k=_config['csls'], inplace=True)
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
-            similarities = 2 * x[src[i:j]].dot(
-                z.T) - knn_sim_bwd  # Equivalent to the real CSLS scores for NN
+            similarities = 2 * x[src[i:j]].dot(z.T) - knn_sim_bwd  # Equivalent to the real CSLS scores for NN
             nn = similarities.argmax(axis=1).tolist()
             for k in range(j - i):
                 translation[src[i + k]] = nn[k]
@@ -420,4 +410,5 @@ if __name__ == '__main__':
         argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
     options = argument_parser.parse_args()
     configs = vars(options)
+    print(type(configs['normalize']))
     run_main(configs)
