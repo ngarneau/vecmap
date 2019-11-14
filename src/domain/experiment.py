@@ -81,7 +81,7 @@ class StochasticAblationExperiment(OriginalExperiment):
 class VocabularyCutOffAblationExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'vocabulary_cutoff_ablation'
     CHANGING_PARAMS = {
-        'vocabulary_cutoff': [1e5],
+        'vocabulary_cutoff': [10**5],
     }
 
     def __init__(self, base_config):
