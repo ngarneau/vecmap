@@ -3,7 +3,7 @@
 #SBATCH --cpus-per-task=6
 #SBATCH --gres=gpu:1              # Number of GPUs (per node)
 #SBATCH --mem=5G                  # memory (per node)
-#SBATCH --time=0-05:00            # time (DD-HH:MM)
+#SBATCH --time=0-01:30            # time (DD-HH:MM)
 #SBATCH --mail-user=mathieu.godbout.3@ulaval.ca
 #SBATCH --mail-type=FAIL
 #SBATCH --output=/scratch/magod/vecmap/slurm_outputs/%j.out
@@ -18,7 +18,7 @@ pip install --no-index -r beluga_requirements.txt
 date
 SECONDS=0
 
-python -m src.scripts.experiment $@
+python -m src.scripts.runner $@
 
 diff=$SECONDS
 echo "$(($diff / 60)) minutes and $(($diff % 60)) seconds elapsed."
