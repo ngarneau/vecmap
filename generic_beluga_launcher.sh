@@ -18,7 +18,7 @@ pip install --no-index -r beluga_requirements.txt
 date
 SECONDS=0
 
-python -m src.scripts.runner $@
+python -m src.scripts.main_loop $@
 
 diff=$SECONDS
 echo "$(($diff / 60)) minutes and $(($diff % 60)) seconds elapsed."
