@@ -13,7 +13,8 @@ class Experiment:
     def __init__(self, base_config):
         self.base_config = base_config
         self.mlflow_client = MlflowClient(tracking_uri=base_config['mlflow_output_uri'])
-        self.mlflow_client.create_experiment(self.EXPERIMENT_NAME)
+        if not self.EXPERIMENT_NAME in [exp.name for exp in self.mlflow_client.list_experiments()]:
+            self.mlflow_client.create_experiment(self.EXPERIMENT_NAME)
 
     def get_runs(self):
         mlflow_experiment = self.mlflow_client.get_experiment_by_name(self.EXPERIMENT_NAME)
