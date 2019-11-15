@@ -16,6 +16,8 @@ class Experiment:
         if not self.EXPERIMENT_NAME in [exp.name for exp in self.mlflow_client.list_experiments()]:
             self.mlflow_client.create_experiment(self.EXPERIMENT_NAME)
 
+        print(self.mlflow_client.list_experiments())
+
     def get_runs(self):
         mlflow_experiment = self.mlflow_client.get_experiment_by_name(self.EXPERIMENT_NAME)
         return self.mlflow_client.search_runs(experiment_ids=[mlflow_experiment.experiment_id])

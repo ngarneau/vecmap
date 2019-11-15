@@ -385,6 +385,7 @@ def run_main(configs):
 
     mlflow.set_experiment(configs['experiment_name'])  # Create the experiment if it did not already existed
     mlflow_client = MlflowClient(tracking_uri=configs['mlflow_output_uri'])
+    logging.info(mlflow_client.list_experiments())
     mlflow_experiment = mlflow_client.get_experiment_by_name(configs['experiment_name'])
     os.makedirs('{}/mapped_embeddings'.format(configs['embedding_output_uri']), exist_ok=True)
 
