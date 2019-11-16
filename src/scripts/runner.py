@@ -7,7 +7,6 @@ import mlflow
 from copy import deepcopy
 import sys
 import yaml
-from mlflow.tracking import MlflowClient
 
 from src.scripts.main_loop import run_main
 from src.domain.table import get_table1, get_table2, get_table3, get_table4
