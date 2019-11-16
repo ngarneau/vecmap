@@ -74,7 +74,7 @@ class Launcher:
             for config in experiment.get_parameters_combinations():
                 config['experiment_name'] = experiment.EXPERIMENT_NAME
                 if 'vocabulary_cutoff' in experiment.EXPERIMENT_NAME:
-                    sbatch_args = {'cpus-per-task': 20, 'mem': '30G', 'time': '1-0:00', 'gres': 'gpu:0'}
+                    sbatch_args = {'cpus-per-task': 20, 'mem': '30G', 'time': '7-0:00', 'gres': 'gpu:0'}
                     self.run_launcher(config, self.num_runs, cuda=False, sbatch_args=sbatch_args)
                 else:
                     self.run_launcher(config, self.num_runs, self.cuda)
