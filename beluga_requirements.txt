@@ -3,3 +3,4 @@ scipy
 PyYAML
 mlflow
 python2latex
+cupy
