@@ -9,7 +9,7 @@ import sys
 import yaml
 
 from src.scripts.main_loop import run_main
-from src.domain.table import get_table1, get_table2, get_table3
+from src.domain.table import get_table1, get_table2, get_table3, get_table4
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
 DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/mlflow'
@@ -71,14 +71,14 @@ class Launcher:
     def run_experiment_for_table(self, table):
         for name, experiment in table.get_experiments():
             logging.info("Running experiment: {}".format(experiment.EXPERIMENT_NAME))
-            for config in experiment.get_parameters_combinations():
+            for config, sbatch_args in experiment.get_parameters_combinations():
                 config['experiment_name'] = experiment.EXPERIMENT_NAME
-                if 'vocabulary_cutoff' in experiment.EXPERIMENT_NAME:
-                    sbatch_args = {'cpus-per-task': 20, 'mem': '30G', 'time': '7-0:00', 'gres': 'gpu:0'}
-                    self.run_launcher(config, self.num_runs, cuda=False, sbatch_args=sbatch_args)
+                if 'cuda' in experiment.CHANGING_PARAMS:
+                    self.run_launcher(config, self.num_runs, cuda=config['cuda'], sbatch_args=sbatch_args)
                 else:
-                    self.run_launcher(config, self.num_runs, self.cuda)
-                logging.info("Done running experiment: {} with override {}".format(experiment.EXPERIMENT_NAME, config))
+                    self.run_launcher(config, self.num_runs, cuda=self.cuda, sbatch_args=sbatch_args)
+                logging.info("Done running experiment: {} with override {} and sbatch_args {}".format(
+                    experiment.EXPERIMENT_NAME, config, sbatch_args))
 
 
 def main(args):
@@ -109,6 +109,7 @@ def main(args):
     table3 = get_table3(base_configs)
     launcher.run_experiment_for_table(table3)
     logging.info("Done.")
+
 
 
 if __name__ == '__main__':

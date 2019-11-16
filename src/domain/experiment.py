@@ -36,9 +36,12 @@ class Experiment:
                                 for ablated_param, param_value in zip(ablated_params, params_combination)
                             }
                             run_params.update(new_params)
-                            yield run_params
+                            yield run_params, self.get_sbatch_args(run_params)
                     else:
-                        yield run_params
+                        yield run_params, self.get_sbatch_args(run_params)
+
+    def get_sbatch_args(self, run_params):
+        return {}
 
 
 class OriginalExperiment(Experiment):
@@ -85,12 +88,13 @@ class StochasticAblationExperiment(OriginalExperiment):
 
 class VocabularyCutOffAblationExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'vocabulary_cutoff_ablation'
-    CHANGING_PARAMS = {
-        'vocabulary_cutoff': [10**5],
-    }
+    CHANGING_PARAMS = {'vocabulary_cutoff': [10**5], 'cuda': [False]}
 
     def __init__(self, base_config):
         super().__init__(base_config)
+
+    def get_sbatch_args(self, run_params):
+        return {'cpus-per-task': 20, 'mem': '30G', 'time': '7-0:00', 'gres': 'gpu:0'}
 
 
 class CSLSAblationExperiment(OriginalExperiment):
