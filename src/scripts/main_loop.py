@@ -408,7 +408,9 @@ if __name__ == '__main__':
     for config, value in base_configs.items():
         if type(value) is bool:
             # Hack as per https://stackoverflow.com/a/46951029
-            argument_parser.add_argument('--{}'.format(config), type=lambda v: v.lower() is 'true', default=value)
+            argument_parser.add_argument('--{}'.format(config),
+                                         type=lambda x: (str(x).lower() in ['true', '1', 'yes']),
+                                         default=value)
         else:
             argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
     options = argument_parser.parse_args()
