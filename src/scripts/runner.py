@@ -95,7 +95,6 @@ def main(args):
 
     launcher = Launcher(run_launcher, num_runs, cuda)
 
-    Run table1 experiments
     logging.info("Lauching experiments for Table 1")
     table1 = get_table1(base_configs)
     launcher.run_experiment_for_table(table1)
