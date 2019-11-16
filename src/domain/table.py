@@ -394,3 +394,10 @@ def get_table3(configs) -> Table:
         "Other Languages": OtherLanguagesOriginalExperiment(configs),
         "Other Languages Stochastic": OtherLanguagesStochasticExperiment(configs),
     })
+
+def get_table4(configs) -> Table:
+    return Table4({
+        "CSLS": CSLSGridSearchExperiment(configs),
+        "Vocabulary cutoff": VocabularyCutoffGridSearchExperiment(configs),
+        "Stochastic": StochasticGridSearchExperiment(configs)
+    })

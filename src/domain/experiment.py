@@ -13,7 +13,8 @@ class Experiment:
 
     def __init__(self, base_config):
         self.base_config = base_config
-        self.mlflow_client = MlflowClient(tracking_uri=base_config['mlflow_output_uri'])
+        # self.mlflow_client = MlflowClient(tracking_uri=base_config['mlflow_output_uri'])
+        self.mlflow_client = MlflowClient(tracking_uri='.')
 
     def get_runs(self):
         mlflow_experiment = self.mlflow_client.get_experiment_by_name(self.EXPERIMENT_NAME)
@@ -161,6 +162,45 @@ class OtherLanguagesStochasticExperiment(OriginalExperiment):
 
     def __init__(self, base_config):
         super().__init__(base_config)
+
+
+class CSLSGridSearchExperiment(OriginalExperiment):
+    EXPERIMENT_NAME = 'csls_grid_search'
+    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'fi', 'it']}
+
+    CHANGING_PARAMS = {'csls': [5, 8, 10, 12, 15]}
+
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+    def get_sbatch_args(self, run_params):
+        return {'time': '0-2:00'}
+
+
+class VocabularyCutoffGridSearchExperiment(OriginalExperiment):
+    EXPERIMENT_NAME = 'vocabulary_cutoff_grid_search'
+    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'fi', 'it']}
+
+    CHANGING_PARAMS = {'vocabulary_cutoff': [int(factor * 10**4) for factor in [1, 1.5, 2, 2.5, 3]]}
+
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+    def get_sbatch_args(self, run_params):
+        return {'time': '0-3:00'}
+
+
+class StochasticGridSearchExperiment(OriginalExperiment):
+    EXPERIMENT_NAME = 'stochastic_grid_search'
+    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'fi', 'it']}
+
+    CHANGING_PARAMS = {'stochastic_initial': [0.05, 0.1, 0.2], 'stochastic_multiplier': [1.5, 2, 3, 4]}
+
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+    def get_sbatch_args(self, run_params):
+        return {'time': '0-3:00'}
 
 
 class HyperparametersExperiment(OriginalExperiment):
