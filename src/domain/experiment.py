@@ -27,11 +27,16 @@ class Experiment:
                     run_params['source_language'] = source_language
                     run_params['target_language'] = target_language
                     if len(self.CHANGING_PARAMS) > 0:
-                        for ablated_param, param_values in self.CHANGING_PARAMS.items():
-                            for param_value in param_values:
-                                # Apply the language params combination
-                                run_params[ablated_param] = param_value
-                                yield run_params
+                        param_values = product(*self.CHANGING_PARAMS.values())
+                        ablated_params = self.CHANGING_PARAMS.keys()
+                        for params_combination in param_values:
+                            # Apply the language params combination
+                            new_params = {
+                                ablated_param: param_value
+                                for ablated_param, param_value in zip(ablated_params, params_combination)
+                            }
+                            run_params.update(new_params)
+                            yield run_params
                     else:
                         yield run_params
 
