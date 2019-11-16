@@ -406,7 +406,10 @@ if __name__ == '__main__':
     base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
     argument_parser = argparse.ArgumentParser()
     for config, value in base_configs.items():
-        argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
+        if type(value) is bool:
+            argument_parser.add_argument('--{}'.format(config), type=lambda v: v.lower() is 'true', default=value)
+        else:
+            argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
     options = argument_parser.parse_args()
     configs = vars(options)
     run_main(configs)
