@@ -119,63 +119,15 @@ class VecMap:
                 self.x.dot(w, out=self.xw)
                 self.zw[:] = self.z
             else:  # advanced mapping
-                self.xw[:] = self.x
-                self.zw[:] = self.z
-
-                wx1, wz1 = self._whiten()
-
-                wx2, wz2, s = self._orthogonal_mapping()
-
-                self._re_weighting(s)
-
-                self._re_whitening(wx1, wz1, wx2, wz2)
-
-                self._dimensionality_reduction()
+                self.symmetric_re_weighting()
 
             # Self-learning
             # Update the training dictionary
             if end:
                 break
             else:
-                if self._config['direction'] in ('forward', 'union'):
-                    if self._config['csls'] > 0:
-                        for i in range(0, self.trg_size, self.simbwd.shape[0]):
-                            j = min(i + self.simbwd.shape[0], self.trg_size)
-                            self.zw[i:j].dot(self.xw[:self.src_size].T, out=self.simbwd[:j - i])
-                            self.knn_sim_bwd[i:j] = topk_mean(self.simbwd[:j - i], k=self._config['csls'], inplace=True)
-                    for i in range(0, self.src_size, self.simfwd.shape[0]):
-                        j = min(i + self.simfwd.shape[0], self.src_size)
-                        self.xw[i:j].dot(self.zw[:self.trg_size].T, out=self.simfwd[:j - i])
-                        self.simfwd[:j - i].max(axis=1, out=self.best_sim_forward[i:j])
-                        self.simfwd[:j - i] -= self.knn_sim_bwd / 2  # Equivalent to the real CSLS scores for NN
-                        dropout(self.simfwd[:j - i], 1 - keep_prob, compute_engine=self.compute_engine).argmax(axis=1,
-                                                                                                               out=self.trg_indices_forward[
-                                                                                                                   i:j])
-                if self._config['direction'] in ('backward', 'union'):
-                    if self._config['csls'] > 0:
-                        for i in range(0, self.src_size, self.simfwd.shape[0]):
-                            j = min(i + self.simfwd.shape[0], self.src_size)
-                            self.xw[i:j].dot(self.zw[:self.trg_size].T, out=self.simfwd[:j - i])
-                            self.knn_sim_fwd[i:j] = topk_mean(self.simfwd[:j - i], k=self._config['csls'], inplace=True)
-                    for i in range(0, self.trg_size, self.simbwd.shape[0]):
-                        j = min(i + self.simbwd.shape[0], self.trg_size)
-                        self.zw[i:j].dot(self.xw[:self.src_size].T, out=self.simbwd[:j - i])
-                        self.simbwd[:j - i].max(axis=1, out=self.best_sim_backward[i:j])
-                        self.simbwd[:j - i] -= self.knn_sim_fwd / 2  # Equivalent to the real CSLS scores for NN
-                        dropout(self.simbwd[:j - i], 1 - keep_prob, compute_engine=self.compute_engine).argmax(axis=1,
-                                                                                                               out=self.src_indices_backward[
-                                                                                                                   i:j])
-                if self._config['direction'] == 'forward':
-                    self.src_indices = self.src_indices_forward
-                    self.trg_indices = self.trg_indices_forward
-                elif self._config['direction'] == 'backward':
-                    self.src_indices = self.src_indices_backward
-                    self.trg_indices = self.trg_indices_backward
-                elif self._config['direction'] == 'union':
-                    self.src_indices = self.compute_engine.engine.concatenate(
-                        (self.src_indices_forward, self.src_indices_backward))
-                    self.trg_indices = self.compute_engine.engine.concatenate(
-                        (self.trg_indices_forward, self.trg_indices_backward))
+                self._CSLS_retrieval(keep_prob)
+                self._bidirectional_dictionary_induction()
 
                 # Objective function evaluation
                 if self._config['direction'] == 'forward':
@@ -297,6 +249,20 @@ class VecMap:
         mlflow.log_metric('accuracy', accuracy)
         logging.info('Coverage:{0:7.2%}  Accuracy:{1:7.2%}'.format(coverage, accuracy))
 
+    def symmetric_re_weighting(self):
+        self.xw[:] = self.x
+        self.zw[:] = self.z
+
+        wx1, wz1 = self._whiten()
+
+        wx2, wz2, s = self._orthogonal_mapping()
+
+        self._re_weighting(s)
+
+        self._re_whitening(wx1, wz1, wx2, wz2)
+
+        self._dimensionality_reduction()
+
     def _init_computing_engine(self, use_cuda, seed):
         """
         This method will try to set cupy as the compute engine if the CUDA flag is activated otherwise it will use NumPy.
@@ -342,3 +308,46 @@ class VecMap:
         if self._config['dim_reduction'] > 0:
             self.xw = self.xw[:, :self._config['dim_reduction']]
             self.zw = self.zw[:, :self._config['dim_reduction']]
+
+    def _CSLS_retrieval(self, keep_prob):
+        if self._config['direction'] in ('forward', 'union'):
+            if self._config['csls'] > 0:
+                for i in range(0, self.trg_size, self.simbwd.shape[0]):
+                    j = min(i + self.simbwd.shape[0], self.trg_size)
+                    self.zw[i:j].dot(self.xw[:self.src_size].T, out=self.simbwd[:j - i])
+                    self.knn_sim_bwd[i:j] = topk_mean(self.simbwd[:j - i], k=self._config['csls'], inplace=True)
+            for i in range(0, self.src_size, self.simfwd.shape[0]):
+                j = min(i + self.simfwd.shape[0], self.src_size)
+                self.xw[i:j].dot(self.zw[:self.trg_size].T, out=self.simfwd[:j - i])
+                self.simfwd[:j - i].max(axis=1, out=self.best_sim_forward[i:j])
+                self.simfwd[:j - i] -= self.knn_sim_bwd / 2  # Equivalent to the real CSLS scores for NN
+                dropout(self.simfwd[:j - i], 1 - keep_prob, compute_engine=self.compute_engine).argmax(axis=1,
+                                                                                                       out=self.trg_indices_forward[
+                                                                                                           i:j])
+        if self._config['direction'] in ('backward', 'union'):
+            if self._config['csls'] > 0:
+                for i in range(0, self.src_size, self.simfwd.shape[0]):
+                    j = min(i + self.simfwd.shape[0], self.src_size)
+                    self.xw[i:j].dot(self.zw[:self.trg_size].T, out=self.simfwd[:j - i])
+                    self.knn_sim_fwd[i:j] = topk_mean(self.simfwd[:j - i], k=self._config['csls'], inplace=True)
+            for i in range(0, self.trg_size, self.simbwd.shape[0]):
+                j = min(i + self.simbwd.shape[0], self.trg_size)
+                self.zw[i:j].dot(self.xw[:self.src_size].T, out=self.simbwd[:j - i])
+                self.simbwd[:j - i].max(axis=1, out=self.best_sim_backward[i:j])
+                self.simbwd[:j - i] -= self.knn_sim_fwd / 2  # Equivalent to the real CSLS scores for NN
+                dropout(self.simbwd[:j - i], 1 - keep_prob, compute_engine=self.compute_engine).argmax(axis=1,
+                                                                                                       out=self.src_indices_backward[
+                                                                                                           i:j])
+
+    def _bidirectional_dictionary_induction(self):
+        if self._config['direction'] == 'forward':
+            self.src_indices = self.src_indices_forward
+            self.trg_indices = self.trg_indices_forward
+        elif self._config['direction'] == 'backward':
+            self.src_indices = self.src_indices_backward
+            self.trg_indices = self.trg_indices_backward
+        elif self._config['direction'] == 'union':
+            self.src_indices = self.compute_engine.engine.concatenate(
+                (self.src_indices_forward, self.src_indices_backward))
+            self.trg_indices = self.compute_engine.engine.concatenate(
+                (self.trg_indices_forward, self.trg_indices_backward))
