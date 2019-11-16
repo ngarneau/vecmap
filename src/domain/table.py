@@ -394,8 +394,3 @@ def get_table3(configs) -> Table:
         "Other Languages": OtherLanguagesOriginalExperiment(configs),
         "Other Languages Stochastic": OtherLanguagesStochasticExperiment(configs),
     })
-
-def get_table4(configs):
-    return Table4({
-        "Cutoff (k=100k)": VocabularyCutOffAblationExperiment(configs)
-    })
