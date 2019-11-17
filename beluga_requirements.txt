@@ -4,3 +4,4 @@ PyYAML
 mlflow
 python2latex
 cupy
+matplotlib
