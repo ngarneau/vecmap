@@ -169,13 +169,10 @@ class CSLSGridSearchExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'csls_grid_search'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'fi', 'it']}
 
-    CHANGING_PARAMS = {'csls': [5, 8, 10, 12, 15]}
+    CHANGING_PARAMS = {'csls': list(range(1, 21))}
 
     def __init__(self, base_config):
         super().__init__(base_config)
-
-    def get_sbatch_args(self, run_params):
-        return {'time': '0-1:00'}
 
 
 class VocabularyCutoffGridSearchExperiment(OriginalExperiment):
