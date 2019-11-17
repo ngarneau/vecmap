@@ -13,7 +13,7 @@ def generate_table_1(configs):
 
 def generate_table_2(configs):
     """
-    This method generates the table 1 from the paper.
+    This method generates the table 2 from the paper.
     """
     table = get_table2(configs)
     table.write('./output/tables_and_plots/table2.tex')
@@ -21,7 +21,7 @@ def generate_table_2(configs):
 
 def generate_table_3(configs):
     """
-    This method generates the table 1 from the paper.
+    This method generates the table 3 from the paper.
     """
     table = get_table3(configs)
     table.write('./output/tables_and_plots/table3.tex')
