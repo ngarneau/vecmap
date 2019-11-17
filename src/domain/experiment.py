@@ -174,7 +174,7 @@ class CSLSGridSearchExperiment(OriginalExperiment):
         super().__init__(base_config)
 
     def get_sbatch_args(self, run_params):
-        return {'time': '0-2:00'}
+        return {'time': '0-1:00'}
 
 
 class VocabularyCutoffGridSearchExperiment(OriginalExperiment):
@@ -186,9 +186,6 @@ class VocabularyCutoffGridSearchExperiment(OriginalExperiment):
     def __init__(self, base_config):
         super().__init__(base_config)
 
-    def get_sbatch_args(self, run_params):
-        return {'time': '0-3:00'}
-
 
 class StochasticGridSearchExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'stochastic_grid_search'
@@ -198,9 +195,6 @@ class StochasticGridSearchExperiment(OriginalExperiment):
 
     def __init__(self, base_config):
         super().__init__(base_config)
-
-    def get_sbatch_args(self, run_params):
-        return {'time': '0-3:00'}
 
 
 class HyperparametersExperiment(OriginalExperiment):
