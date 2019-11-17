@@ -1,6 +1,6 @@
 import yaml
 
-from src.domain.table import get_table1, get_table2, get_table3
+from src.domain.table import get_table1, get_table2, get_table3, get_table4
 
 
 def generate_table_1(configs):
@@ -27,11 +27,21 @@ def generate_table_3(configs):
     table.write('./output/tables_and_plots/table3.tex')
 
 
+def generate_table_4(configs):
+    """
+    This method generates the table 4 from the paper.
+    """
+    table = get_table4(configs)
+    table.write('./output/tables_and_plots/table4.tex')
+
+
 def main():
     base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
-    generate_table_1(base_configs)
-    generate_table_2(base_configs)
-    generate_table_3(base_configs)
+    # generate_table_1(base_configs)
+    # generate_table_2(base_configs)
+    # generate_table_3(base_configs)
+    generate_table_4(base_configs)
+
 
 if __name__ == '__main__':
     main()

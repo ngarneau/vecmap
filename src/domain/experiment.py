@@ -2,7 +2,6 @@ from collections import defaultdict
 from itertools import product
 import mlflow
 from mlflow.tracking import MlflowClient
-from mlflow.entities import RunStatus
 
 
 class Experiment:
@@ -62,17 +61,17 @@ class OriginalExperiment(Experiment):
     def __init__(self, base_config):
         super().__init__(base_config)
 
-    def __is_a_valid_run(self, run):
+    def _is_a_valid_run(self, run):
         return (run.data.params['target_language'] in self.LANGUAGE_PARAMS['target_language']
                 and run.data.params['source_language'] in self.LANGUAGE_PARAMS['source_language']
-                and run.info.status == RunStatus.FINISHED)
+                and run.info.status == 'FINISHED')
 
     def aggregate_runs(self):
         runs = self.get_runs()
         accuracies = defaultdict(list)
         times = defaultdict(list)
         for run in runs:
-            if self.__is_a_valid_run(run):
+            if self._is_a_valid_run(run):
                 minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
                 accuracies[run.data.params['target_language']].append(run.data.metrics['accuracy'] * 100)
                 times[run.data.params['target_language']].append(minutes)
@@ -165,7 +164,30 @@ class OtherLanguagesStochasticExperiment(OriginalExperiment):
         super().__init__(base_config)
 
 
-class CSLSGridSearchExperiment(OriginalExperiment):
+class GridSearchExperiment(OriginalExperiment):
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+    def __get_run_params(self, run):
+        if len(self.CHANGING_PARAMS) == 1:
+            return run.data.params[list(self.CHANGING_PARAMS)[0]]
+        else:
+            return tuple(run.data.params[param_name] for param_name in self.CHANGING_PARAMS)
+
+    def aggregate_runs(self):
+        runs = self.get_runs()
+        accuracies = defaultdict(lambda: defaultdict(list))
+        times = defaultdict(lambda: defaultdict(list))
+        for run in runs:
+            if self._is_a_valid_run(run):
+                minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
+                run_params = self.__get_run_params(run)
+                accuracies[run.data.params['target_language']][run_params].append(run.data.metrics['accuracy'] * 100)
+                times[run.data.params['target_language']][run_params].append(minutes)
+        return {'accuracies': accuracies, 'times': times}
+
+
+class CSLSGridSearchExperiment(GridSearchExperiment):
     EXPERIMENT_NAME = 'csls_grid_search'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'fi', 'it']}
 
@@ -175,7 +197,7 @@ class CSLSGridSearchExperiment(OriginalExperiment):
         super().__init__(base_config)
 
 
-class VocabularyCutoffGridSearchExperiment(OriginalExperiment):
+class VocabularyCutoffGridSearchExperiment(GridSearchExperiment):
     EXPERIMENT_NAME = 'vocabulary_cutoff_grid_search'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'fi', 'it']}
 
@@ -185,7 +207,7 @@ class VocabularyCutoffGridSearchExperiment(OriginalExperiment):
         super().__init__(base_config)
 
 
-class StochasticGridSearchExperiment(OriginalExperiment):
+class StochasticGridSearchExperiment(GridSearchExperiment):
     EXPERIMENT_NAME = 'stochastic_grid_search'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'fi', 'it']}
 

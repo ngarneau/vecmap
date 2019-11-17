@@ -1,8 +1,10 @@
 from typing import Dict, List, Iterable, Tuple
 
 import numpy as np
+import os
 import mlflow
-from python2latex import Document, Table as LatexTable, build, bold
+from python2latex import Document, Plot, Table as LatexTable, build, bold
+import matplotlib.pyplot as plt
 
 from src.domain.experiment import *
 
@@ -29,6 +31,8 @@ class Table1(Table):
     CAPTION = 'The original results were taken from the original paper of \cite{artetxe-etal-2018-robust}. The reproduced results have been generated using the codebase of \cite{artetxe-etal-2018-robust} wrapped around the \texttt{reproduce\_original.sh} from our codebase.'
 
     def write(self, output_path):
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
         experiment = self.experiments['Reproduced Results']
         metrics = experiment.aggregate_runs()
 
@@ -187,6 +191,8 @@ class Table2(Table1):
         return table
 
     def write(self, output_path):
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
         doc = Document(filename='table2', filepath=output_path, doc_type='article', options=('12pt',))
         sec = doc.new_section('Table 2')
         col, row = 17, 17
@@ -325,6 +331,8 @@ class Table3(Table):
     CAPTION = 'The original results were taken from the original paper of \cite{artetxe-etal-2018-robust}. The reproduced results have been generated using the codebase of \cite{artetxe-etal-2018-robust} wrapped around the \texttt{reproduce\_original.sh} from our codebase.'
 
     def write(self, output_path):
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
         experiment = self.experiments['Other Languages']
         metrics = experiment.aggregate_runs()
 
@@ -371,8 +379,69 @@ class Table3(Table):
 
 
 class Table4(Table):
+
+    def _compute_mean_std_metrics(self, metrics):
+        mean_metrics = {}
+        std_metrics = {}
+        for metric_name, metric_dict in metrics.items():
+            mean_metrics[metric_name] = {}
+            std_metrics[metric_name] = {}
+            for language, language_dict in metric_dict.items():
+                mean_metrics[metric_name][language] = {}
+                std_metrics[metric_name][language] = {}
+                for config_name, config_values in language_dict.items():
+                    mean_metrics[metric_name][language][config_name] = np.mean(config_values)
+                    std_metrics[metric_name][language][config_name] = np.std(config_values)
+
+        return mean_metrics, std_metrics
+
+    def linear_plot_from_metrics(self, metrics, x_label, language, title, file_path):
+        mean_metrics, std_metrics = self._compute_mean_std_metrics(metrics)
+
+        fig, ax1 = plt.subplots()
+        fig.suptitle(title)
+
+        color = 'tab:red'
+        ax1.set_xlabel(x_label)
+        ax1.set_ylabel('Accuracy')
+        x, y, std = np.array(list(mean_metrics['accuracies'][language].keys())).astype(int), np.array(list(mean_metrics['accuracies'][language].values())).astype(float), np.array(list(std_metrics['accuracies'][language].values())).astype(float)
+        sorting = x.argsort()
+        x, y, std = x[sorting], y[sorting], std[sorting]
+        ax1.plot(x, y, color=color, linewidth=3)
+        ax1.tick_params(axis='y')
+        ax1.fill_between(x, y - std, y + std, color=color, alpha=0.4)
+
+        ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+
+        color = 'tab:blue'
+        ax2.set_ylabel('Time (minutes)')
+        x, y, std = np.array(list(mean_metrics['times'][language].keys())).astype(int), np.array(list(mean_metrics['times'][language].values())).astype(float), np.array(list(std_metrics['times'][language].values())).astype(float)
+        sorting = x.argsort()
+        x, y, std = x[sorting], y[sorting], std[sorting]
+        ax2.plot(x, y, color=color, linewidth=3)
+        ax2.tick_params(axis='y')
+
+        fig.tight_layout()
+        plt.savefig(file_path)
+
+    def write_CSLS(self, doc, sec, output_path):
+        experiment = self.experiments['CSLS']
+        metrics = experiment.aggregate_runs()
+
+        for language in metrics['accuracies']:
+            title = 'CSLS Hyperparameter Search (en-{})'.format(language)
+            file_path = os.path.join(output_path, 'csls_en_{}.png'.format(language))
+            self.linear_plot_from_metrics(metrics, x_label='CSLS', language=language, title=title, file_path=file_path)
+
     def write(self, output_path):
-        pass
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+
+        doc = Document(filename='table4', filepath=output_path, doc_type='article', options=('12pt',))
+        sec = doc.new_section('Table 4')
+
+        self.write_CSLS(doc, sec, output_path)
+
 
 def get_table1(configs) -> Table:
     return Table1({"Reproduced Results": OriginalExperiment(configs)})
