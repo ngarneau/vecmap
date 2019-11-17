@@ -2,6 +2,7 @@ from collections import defaultdict
 from itertools import product
 import mlflow
 from mlflow.tracking import MlflowClient
+from mlflow.entities import RunStatus
 
 
 class Experiment:
@@ -63,7 +64,8 @@ class OriginalExperiment(Experiment):
 
     def __is_a_valid_run(self, run):
         return (run.data.params['target_language'] in self.LANGUAGE_PARAMS['target_language']
-                and run.data.params['source_language'] in self.LANGUAGE_PARAMS['source_language'])
+                and run.data.params['source_language'] in self.LANGUAGE_PARAMS['source_language']
+                and run.info.status == RunStatus.FINISHED)
 
     def aggregate_runs(self):
         runs = self.get_runs()
