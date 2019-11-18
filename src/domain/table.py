@@ -488,8 +488,8 @@ class Table4(Table):
         doc = Document(filename='table4', filepath=output_path, doc_type='article', options=('12pt',))
         sec = doc.new_section('Table 4')
 
-        # self.write_CSLS(doc, sec, output_path)
-        # self.write_vocabulary_cutoff(doc, sec, output_path)
+        self.write_CSLS(doc, sec, output_path)
+        self.write_vocabulary_cutoff(doc, sec, output_path)
         self.write_stochastic(doc, sec, output_path)
 
 
