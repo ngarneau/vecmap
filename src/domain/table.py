@@ -409,5 +409,10 @@ def get_table2(configs):
 def get_table3(configs) -> Table:
     return Table3({
         "Other Languages": OtherLanguagesOriginalExperiment(configs),
+        "Other Languages Unsup. Init (Random)": OtherLanguagesRandomSeedDictionaryAblationExperiment(configs),
+        "Other Languages Unsup. Init (Random Cutoff)": OtherLanguagesRandomCutoffSeedDictionaryAblationExperiment(configs),
         "Other Languages Stochastic": OtherLanguagesStochasticExperiment(configs),
+        "Other Languages CSLS": OtherLanguagesCSLSAblationExperiment(configs),
+        "Other Languages Bidrectional": OtherLanguagesDirectionAblationExperiment(configs),
+        "Other Languages Re-weighting": OtherLanguagesReweightAblationExperiment(configs),
     })

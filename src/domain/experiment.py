@@ -151,14 +151,61 @@ class OtherLanguagesOriginalExperiment(OriginalExperiment):
         super().__init__(base_config)
 
 
-class OtherLanguagesStochasticExperiment(OriginalExperiment):
+class OtherLanguagesStochasticExperiment(StochasticAblationExperiment):
     EXPERIMENT_NAME = 'other_languages_stochastic'
     LANGUAGE_PARAMS = {
         'source_language': ['en'],
         'target_language': ['et', 'fa', 'lv', 'vi']
     }
-    CHANGING_PARAMS = {
-        'stochastic_initial': [1.0],
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+
+class OtherLanguagesCSLSAblationExperiment(CSLSAblationExperiment):
+    EXPERIMENT_NAME = 'other_languages_csls_ablation'
+    LANGUAGE_PARAMS = {
+        'source_language': ['en'],
+        'target_language': ['et', 'fa', 'lv', 'vi']
+    }
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+
+class OtherLanguagesDirectionAblationExperiment(DirectionAblationExperiment):
+    EXPERIMENT_NAME = 'other_languages_direction_ablation'
+    LANGUAGE_PARAMS = {
+        'source_language': ['en'],
+        'target_language': ['et', 'fa', 'lv', 'vi']
+    }
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+
+class OtherLanguagesReweightAblationExperiment(ReweightAblationExperiment):
+    EXPERIMENT_NAME = 'other_languages_reweight_ablation'
+    LANGUAGE_PARAMS = {
+        'source_language': ['en'],
+        'target_language': ['et', 'fa', 'lv', 'vi']
+    }
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+
+class OtherLanguagesRandomSeedDictionaryAblationExperiment(RandomSeedDictionaryAblationExperiment):
+    EXPERIMENT_NAME = 'other_languages_random_seed_dictionary_ablation'
+    LANGUAGE_PARAMS = {
+        'source_language': ['en'],
+        'target_language': ['et', 'fa', 'lv', 'vi']
+    }
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+
+class OtherLanguagesRandomCutoffSeedDictionaryAblationExperiment(RandomCutoffSeedDictionaryAblationExperiment):
+    EXPERIMENT_NAME = 'other_languages_random_cutoff_seed_dictionary_ablation'
+    LANGUAGE_PARAMS = {
+        'source_language': ['en'],
+        'target_language': ['et', 'fa', 'lv', 'vi']
     }
     def __init__(self, base_config):
         super().__init__(base_config)
