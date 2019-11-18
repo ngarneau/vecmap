@@ -7,7 +7,7 @@
 #SBATCH --time=0-01:30            # time (DD-HH:MM)
 #SBATCH --mail-user=mathieu.godbout.3@ulaval.ca
 #SBATCH --mail-type=FAIL
-#SBATCH --output=/scratch/magod/vecmap/slurm_outputs/%j.out
+#SBATCH --output=/scratch/magod/vecmap/slurm_outputs/%A_%a.out
 
 module load python/3.7
 virtualenv --no-download $SLURM_TMPDIR/env
