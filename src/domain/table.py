@@ -455,7 +455,7 @@ class Table4(Table):
                 z[x_idx, y_idx] = float(mean_metrics[metric_to_plot][language][(str(x_value), str(y_value))])
 
 
-        im, _ = heatmap(z, y_values, x_values, ax=ax,
+        im, _ = heatmap(z, x_values, y_values, ax=ax,
                            cbarlabel=cbarlabel)
         _ = annotate_heatmap(im, valfmt=valfmt)
 
