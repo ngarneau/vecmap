@@ -220,6 +220,7 @@ def run_experiment(_config):
             logging.info('ITERATION {0} ({1:.2f}s)'.format(it, duration))
             logging.info('\t- Objective:        {0:9.4f}%'.format(100 * objective))
             logging.info('\t- Drop probability: {0:9.4f}%'.format(100 - 100 * keep_prob))
+            mlflow.log_metric('iter_duration', duration)
 
         t = time.time()
         it += 1
