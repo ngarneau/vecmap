@@ -81,45 +81,44 @@ class Launcher:
 
 
 def main(args):
-    if args.supercomputer:
+    if args['supercomputer']:
         run_launcher = supercomputer_launcher
         mlflow.set_tracking_uri(DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT)
     else:
         run_launcher = default_launcher
         mlflow.set_tracking_uri(DEFAULT_LOCAL_MLFLOW_OUTPUT)
 
-    num_runs = args.num_runs
-    cuda = args.cuda
-    base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
+    num_runs = args['num_runs']
+    cuda = args['cuda']
 
     launcher = Launcher(run_launcher, num_runs, cuda)
 
     logging.info("Lauching experiments for Table 1")
-    table1 = get_table1(base_configs)
+    table1 = get_table1(args)
     launcher.run_experiment_for_table(table1)
     logging.info("Done.")
 
     logging.info("Lauching experiments for Table 2")
-    table2 = get_table2(base_configs)
+    table2 = get_table2(args)
     launcher.run_experiment_for_table(table2)
     logging.info("Done.")
 
     logging.info("Lauching experiments for Table 3")
-    table3 = get_table3(base_configs)
+    table3 = get_table3(args)
     launcher.run_experiment_for_table(table3)
     logging.info("Done.")
 
 
 if __name__ == '__main__':
-    logging_path = './output/logs'
+    base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
+    argument_parser = argparse.ArgumentParser()
+    for config, value in base_configs.items():
+        argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
+    base_configs = argument_parser.parse_args()
+    base_configs = vars(base_configs)
+
+    logging_path = os.path.join(base_configs['output_path'], 'logs')
     os.makedirs(logging_path, exist_ok=True)
     configure_logging(logging_path, logging.INFO)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--num_runs', type=int, default=10, help='The number of runs to execute per configuration.')
-    parser.add_argument('--supercomputer',
-                        action='store_true',
-                        help='Wether or not the ablation study has to be parallelized on a supercomputer.')
-    parser.add_argument('--cuda', action='store_true', help='Wether or not to use a GPU to run the ablation study.')
-    args = parser.parse_args()
-    main(args)
+    main(base_configs)
