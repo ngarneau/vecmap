@@ -328,9 +328,12 @@ class Table3(Table):
         experiment = self.experiments['Other Languages']
         metrics = experiment.aggregate_runs()
 
+        stochastic_experiment = self.experiments['Other Languages Stochastic']
+        stochastic_metrics = stochastic_experiment.aggregate_runs()
+
         doc = Document(filename='table3', filepath=output_path, doc_type='article', options=('12pt',))
         sec = doc.new_section('Table 3')
-        col, row = 17, 3
+        col, row = 17, 4
         table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='other_languages_results'))
         table.caption = self.CAPTION
         table.label_pos = 'bottom'
@@ -366,6 +369,24 @@ class Table3(Table):
         table[2, 14] = np.average(metrics['accuracies']['vi'])
         table[2, 15] = np.sum(np.array(metrics['accuracies']['vi']) > 1.0)/len(metrics['accuracies']['vi'])
         table[2, 16] = np.average(metrics['times']['vi'])
+
+        table[3, 0] = bold('Stochastic')
+        table[3, 1] = np.max(stochastic_metrics['accuracies']['et'])
+        table[3, 2] = np.average(stochastic_metrics['accuracies']['et'])
+        table[3, 3] = np.sum(np.array(stochastic_metrics['accuracies']['et']) > 1.0)/len(metrics['accuracies']['et'])
+        table[3, 4] = np.average(stochastic_metrics['times']['et'])
+        table[3, 5] = np.max(stochastic_metrics['accuracies']['fa'])
+        table[3, 6] = np.average(stochastic_metrics['accuracies']['fa'])
+        table[3, 7] = np.sum(np.array(stochastic_metrics['accuracies']['fa']) > 1.0)/len(metrics['accuracies']['fa'])
+        table[3, 8] = np.average(stochastic_metrics['times']['fa'])
+        table[3, 9] = np.max(stochastic_metrics['accuracies']['lv'])
+        table[3, 10] = np.average(stochastic_metrics['accuracies']['lv'])
+        table[3, 11] = np.sum(np.array(stochastic_metrics['accuracies']['lv']) > 1.0)/len(metrics['accuracies']['lv'])
+        table[3, 12] = np.average(stochastic_metrics['times']['lv'])
+        table[3, 13] = np.max(stochastic_metrics['accuracies']['vi'])
+        table[3, 14] = np.average(stochastic_metrics['accuracies']['vi'])
+        table[3, 15] = np.sum(np.array(stochastic_metrics['accuracies']['vi']) > 1.0)/len(metrics['accuracies']['vi'])
+        table[3, 16] = np.average(stochastic_metrics['times']['vi'])
 
         tex = doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
 
