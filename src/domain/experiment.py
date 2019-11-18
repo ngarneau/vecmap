@@ -201,10 +201,13 @@ class VocabularyCutoffGridSearchExperiment(GridSearchExperiment):
     EXPERIMENT_NAME = 'vocabulary_cutoff_grid_search'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'fi', 'it']}
 
-    CHANGING_PARAMS = {'vocabulary_cutoff': [int(factor * 10**4) for factor in [1, 1.5, 2, 2.5, 3]]}
+    CHANGING_PARAMS = {'vocabulary_cutoff': [int(factor * 10**4) for factor in range(10, 31)]}
 
     def __init__(self, base_config):
         super().__init__(base_config)
+
+    def get_sbatch_args(self, run_params):
+        return {'time': '0-2:00'}
 
 
 class StochasticGridSearchExperiment(GridSearchExperiment):
@@ -215,6 +218,9 @@ class StochasticGridSearchExperiment(GridSearchExperiment):
 
     def __init__(self, base_config):
         super().__init__(base_config)
+
+    def get_sbatch_args(self, run_params):
+        return {'time': '0-2:30'}
 
 
 class HyperparametersExperiment(OriginalExperiment):
