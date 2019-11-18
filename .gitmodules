@@ -1,0 +1,3 @@
+[submodule "build-script"]
+	path = build-script
+	url = https://gitlab.com/CLARIN-ERIC/build-script.git
