@@ -1,5 +1,6 @@
 from cupy_utils import *
 
+
 def topk_mean(m, k, inplace=False):  # TODO Assuming that axis is 1
     xp = get_array_module(m)
     n = m.shape[0]
@@ -16,6 +17,13 @@ def topk_mean(m, k, inplace=False):  # TODO Assuming that axis is 1
         ans += m[ind0, ind1]
         m[ind0, ind1] = minimum
     return ans / k
+
+def compute_matrix_size(src_embedding_matrix, trg_embedding_matrix, vocabulary_cutoff):
+    src_size = src_embedding_matrix.shape[0] if vocabulary_cutoff <= 0 else min(
+        src_embedding_matrix.shape[0], vocabulary_cutoff)
+    trg_size = trg_embedding_matrix.shape[0] if vocabulary_cutoff <= 0 else min(
+        trg_embedding_matrix.shape[0], vocabulary_cutoff)
+    return src_size, trg_size
 
 
 def get_ml_query_string(configs):
