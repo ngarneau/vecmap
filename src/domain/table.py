@@ -6,6 +6,7 @@ import mlflow
 from python2latex import Document, Plot, Table as LatexTable, build, bold
 import matplotlib.pyplot as plt
 
+from src.domain.matplotlib_utils import heatmap, annotate_heatmap
 from src.domain.experiment import *
 
 class Table:
@@ -443,6 +444,43 @@ class Table4(Table):
             file_path = os.path.join(output_path, 'voc_cutoff_en_{}.png'.format(language))
             self.linear_plot_from_metrics(mean_metrics, std_metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=file_path)
 
+    def generate_heatmap(self, experiment, mean_metrics, ax, x_label, y_label, language, metric_to_plot, cbarlabel, valfmt):
+        x_values, y_values = sorted(experiment.CHANGING_PARAMS[x_label]), sorted(experiment.CHANGING_PARAMS[y_label])
+        z = np.zeros((len(x_values), len(y_values)), dtype=float)
+
+        for x_idx, x_value in enumerate(x_values):
+            for y_idx, y_value in enumerate(y_values):
+                # temp
+                y_value = float(y_value)
+                z[x_idx, y_idx] = float(mean_metrics[metric_to_plot][language][(str(x_value), str(y_value))])
+
+
+        im, _ = heatmap(z, y_values, x_values, ax=ax,
+                           cbarlabel=cbarlabel)
+        _ = annotate_heatmap(im, valfmt=valfmt)
+
+    def heatmaps_from_metrics(self, experiment, mean_metrics, x_label, y_label, language, title, file_path):
+        fig, axs = plt.subplots(1, 2)
+        fig.suptitle(title)
+
+        self.generate_heatmap(experiment, mean_metrics, axs[0], x_label, y_label, language, 'accuracies', 'Accuracy', '{x:.2f}')
+        self.generate_heatmap(experiment, mean_metrics, axs[1], x_label, y_label, language, 'times', 'Time (minutes)', '{x:.1f}')
+
+        fig.tight_layout()
+        plt.savefig(file_path)
+
+
+    def write_stochastic(self, doc, sec, output_path):
+        experiment = self.experiments['Stochatic']
+        metrics = experiment.aggregate_runs()
+        mean_metrics, _ = self._compute_mean_std_metrics(metrics)
+
+        for language in metrics['accuracies']:
+            title = 'Stochastic Hyperparameter Search (en-{})'.format(language)
+            file_path = os.path.join(output_path, 'stochastic_en_{}.png'.format(language))
+            self.heatmaps_from_metrics(experiment, mean_metrics, x_label='stochastic_initial', y_label='stochastic_multiplier', language=language, title=title, file_path=file_path)
+
+
     def write(self, output_path):
         if not os.path.exists(output_path):
             os.makedirs(output_path)
@@ -452,6 +490,7 @@ class Table4(Table):
 
         self.write_CSLS(doc, sec, output_path)
         self.write_vocabulary_cutoff(doc, sec, output_path)
+        self.write_stochastic(doc, sec, output_path)
 
 
 def get_table1(configs) -> Table:
