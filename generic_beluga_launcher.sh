@@ -1,5 +1,6 @@
 #!/bin/bash
 #SBATCH --account=def-lulam50
+#SBATCH --array=1-10
 #SBATCH --cpus-per-task=6
 #SBATCH --gres=gpu:1              # Number of GPUs (per node)
 #SBATCH --mem=5G                  # memory (per node)
@@ -18,7 +19,7 @@ pip install --no-index -r beluga_requirements.txt
 date
 SECONDS=0
 
-python -m src.scripts.main_loop $@
+python -m src.scripts.main_loop --seed=$SLURM_ARRAY_TASK_ID $@
 
 diff=$SECONDS
 echo "$(($diff / 60)) minutes and $(($diff % 60)) seconds elapsed."

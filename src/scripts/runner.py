@@ -24,15 +24,13 @@ def args_formatter(run_args):
 
 def supercomputer_launcher(run_args, num_runs, cuda, sbatch_args={}):
     run_args['supercomputer'] = True
-    run_args['num_runs'] = 1
     run_args['cuda'] = cuda
     run_args['embedding_output_uri'] = DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT
     run_args['mlflow_output_uri'] = DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT
-    for run_number in range(num_runs):
-        run_args['seed'] = run_number
-        run_args['num_runs'] = 1  # Override the number of runs to do from the command line
-        subprocess.Popen(
-            ['sbatch', *args_formatter(sbatch_args), 'generic_beluga_launcher.sh', *args_formatter(run_args)])
+    run_args['num_runs'] = 1  # Override the number of runs to do from the command line
+    del run_args['seed']
+    sbatch_args.update({'array': '1-{}'.format(num_runs)})
+    subprocess.Popen(['sbatch', *args_formatter(sbatch_args), 'generic_beluga_launcher.sh', *args_formatter(run_args)])
 
 
 def default_launcher(run_args, num_runs, cuda, sbatch_args={}):
