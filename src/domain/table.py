@@ -471,7 +471,7 @@ class Table4(Table):
 
 
     def write_stochastic(self, doc, sec, output_path):
-        experiment = self.experiments['Stochatic']
+        experiment = self.experiments['Stochastic']
         metrics = experiment.aggregate_runs()
         mean_metrics, _ = self._compute_mean_std_metrics(metrics)
 
@@ -488,8 +488,8 @@ class Table4(Table):
         doc = Document(filename='table4', filepath=output_path, doc_type='article', options=('12pt',))
         sec = doc.new_section('Table 4')
 
-        self.write_CSLS(doc, sec, output_path)
-        self.write_vocabulary_cutoff(doc, sec, output_path)
+        # self.write_CSLS(doc, sec, output_path)
+        # self.write_vocabulary_cutoff(doc, sec, output_path)
         self.write_stochastic(doc, sec, output_path)
 
 
@@ -518,5 +518,5 @@ def get_table4(configs) -> Table:
     return Table4({
         "CSLS": CSLSGridSearchExperiment(configs),
         "Vocabulary Cutoff": VocabularyCutoffGridSearchExperiment(configs),
-        "Stochatic": StochasticGridSearchExperiment(configs)
+        "Stochastic": StochasticGridSearchExperiment(configs)
     })
