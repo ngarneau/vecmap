@@ -395,9 +395,7 @@ class Table4(Table):
 
         return mean_metrics, std_metrics
 
-    def linear_plot_from_metrics(self, metrics, x_label, language, title, file_path):
-        mean_metrics, std_metrics = self._compute_mean_std_metrics(metrics)
-
+    def linear_plot_from_metrics(self, mean_metrics, std_metrics, x_label, language, title, file_path):
         fig, ax1 = plt.subplots()
         fig.suptitle(title)
 
@@ -427,21 +425,23 @@ class Table4(Table):
     def write_CSLS(self, doc, sec, output_path):
         experiment = self.experiments['CSLS']
         metrics = experiment.aggregate_runs()
+        mean_metrics, std_metrics = self._compute_mean_std_metrics(metrics)
 
         for language in metrics['accuracies']:
             title = 'CSLS Hyperparameter Search (en-{})'.format(language)
             file_path = os.path.join(output_path, 'csls_en_{}.png'.format(language))
-            self.linear_plot_from_metrics(metrics, x_label='CSLS', language=language, title=title, file_path=file_path)
+            self.linear_plot_from_metrics(mean_metrics, std_metrics, x_label='CSLS', language=language, title=title, file_path=file_path)
 
 
     def write_vocabulary_cutoff(self, doc, sec, output_path):
         experiment = self.experiments['Vocabulary Cutoff']
         metrics = experiment.aggregate_runs()
+        mean_metrics, std_metrics = self._compute_mean_std_metrics(metrics)
 
         for language in metrics['accuracies']:
             title = 'Vocabulary Cutoff Hyperparameter Search (en-{})'.format(language)
             file_path = os.path.join(output_path, 'voc_cutoff_en_{}.png'.format(language))
-            self.linear_plot_from_metrics(metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=file_path)
+            self.linear_plot_from_metrics(mean_metrics, std_metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=file_path)
 
     def write(self, output_path):
         if not os.path.exists(output_path):
