@@ -433,6 +433,16 @@ class Table4(Table):
             file_path = os.path.join(output_path, 'csls_en_{}.png'.format(language))
             self.linear_plot_from_metrics(metrics, x_label='CSLS', language=language, title=title, file_path=file_path)
 
+
+    def write_vocabulary_cutoff(self, doc, sec, output_path):
+        experiment = self.experiments['Vocabulary Cutoff']
+        metrics = experiment.aggregate_runs()
+
+        for language in metrics['accuracies']:
+            title = 'Vocabulary Cutoff Hyperparameter Search (en-{})'.format(language)
+            file_path = os.path.join(output_path, 'voc_cutoff_en_{}.png'.format(language))
+            self.linear_plot_from_metrics(metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=file_path)
+
     def write(self, output_path):
         if not os.path.exists(output_path):
             os.makedirs(output_path)
@@ -441,6 +451,7 @@ class Table4(Table):
         sec = doc.new_section('Table 4')
 
         self.write_CSLS(doc, sec, output_path)
+        self.write_vocabulary_cutoff(doc, sec, output_path)
 
 
 def get_table1(configs) -> Table:
@@ -466,5 +477,7 @@ def get_table3(configs) -> Table:
 
 def get_table4(configs) -> Table:
     return Table4({
-        "CSLS": CSLSGridSearchExperiment(configs)
+        "CSLS": CSLSGridSearchExperiment(configs),
+        "Vocabulary Cutoff": VocabularyCutoffGridSearchExperiment(configs),
+        "Stochatic": StochasticGridSearchExperiment(configs)
     })
