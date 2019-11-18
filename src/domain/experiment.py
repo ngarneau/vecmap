@@ -201,7 +201,7 @@ class VocabularyCutoffGridSearchExperiment(GridSearchExperiment):
     EXPERIMENT_NAME = 'vocabulary_cutoff_grid_search'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'fi', 'it']}
 
-    CHANGING_PARAMS = {'vocabulary_cutoff': [int(factor * 10**4) for factor in range(10, 31)]}
+    CHANGING_PARAMS = {'vocabulary_cutoff': [int(factor * 10**3) for factor in range(10, 31)]}
 
     def __init__(self, base_config):
         super().__init__(base_config)
