@@ -12,3 +12,7 @@ __pycache__/
 venv/
 /data
 /mlruns/
+
+dataset.tar.gz
+update_version.sh
+copy_data.sh
