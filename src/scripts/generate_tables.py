@@ -32,7 +32,7 @@ def generate_table_4(configs):
     This method generates the table 4 from the paper.
     """
     table = get_table4(configs)
-    table.write('./output/tables_and_plots/table4.tex')
+    table.write('./output/tables_and_plots/table4')
 
 
 def main():
