@@ -179,13 +179,26 @@ class GridSearchExperiment(OriginalExperiment):
         runs = self.get_runs()
         accuracies = defaultdict(lambda: defaultdict(list))
         times = defaultdict(lambda: defaultdict(list))
+        num_iters = defaultdict(lambda: defaultdict(list))
+        avg_iter_times = defaultdict(lambda: defaultdict(list))
         for run in runs:
             if self._is_a_valid_run(run):
-                minutes = ((run.info.end_time - run.info.start_time) // 60 // 60) % 60
+                minutes = max(((run.info.end_time - run.info.start_time) // 60 // 60) % 60, 1)
                 run_params = self.__get_run_params(run)
                 accuracies[run.data.params['target_language']][run_params].append(run.data.metrics['accuracy'] * 100)
                 times[run.data.params['target_language']][run_params].append(minutes)
-        return {'accuracies': accuracies, 'times': times}
+                num_iters[run.data.params['target_language']][run_params].append(int(run.data.metrics['num_iters']))
+
+                # If part of runs without the iter_duration logging, we approximate
+                # an iteration duration with (total_duration/num_iter)
+                if 'iter_duration' in run.data.metrics:
+                    avg_iter_times[run.data.params['target_language']][run_params].append(
+                        np.mean(run.data.metrics['iter_duration']))
+                else:
+                    avg_iter_times[run.data.params['target_language']][run_params].append(minutes * 60 /
+                                                                                          run.data.metrics['num_iters'])
+
+        return {'accuracies': accuracies, 'times': times, 'num_iters': num_iters, 'avg_iter_times': avg_iter_times}
 
 
 class CSLSGridSearchExperiment(GridSearchExperiment):
