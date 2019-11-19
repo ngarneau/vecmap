@@ -516,5 +516,7 @@ def get_table3(configs) -> Table:
 
 def get_table4(configs) -> Table:
     return Table4({
+        "CSLS": CSLSGridSearchExperiment(configs),
+        "Vocabulary Cutoff": VocabularyCutoffGridSearchExperiment(configs),
         "Stochastic": StochasticGridSearchExperiment(configs)
     })
