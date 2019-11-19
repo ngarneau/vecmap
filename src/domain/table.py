@@ -2,11 +2,12 @@ from typing import Dict, List, Iterable, Tuple
 
 import numpy as np
 import os
+import csv
+import itertools
 import mlflow
-from python2latex import Document, Plot, FloatingEnvironmentMixin, FloatingFigure, Table as LatexTable, build, bold
+from python2latex import Document, Plot, FloatingEnvironmentMixin, FloatingFigure, Table as LatexTable, TexCommand, build, bold
 import matplotlib.pyplot as plt
 
-from src.domain.matplotlib_utils import heatmap, annotate_heatmap
 from src.domain.experiment import *
 
 class Table:
@@ -396,8 +397,8 @@ class Table4(Table):
 
         return mean_metrics, std_metrics
 
-    def plot_to_latex(self, doc, sec, mean_metrics, std_metrics, x_label, language, title, file_path):
-        plot = sec.new(CustomPlot(plot_name=title, plot_path=file_path))
+    def plot_to_latex(self, sec, mean_metrics, std_metrics, x_label, language, title, file_path):
+        plot = sec.new(CustomPlot(plot_name=title, plot_path=file_path, width=r'.8\textwidth', height=r'.8\textwidth'))
         plot.caption = title
 
         x, y, std = np.array(list(mean_metrics['accuracies'][language].keys())).astype(int), np.array(list(mean_metrics['accuracies'][language].values())).astype(float), np.array(list(std_metrics['accuracies'][language].values())).astype(float)
@@ -411,14 +412,14 @@ class Table4(Table):
         plot.legend_position = 'south east'
 
         plot.x_label = x_label
-        plot.y_label = 'Accuracy (%)'
+        plot.y_label = 'Accuracy (\%)'
 
         plot.x_min = np.floor(x.min())
         plot.x_max = np.ceil(x.max())
         plot.y_min = np.floor((y - std).min())
         plot.y_max = np.ceil((y + std).max())
 
-    def write_CSLS(self, doc, sec, output_path):
+    def write_CSLS(self, sec, output_path):
         experiment = self.experiments['CSLS']
         metrics = experiment.aggregate_runs()
         mean_metrics, std_metrics = self._compute_mean_std_metrics(metrics)
@@ -426,10 +427,10 @@ class Table4(Table):
         for language in metrics['accuracies']:
             title = 'CSLS Hyperparameter Search (en-{})'.format(language)
             file_path = os.path.join(output_path, 'csls_en_{}'.format(language))
-            self.plot_to_latex(doc, sec, mean_metrics, std_metrics, x_label='CSLS', language=language, title=title, file_path=file_path)
+            self.plot_to_latex(sec, mean_metrics, std_metrics, x_label='CSLS', language=language, title=title, file_path=file_path)
 
 
-    def write_vocabulary_cutoff(self, doc, sec, output_path):
+    def write_vocabulary_cutoff(self, sec, output_path):
         experiment = self.experiments['Vocabulary Cutoff']
         metrics = experiment.aggregate_runs()
         mean_metrics, std_metrics = self._compute_mean_std_metrics(metrics)
@@ -437,9 +438,13 @@ class Table4(Table):
         for language in metrics['accuracies']:
             title = 'Vocabulary Cutoff Hyperparameter Search (en-{})'.format(language)
             file_path = os.path.join(output_path, 'voc_cutoff_en_{}'.format(language))
-            self.plot_to_latex(doc, sec, mean_metrics, std_metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=file_path)
+            self.plot_to_latex(sec, mean_metrics, std_metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=file_path)
 
-    def generate_heatmap(self, experiment, mean_metrics, ax, x_label, y_label, language, metric_to_plot, cbarlabel, valfmt):
+
+    def heatmap_to_latex(self, experiment, sec, mean_metrics, x_label, y_label, language, title, file_path, file_name):
+        plot = sec.new(CustomPlot(plot_name=file_name, plot_path=file_path, grid=False, lines=False))
+        plot.caption = title
+
         x_values, y_values = sorted(experiment.CHANGING_PARAMS[x_label]), sorted(experiment.CHANGING_PARAMS[y_label])
         z = np.zeros((len(x_values), len(y_values)), dtype=float)
 
@@ -447,33 +452,39 @@ class Table4(Table):
             for y_idx, y_value in enumerate(y_values):
                 # temp
                 y_value = float(y_value)
-                z[x_idx, y_idx] = float(mean_metrics[metric_to_plot][language][(str(x_value), str(y_value))])
+                z[x_idx, y_idx] = float(mean_metrics['accuracies'][language][(str(x_value), str(y_value))])
 
+        # Add a label to each axis
+        plot.x_label = 'Stochastic Initial'
+        plot.y_label = 'Stochastic Multiplier'
 
-        im, _ = heatmap(z, x_values, y_values, ax=ax,
-                           cbarlabel=cbarlabel)
-        _ = annotate_heatmap(im, valfmt=valfmt)
+        plot.x_ticks_labels = ['{:.2f}'.format(x) for x in x_values]
+        plot.y_ticks_labels = ['{:.1f}'.format(y) for y in y_values]
 
-    def heatmaps_from_metrics(self, experiment, mean_metrics, x_label, y_label, language, title, file_path):
-        fig, axs = plt.subplots(1, 2)
-        fig.suptitle(title)
+        x_values = list(range(len(x_values)))
+        y_values = list(range(len(y_values)))
 
-        self.generate_heatmap(experiment, mean_metrics, axs[0], x_label, y_label, language, 'accuracies', 'Accuracy', '{x:.2f}')
-        self.generate_heatmap(experiment, mean_metrics, axs[1], x_label, y_label, language, 'times', 'Time (minutes)', '{x:.1f}')
+        plot.x_ticks = x_values
+        plot.y_ticks = y_values
 
-        fig.tight_layout()
-        plt.savefig(file_path)
+        plot.add_matrix_plot(x_values, y_values, z, inv_y_axis=True, colorbar=True)
 
+        plot.axis.kwoptions['enlargelimits'] = 'false'
+        plot.axis.kwoptions['nodes_near_coords']= '{\pgfmathprintnumber\pgfplotspointmeta\,\%}'
+        plot.axis.kwoptions['every_node_near_coord/.append style'] =' {xshift=0pt,yshift=-7pt, black, font=\\footnotesize}'
+        plot.axis.kwoptions['colorbar_style'] = '{{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}}'
+        plot.axis.kwoptions['point_meta'] = 'explicit'
 
-    def write_stochastic(self, doc, sec, output_path):
+    def write_stochastic(self, sec, output_path):
         experiment = self.experiments['Stochastic']
         metrics = experiment.aggregate_runs()
         mean_metrics, _ = self._compute_mean_std_metrics(metrics)
 
         for language in metrics['accuracies']:
             title = 'Stochastic Hyperparameter Search (en-{})'.format(language)
-            file_path = os.path.join(output_path, 'stochastic_en_{}.png'.format(language))
-            self.heatmaps_from_metrics(experiment, mean_metrics, x_label='stochastic_initial', y_label='stochastic_multiplier', language=language, title=title, file_path=file_path)
+            file_name = 'stochastic_en_{}'.format(language)
+            file_path = os.path.join(output_path, file_name)
+            self.heatmap_to_latex(experiment, sec, mean_metrics, x_label='stochastic_initial', y_label='stochastic_multiplier', language=language, title=title, file_path=file_path, file_name=file_name)
 
 
     def write(self, output_path):
@@ -481,15 +492,16 @@ class Table4(Table):
             os.makedirs(output_path)
 
         doc = Document(filename='table4', filepath=output_path, doc_type='article', options=('12pt',))
-        doc.add_to_preamble('\pgfplotsset{compat=1.16}')
         doc.add_to_preamble("\\usepgfplotslibrary{fillbetween}")
-        sec = doc.new_section('Table 4')
+        doc.add_to_preamble('\\usepgfplotslibrary{colorbrewer}\n\\pgfplotsset{compat=1.16, colormap/Blues-3}')
 
-        self.write_CSLS(doc, sec, output_path)
-        self.write_vocabulary_cutoff(doc, sec, output_path)
-        self.write_stochastic(doc, sec, output_path)
+        sec = doc.new_section('All graphs')
 
-        doc.build(save_to_disk=True, compile_to_pdf=True, show_pdf=False)
+        self.write_CSLS(sec, output_path)
+        self.write_vocabulary_cutoff(sec, output_path)
+        self.write_stochastic(sec, output_path)
+
+        doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
 
 
 def get_table1(configs) -> Table:
@@ -522,9 +534,10 @@ def get_table4(configs) -> Table:
 
 class CustomPlot(Plot, super_class=FloatingFigure):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, position='th!', width=r'.8\textwidth', height=r'.45\textwidth', *args, **kwargs):
+        super().__init__(*args, width=width, height=height, position=position, **kwargs)
         self.endlines = []
+        self.matrix_plot = None
 
     def add_to_end(self, line):
         self.endlines.append(line)
@@ -539,3 +552,50 @@ class CustomPlot(Plot, super_class=FloatingFigure):
             self.axis.append(endline)
 
         return FloatingFigure.build(self)
+
+    def save_to_csv(self):
+        filepath = os.path.join(self.plot_path, self.plot_name + '.csv')
+        os.makedirs(self.plot_path, exist_ok=True)
+        with open(filepath, 'w', newline='') as file:
+            writer = csv.writer(file)
+
+            titles = [coor for i in range(len(self.plots)) for coor in (f'x{i}', f'y{i}')]
+            if self.matrix_plot:
+                titles += ['x', 'y', 'C']
+            writer.writerow(titles)
+            data = [x_y for x, y, *_ in self.plots for x_y in (x, y)]
+            if self.matrix_plot:
+                X, Y, Z, *_ = self.matrix_plot
+                XX, YY = np.meshgrid(X, Y)
+                data += [XX.reshape(-1), YY.reshape(-1), Z.reshape(-1)]
+
+            for row in itertools.zip_longest(*data, fillvalue=''):
+                writer.writerow(row)
+
+    def add_matrix_plot(self, X, Y, Z, *options, inv_y_axis=True, colorbar=True, **kwoptions):
+        X = np.array([x for x in X])
+        Y = np.array([y for y in Y])
+        Z = np.array([[z for z in z_row] for z_row in Z])
+        assert Z.shape == X.shape + Y.shape
+        if colorbar:
+            self.axis.options += ('colorbar',)
+            self.axis.kwoptions['enlargelimits'] = 'false'
+        self.matrix_plot = (X, Y, Z, inv_y_axis, options, kwoptions)
+
+    def _build_plots(self):
+        super()._build_plots()
+
+        if self.matrix_plot:
+            plot_path = self.plot_path + '/' + self.plot_name + '.csv'
+            X, Y, Z, inv_y_axis, options, kwoptions = self.matrix_plot
+            self.axis += AddMatrixPlot(len(X), plot_path, inv_y_axis, *options, **kwoptions)
+
+class AddMatrixPlot(TexCommand):
+    def __init__(self, num_cols, plot_path, inv_y, *options, **kwoptions):
+        self.plot_path = plot_path
+        options = options + ('matrix plot{}'.format('*' if inv_y else ''),)
+        kwoptions['mesh/cols'] = str(num_cols)
+        super().__init__('addplot', options=options, options_pos='first', **kwoptions)
+
+    def build(self):
+        return super().build() + f" table[x=x, y=y, meta=C, col sep=comma]{{{self.plot_path}}};"
