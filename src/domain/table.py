@@ -411,7 +411,7 @@ class Table4(Table):
         plot.legend_position = 'south east'
 
         plot.x_label = x_label
-        plot.y_label = 'Accuracy'
+        plot.y_label = 'Accuracy (%)'
 
         plot.x_min = np.floor(x.min())
         plot.x_max = np.ceil(x.max())
