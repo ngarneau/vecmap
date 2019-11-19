@@ -15,4 +15,3 @@ venv/
 
 dataset.tar.gz
 update_version.sh
-copy_data.sh
