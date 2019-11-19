@@ -2,10 +2,8 @@ from typing import Dict, List, Iterable, Tuple
 
 import numpy as np
 import os
-import csv
-import itertools
 import mlflow
-from python2latex import Document, Plot, FloatingEnvironmentMixin, FloatingFigure, Table as LatexTable, TexCommand, build, bold
+from python2latex import Document, Plot, Table as LatexTable, build, bold
 import matplotlib.pyplot as plt
 
 from src.domain.experiment import *
@@ -398,7 +396,7 @@ class Table4(Table):
         return mean_metrics, std_metrics
 
     def plot_to_latex(self, sec, mean_metrics, std_metrics, x_label, language, title, file_path):
-        plot = sec.new(CustomPlot(plot_name=title, plot_path=file_path, width=r'.8\textwidth', height=r'.8\textwidth'))
+        plot = sec.new(Plot(plot_name=title, plot_path=file_path, position='th!'))
         plot.caption = title
 
         x, y, std = np.array(list(mean_metrics['accuracies'][language].keys())).astype(int), np.array(list(mean_metrics['accuracies'][language].values())).astype(float), np.array(list(std_metrics['accuracies'][language].values())).astype(float)
@@ -408,7 +406,8 @@ class Table4(Table):
         plot.add_plot(x, y, 'blue', 'ylabel near ticks', mark='*', line_width='3pt', mark_size='3pt')
         plot.add_plot(x, y+std, name_path='upper', draw='none')
         plot.add_plot(x, y-std, name_path='lower', draw='none')
-        plot.add_to_end('\\addplot[fill=blue!10] fill between[of=upper and lower];')
+        plot.axis.append('\\addplot[fill=blue!10] fill between[of=upper and lower];')
+        plot.axis.kwoptions['y tick label style'] = '{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}'
         plot.legend_position = 'south east'
 
         plot.x_label = x_label
@@ -442,7 +441,12 @@ class Table4(Table):
 
 
     def heatmap_to_latex(self, experiment, sec, mean_metrics, x_label, y_label, language, title, file_path, file_name):
-        plot = sec.new(CustomPlot(plot_name=file_name, plot_path=file_path, grid=False, lines=False))
+        plot = sec.new(Plot(plot_name=file_name, plot_path=file_path,
+                    grid=False, lines=False,
+                    enlargelimits='false',
+                    width=r'.8\textwidth', height=r'.8\textwidth',
+                    position='th!'
+                    ))
         plot.caption = title
 
         x_values, y_values = sorted(experiment.CHANGING_PARAMS[x_label]), sorted(experiment.CHANGING_PARAMS[y_label])
@@ -467,13 +471,17 @@ class Table4(Table):
         plot.x_ticks = x_values
         plot.y_ticks = y_values
 
-        plot.add_matrix_plot(x_values, y_values, z, inv_y_axis=True, colorbar=True)
+        delta = z.max() - z.min()
+        point_min = z.min() - delta/2
+        point_max = z.max() + delta/2
 
-        plot.axis.kwoptions['enlargelimits'] = 'false'
-        plot.axis.kwoptions['nodes_near_coords']= '{\pgfmathprintnumber\pgfplotspointmeta\,\%}'
-        plot.axis.kwoptions['every_node_near_coord/.append style'] =' {xshift=0pt,yshift=-7pt, black, font=\\footnotesize}'
+        plot.add_matrix_plot(x_values, y_values, z, point_meta_min=point_min, point_meta_max=point_max)
+        plot.axis.options += (
+                                r'nodes near coords={\pgfmathprintnumber\pgfplotspointmeta\,\%}',
+                                r'every node near coord/.append style={xshift=0pt,yshift=-7pt, black, font=\footnotesize}',
+                              )
+
         plot.axis.kwoptions['colorbar_style'] = '{{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}}'
-        plot.axis.kwoptions['point_meta'] = 'explicit'
 
     def write_stochastic(self, sec, output_path):
         experiment = self.experiments['Stochastic']
@@ -492,8 +500,9 @@ class Table4(Table):
             os.makedirs(output_path)
 
         doc = Document(filename='table4', filepath=output_path, doc_type='article', options=('12pt',))
-        doc.add_to_preamble("\\usepgfplotslibrary{fillbetween}")
-        doc.add_to_preamble('\\usepgfplotslibrary{colorbrewer}\n\\pgfplotsset{compat=1.16, colormap/Blues-3}')
+        doc.add_to_preamble(r"\usepgfplotslibrary{fillbetween}")
+        doc.add_to_preamble(r'\usepgfplotslibrary{colorbrewer}')
+        doc.add_to_preamble(r'\pgfplotsset{compat=1.15, colormap/Blues}')
 
         sec = doc.new_section('All graphs')
 
@@ -531,71 +540,3 @@ def get_table4(configs) -> Table:
         "Vocabulary Cutoff": VocabularyCutoffGridSearchExperiment(configs),
         "Stochastic": StochasticGridSearchExperiment(configs)
     })
-
-class CustomPlot(Plot, super_class=FloatingFigure):
-
-    def __init__(self, position='th!', width=r'.8\textwidth', height=r'.45\textwidth', *args, **kwargs):
-        super().__init__(*args, width=width, height=height, position=position, **kwargs)
-        self.endlines = []
-        self.matrix_plot = None
-
-    def add_to_end(self, line):
-        self.endlines.append(line)
-
-    def build(self):
-        self.save_to_csv()
-        self._build_plots()
-
-        self.axis.options += (f"every axis plot/.append style={{{', '.join('='.join([k,v]) for k,v in self.default_plot_kwoptions.items())}}}",)
-
-        for endline in self.endlines:
-            self.axis.append(endline)
-
-        return FloatingFigure.build(self)
-
-    def save_to_csv(self):
-        filepath = os.path.join(self.plot_path, self.plot_name + '.csv')
-        os.makedirs(self.plot_path, exist_ok=True)
-        with open(filepath, 'w', newline='') as file:
-            writer = csv.writer(file)
-
-            titles = [coor for i in range(len(self.plots)) for coor in (f'x{i}', f'y{i}')]
-            if self.matrix_plot:
-                titles += ['x', 'y', 'C']
-            writer.writerow(titles)
-            data = [x_y for x, y, *_ in self.plots for x_y in (x, y)]
-            if self.matrix_plot:
-                X, Y, Z, *_ = self.matrix_plot
-                XX, YY = np.meshgrid(X, Y)
-                data += [XX.reshape(-1), YY.reshape(-1), Z.reshape(-1)]
-
-            for row in itertools.zip_longest(*data, fillvalue=''):
-                writer.writerow(row)
-
-    def add_matrix_plot(self, X, Y, Z, *options, inv_y_axis=True, colorbar=True, **kwoptions):
-        X = np.array([x for x in X])
-        Y = np.array([y for y in Y])
-        Z = np.array([[z for z in z_row] for z_row in Z])
-        assert Z.shape == X.shape + Y.shape
-        if colorbar:
-            self.axis.options += ('colorbar',)
-            self.axis.kwoptions['enlargelimits'] = 'false'
-        self.matrix_plot = (X, Y, Z, inv_y_axis, options, kwoptions)
-
-    def _build_plots(self):
-        super()._build_plots()
-
-        if self.matrix_plot:
-            plot_path = self.plot_path + '/' + self.plot_name + '.csv'
-            X, Y, Z, inv_y_axis, options, kwoptions = self.matrix_plot
-            self.axis += AddMatrixPlot(len(X), plot_path, inv_y_axis, *options, **kwoptions)
-
-class AddMatrixPlot(TexCommand):
-    def __init__(self, num_cols, plot_path, inv_y, *options, **kwoptions):
-        self.plot_path = plot_path
-        options = options + ('matrix plot{}'.format('*' if inv_y else ''),)
-        kwoptions['mesh/cols'] = str(num_cols)
-        super().__init__('addplot', options=options, options_pos='first', **kwoptions)
-
-    def build(self):
-        return super().build() + f" table[x=x, y=y, meta=C, col sep=comma]{{{self.plot_path}}};"
