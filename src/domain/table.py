@@ -3,7 +3,7 @@ from typing import Dict, List, Iterable, Tuple
 import numpy as np
 import os
 import mlflow
-from python2latex import Document, Plot, Table as LatexTable, build, bold
+from python2latex import Document, Plot, FloatingEnvironmentMixin, FloatingFigure, Table as LatexTable, build, bold
 import matplotlib.pyplot as plt
 
 from src.domain.matplotlib_utils import heatmap, annotate_heatmap
@@ -396,32 +396,27 @@ class Table4(Table):
 
         return mean_metrics, std_metrics
 
-    def linear_plot_from_metrics(self, mean_metrics, std_metrics, x_label, language, title, file_path):
-        fig, ax1 = plt.subplots()
-        fig.suptitle(title)
+    def plot_to_latex(self, doc, sec, mean_metrics, std_metrics, x_label, language, title, file_path):
+        plot = sec.new(CustomPlot(plot_name=title, plot_path=file_path))
+        plot.caption = title
 
-        color = 'tab:red'
-        ax1.set_xlabel(x_label)
-        ax1.set_ylabel('Accuracy')
         x, y, std = np.array(list(mean_metrics['accuracies'][language].keys())).astype(int), np.array(list(mean_metrics['accuracies'][language].values())).astype(float), np.array(list(std_metrics['accuracies'][language].values())).astype(float)
         sorting = x.argsort()
         x, y, std = x[sorting], y[sorting], std[sorting]
-        ax1.plot(x, y, color=color, linewidth=3)
-        ax1.tick_params(axis='y')
-        ax1.fill_between(x, y - std, y + std, color=color, alpha=0.4)
 
-        ax2 = ax1.twinx()  # instantiate a second axes that shares the same x-axis
+        plot.add_plot(x, y, 'blue', 'ylabel near ticks', mark='*', line_width='3pt', mark_size='3pt')
+        plot.add_plot(x, y+std, name_path='upper', draw='none')
+        plot.add_plot(x, y-std, name_path='lower', draw='none')
+        plot.add_to_end('\\addplot[fill=blue!10] fill between[of=upper and lower];')
+        plot.legend_position = 'south east'
 
-        color = 'tab:blue'
-        ax2.set_ylabel('Time (minutes)')
-        x, y, std = np.array(list(mean_metrics['times'][language].keys())).astype(int), np.array(list(mean_metrics['times'][language].values())).astype(float), np.array(list(std_metrics['times'][language].values())).astype(float)
-        sorting = x.argsort()
-        x, y, std = x[sorting], y[sorting], std[sorting]
-        ax2.plot(x, y, color=color, linewidth=3)
-        ax2.tick_params(axis='y')
+        plot.x_label = x_label
+        plot.y_label = 'Accuracy'
 
-        fig.tight_layout()
-        plt.savefig(file_path)
+        plot.x_min = np.floor(x.min())
+        plot.x_max = np.ceil(x.max())
+        plot.y_min = np.floor((y - std).min())
+        plot.y_max = np.ceil((y + std).max())
 
     def write_CSLS(self, doc, sec, output_path):
         experiment = self.experiments['CSLS']
@@ -430,8 +425,8 @@ class Table4(Table):
 
         for language in metrics['accuracies']:
             title = 'CSLS Hyperparameter Search (en-{})'.format(language)
-            file_path = os.path.join(output_path, 'csls_en_{}.png'.format(language))
-            self.linear_plot_from_metrics(mean_metrics, std_metrics, x_label='CSLS', language=language, title=title, file_path=file_path)
+            file_path = os.path.join(output_path, 'csls_en_{}'.format(language))
+            self.plot_to_latex(doc, sec, mean_metrics, std_metrics, x_label='CSLS', language=language, title=title, file_path=file_path)
 
 
     def write_vocabulary_cutoff(self, doc, sec, output_path):
@@ -441,8 +436,8 @@ class Table4(Table):
 
         for language in metrics['accuracies']:
             title = 'Vocabulary Cutoff Hyperparameter Search (en-{})'.format(language)
-            file_path = os.path.join(output_path, 'voc_cutoff_en_{}.png'.format(language))
-            self.linear_plot_from_metrics(mean_metrics, std_metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=file_path)
+            file_path = os.path.join(output_path, 'voc_cutoff_en_{}'.format(language))
+            self.plot_to_latex(doc, sec, mean_metrics, std_metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=file_path)
 
     def generate_heatmap(self, experiment, mean_metrics, ax, x_label, y_label, language, metric_to_plot, cbarlabel, valfmt):
         x_values, y_values = sorted(experiment.CHANGING_PARAMS[x_label]), sorted(experiment.CHANGING_PARAMS[y_label])
@@ -486,11 +481,15 @@ class Table4(Table):
             os.makedirs(output_path)
 
         doc = Document(filename='table4', filepath=output_path, doc_type='article', options=('12pt',))
+        doc.add_to_preamble('\pgfplotsset{compat=1.16}')
+        doc.add_to_preamble("\\usepgfplotslibrary{fillbetween}")
         sec = doc.new_section('Table 4')
 
         self.write_CSLS(doc, sec, output_path)
         self.write_vocabulary_cutoff(doc, sec, output_path)
         self.write_stochastic(doc, sec, output_path)
+
+        doc.build(save_to_disk=True, compile_to_pdf=True, show_pdf=False)
 
 
 def get_table1(configs) -> Table:
@@ -520,3 +519,23 @@ def get_table4(configs) -> Table:
         "Vocabulary Cutoff": VocabularyCutoffGridSearchExperiment(configs),
         "Stochastic": StochasticGridSearchExperiment(configs)
     })
+
+class CustomPlot(Plot, super_class=FloatingFigure):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.endlines = []
+
+    def add_to_end(self, line):
+        self.endlines.append(line)
+
+    def build(self):
+        self.save_to_csv()
+        self._build_plots()
+
+        self.axis.options += (f"every axis plot/.append style={{{', '.join('='.join([k,v]) for k,v in self.default_plot_kwoptions.items())}}}",)
+
+        for endline in self.endlines:
+            self.axis.append(endline)
+
+        return FloatingFigure.build(self)
