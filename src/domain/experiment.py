@@ -214,7 +214,10 @@ class StochasticGridSearchExperiment(GridSearchExperiment):
     EXPERIMENT_NAME = 'stochastic_grid_search'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'fi', 'it']}
 
-    CHANGING_PARAMS = {'stochastic_initial': [0.05, 0.1, 0.2], 'stochastic_multiplier': [1.5, 2, 3, 4]}
+    CHANGING_PARAMS = {
+        'stochastic_initial': list(np.linspace(0.05, 0.3, 5)),
+        'stochastic_multiplier': list(np.linspace(1.5, 3, 4))
+    }
 
     def __init__(self, base_config):
         super().__init__(base_config)
