@@ -2,6 +2,7 @@ from collections import defaultdict
 from itertools import product
 import mlflow
 from mlflow.tracking import MlflowClient
+import numpy as np
 
 
 class Experiment:
