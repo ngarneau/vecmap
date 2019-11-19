@@ -14,4 +14,3 @@ venv/
 /mlruns/
 
 dataset.tar.gz
-update_version.sh
