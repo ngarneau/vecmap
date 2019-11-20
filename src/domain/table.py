@@ -435,6 +435,79 @@ class Table4(Table):
             if i > 0:
                 plot.tikzpicture += current_plot
 
+    def heatmap_all_to_latex(self, experiment, sec, mean_metrics, x_label, y_label, caption, file_path, file_name):
+        plot = sec.new(Plot(plot_name=file_name, plot_path=file_path,
+                    grid=False, lines=False,
+                    enlargelimits='false',
+                    width=r'.4\textwidth', height=r'.4\textwidth',
+                    position='th!',
+                    label=file_name,
+                    name='plot0'
+                    ))
+        plot.caption = caption
+
+        kwargs_per_plot = {1: {'as_float_env':False, 'at':'(plot0.south east)', 'anchor':'south west', 'xshift':r'.14\textwidth', 'name': 'plot1'},
+                           2: {'as_float_env':False, 'at':'(plot0.south west)', 'anchor':'north west', 'yshift':r'-0.07\textwidth', 'name': 'plot2'},
+                           3: {'as_float_env':False, 'at':'(plot2.south east)', 'anchor':'south west', 'xshift':r'.14\textwidth', 'name': 'plot3'}}
+        titles = {'de': 'English-Deutsch', 'it': 'English-Italian', 'fi': 'English-Finnish', 'es':'English-Spanish'}
+
+
+        for i, language in enumerate(mean_metrics['accuracies']):
+            if i == 0:
+                current_plot = plot
+            else:
+                current_plot = Plot(plot_name=file_name, plot_path=file_path,  grid=False, lines=False,
+                    enlargelimits='false',
+                    width=r'.4\textwidth', height=r'.4\textwidth',
+                    position='th!', **kwargs_per_plot[i])
+                current_plot.tikzpicture.head = ''
+                current_plot.tikzpicture.tail = ''
+
+            x_values, y_values = sorted(experiment.CHANGING_PARAMS[x_label]), sorted(experiment.CHANGING_PARAMS[y_label])
+            z = np.zeros((len(x_values), len(y_values)), dtype=float)
+
+            for x_idx, x_value in enumerate(x_values):
+                for y_idx, y_value in enumerate(y_values):
+                    # temp
+                    y_value = float(y_value)
+                    z[x_idx, y_idx] = float(mean_metrics['accuracies'][language][(str(x_value), str(y_value))])
+
+            if i >= 2:
+                current_plot.x_label = r'$p_0$'
+                current_plot.x_ticks_labels = ['{:.2f}'.format(x) for x in x_values]
+            else:
+                current_plot.x_ticks_labels = [r'\empty']
+
+            if i % 2 == 0:
+                current_plot.y_label = r'$p_{factor}$'
+                current_plot.y_ticks_labels = ['{:.1f}'.format(y) for y in y_values]
+            else:
+                current_plot.y_ticks_labels = [r'\empty']
+
+            x_values = list(range(len(x_values)))
+            y_values = list(range(len(y_values)))
+
+            current_plot.x_ticks = x_values
+            current_plot.y_ticks = y_values
+
+            delta = z.max() - z.min()
+            point_min = z.min() - delta/2
+            point_max = z.max() + delta/2
+
+            current_plot.add_matrix_plot(x_values, y_values, z, point_meta_min=point_min, point_meta_max=point_max)
+            current_plot.axis.options += (
+                                    r'nodes near coords={\pgfmathprintnumber\pgfplotspointmeta\,\%}',
+                                    r'every node near coord/.append style={xshift=0pt,yshift=-7pt, black, font=\footnotesize}',
+                                )
+
+            current_plot.axis.kwoptions['colorbar_style'] = '{{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}}'
+
+            current_plot.title = titles[language]
+            current_plot.plot_name += '_en_{}'.format(language)
+
+            if i > 0:
+                plot.tikzpicture += current_plot
+
     def write_CSLS(self, sec, output_path):
         experiment = self.experiments['CSLS']
         metrics = experiment.aggregate_runs()
@@ -443,7 +516,6 @@ class Table4(Table):
         file_name = 'csls'
         caption = r'Accuracy percentage results for values of $k$ in the \textbf{CSLS} procedure on the various language pairs. All reported results are obtained after a total of 10 runs per value of $k$ and the shaded region represents a 95 \% confidence interval on the accuracy.'
         self.plot_all_to_latex(sec, mean_metrics, std_metrics, caption, output_path, file_name)
-
 
     def write_vocabulary_cutoff(self, sec, output_path):
         experiment = self.experiments['Vocabulary Cutoff']
@@ -454,60 +526,14 @@ class Table4(Table):
         caption = r'Accuracy percentage results for values of $k$ in the \textbf{vocabulary cutoff} method on the various language pairs. All reported results are obtained after a total of 10 runs per value of $k$ and the shaded region represents a 95 \% confidence interval on the accuracy.'
         self.plot_all_to_latex(sec, mean_metrics, std_metrics, caption, output_path, file_name)
 
-
-    def heatmap_to_latex(self, experiment, sec, mean_metrics, x_label, y_label, language, title, file_path, file_name):
-        plot = sec.new(Plot(plot_name=file_name, plot_path=file_path,
-                    grid=False, lines=False,
-                    enlargelimits='false',
-                    width=r'.9\columnwidth', height=r'.9\columnwidth',
-                    position='th!',
-                    label=file_name
-                    ))
-        plot.caption = title
-
-        x_values, y_values = sorted(experiment.CHANGING_PARAMS[x_label]), sorted(experiment.CHANGING_PARAMS[y_label])
-        z = np.zeros((len(x_values), len(y_values)), dtype=float)
-
-        for x_idx, x_value in enumerate(x_values):
-            for y_idx, y_value in enumerate(y_values):
-                # temp
-                y_value = float(y_value)
-                z[x_idx, y_idx] = float(mean_metrics['accuracies'][language][(str(x_value), str(y_value))])
-
-        # Add a label to each axis
-        plot.x_label = 'Stochastic Initial'
-        plot.y_label = 'Stochastic Multiplier'
-
-        plot.x_ticks_labels = ['{:.2f}'.format(x) for x in x_values]
-        plot.y_ticks_labels = ['{:.1f}'.format(y) for y in y_values]
-
-        x_values = list(range(len(x_values)))
-        y_values = list(range(len(y_values)))
-
-        plot.x_ticks = x_values
-        plot.y_ticks = y_values
-
-        delta = z.max() - z.min()
-        point_min = z.min() - delta/2
-        point_max = z.max() + delta/2
-
-        plot.add_matrix_plot(x_values, y_values, z, point_meta_min=point_min, point_meta_max=point_max)
-        plot.axis.options += (
-                                r'nodes near coords={\pgfmathprintnumber\pgfplotspointmeta\,\%}',
-                                r'every node near coord/.append style={xshift=0pt,yshift=-7pt, black, font=\footnotesize}',
-                              )
-
-        plot.axis.kwoptions['colorbar_style'] = '{{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}}'
-
     def write_stochastic(self, sec, output_path):
         experiment = self.experiments['Stochastic']
         metrics = experiment.aggregate_runs()
         mean_metrics, _ = self._compute_mean_std_metrics(metrics)
 
-        for language in metrics['accuracies']:
-            title = 'Stochastic Hyperparameter Search (en-{})'.format(language)
-            file_name = 'stochastic_en_{}'.format(language)
-            self.heatmap_to_latex(experiment, sec, mean_metrics, x_label='stochastic_initial', y_label='stochastic_multiplier', language=language, title=title, file_path=output_path, file_name=file_name)
+        file_name = 'stochastic'
+        caption = r'Accuracy percentage results for values of $p_0$ and $p_{factor}$ in the \textbf{stochastic dictionary induction} procedure on the various language pairs. All reported results are obtained after a total of 10 runs per ($p_0$, $p_{factor}$) pair.'
+        self.heatmap_all_to_latex(experiment, sec, mean_metrics, x_label='stochastic_initial', y_label='stochastic_multiplier', caption=caption, file_path=output_path, file_name=file_name)
 
 
     def write(self, output_path):
@@ -523,7 +549,7 @@ class Table4(Table):
 
         self.write_CSLS(sec, output_path)
         self.write_vocabulary_cutoff(sec, output_path)
-        # self.write_stochastic(sec, output_path)
+        self.write_stochastic(sec, output_path)
 
         doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
 
