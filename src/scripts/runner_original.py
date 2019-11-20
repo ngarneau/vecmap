@@ -24,7 +24,6 @@ def main(args):
     logging.info("Lauching experiments for Table 1")
     table1 = get_table1(args)
     launcher.run_experiment_for_table(table1)
-    table1.write('')
     table1.write(os.path.join(args['output_path'], 'tables_and_plots/table1.tex'))
     logging.info("Done.")
 
