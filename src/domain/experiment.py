@@ -172,7 +172,7 @@ class OtherLanguagesStochasticAblationExperiment(OriginalExperiment):
 
 
 class OtherLanguagesCSLSAblationExperiment(OriginalExperiment):
-    EXPERIMENT_NAME = 'csls_ablation'
+    EXPERIMENT_NAME = 'other_languages_csls_ablation'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
     CHANGING_PARAMS = {
         'csls': [0],
@@ -186,7 +186,7 @@ class OtherLanguagesCSLSAblationExperiment(OriginalExperiment):
 
 
 class OtherLanguagesDirectionAblationExperiment(OriginalExperiment):
-    EXPERIMENT_NAME = 'direction_ablation'
+    EXPERIMENT_NAME = 'other_languages_direction_ablation'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
     CHANGING_PARAMS = {
         'direction': ['forward'],
@@ -200,7 +200,7 @@ class OtherLanguagesDirectionAblationExperiment(OriginalExperiment):
 
 
 class OtherLanguagesReweightAblationExperiment(OriginalExperiment):
-    EXPERIMENT_NAME = 'reweight_ablation'
+    EXPERIMENT_NAME = 'other_languages_reweight_ablation'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
     CHANGING_PARAMS = {
         'reweight': [1.0],
@@ -214,7 +214,7 @@ class OtherLanguagesReweightAblationExperiment(OriginalExperiment):
 
 
 class OtherLanguagesRandomSeedDictionaryAblationExperiment(OriginalExperiment):
-    EXPERIMENT_NAME = 'random_seed_dictionary_ablation'
+    EXPERIMENT_NAME = 'other_languages_random_seed_dictionary_ablation'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
     CHANGING_PARAMS = {'seed_dictionary_method': ['random_raw']}
 
@@ -226,7 +226,7 @@ class OtherLanguagesRandomSeedDictionaryAblationExperiment(OriginalExperiment):
 
 
 class OtherLanguagesRandomCutoffSeedDictionaryAblationExperiment(OriginalExperiment):
-    EXPERIMENT_NAME = 'random_cutoff_seed_dictionary_ablation'
+    EXPERIMENT_NAME = 'other_languages_random_cutoff_seed_dictionary_ablation'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
     CHANGING_PARAMS = {'seed_dictionary_method': ['random_cutoff']}
 
