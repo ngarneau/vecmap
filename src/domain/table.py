@@ -395,40 +395,54 @@ class Table4(Table):
 
         return mean_metrics, std_metrics
 
-    def plot_to_latex(self, sec, mean_metrics, std_metrics, x_label, language, title, file_path, file_name):
-        plot = sec.new(Plot(plot_name=file_name, plot_path=file_path, position='th!', width=r'\columnwidth', height=r'.9\columnwidth', label=file_name))
-        plot.caption = title
+    def plot_all_to_latex(self, sec, mean_metrics, std_metrics, caption, file_path, file_name):
+        plot = sec.new(Plot(plot_name=file_name, plot_path=file_path, position='th!', width=r'.3\textwidth', height=r'.3\textwidth', label=file_name, name='plot0', xshift=r'-.14\textwidth'))
+        plot.caption = caption
 
-        x, y, std = np.array(list(mean_metrics['accuracies'][language].keys())).astype(int), np.array(list(mean_metrics['accuracies'][language].values())).astype(float), np.array(list(std_metrics['accuracies'][language].values())).astype(float)
-        sorting = x.argsort()
-        x, y, std = x[sorting], y[sorting], std[sorting]
+        kwargs_per_plot = {1: {'as_float_env':False, 'at':'(plot0.south east)', 'anchor':'south west', 'xshift':r'-.06\textwidth', 'name': 'plot1'},
+                           2: {'as_float_env':False, 'at':'(plot1.south east)', 'anchor':'south west', 'xshift':r'0.01\textwidth', 'name': 'plot2'},
+                           3: {'as_float_env':False, 'at':'(plot2.south east)', 'anchor':'south west', 'xshift':r'.09\textwidth', 'name': 'plot3'}}
+        titles = {'de': 'English-Deutsch', 'it': 'English-Italian', 'fi': 'English-Finnish', 'es':'English-Spanish'}
 
-        plot.add_plot(x, y, 'blue', 'ylabel near ticks', mark='*', line_width='3pt', mark_size='3pt')
-        plot.add_plot(x, y + 1.96 * std, name_path='upper', draw='none')
-        plot.add_plot(x, y - 1.96 * std, name_path='lower', draw='none')
-        plot.axis.append('\\addplot[fill=blue!10] fill between[of=upper and lower];')
-        plot.axis.kwoptions['y tick label style'] = '{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}'
-        plot.legend_position = 'south east'
+        for i, language in enumerate(mean_metrics['accuracies']):
+            if i == 0:
+                current_plot = plot
+            else:
+                current_plot = Plot(plot_name=file_name, plot_path=file_path, width=r'.3\textwidth', height=r'.3\textwidth', **kwargs_per_plot[i])
+                current_plot.tikzpicture.head = ''
+                current_plot.tikzpicture.tail = ''
 
-        plot.x_label = x_label
-        plot.y_label = 'Accuracy (\%)'
+            x, y, std = np.array(list(mean_metrics['accuracies'][language].keys())).astype(int), np.array(list(mean_metrics['accuracies'][language].values())).astype(float), np.array(list(std_metrics['accuracies'][language].values())).astype(float)
+            sorting = x.argsort()
+            x, y, std = x[sorting], y[sorting], std[sorting]
 
-        plot.x_min = np.floor(x.min())
-        plot.x_max = np.ceil(x.max())
-        y_max, y_min = (y + 1.96 * std).max(), (y - 1.96 * std).min()
-        delta = y.max() - y.min()
-        plot.y_min = y_min - delta/2
-        plot.y_max = y_max + delta/2
+            current_plot.add_plot(x, y, 'blue', 'ylabel near ticks', mark='*', line_width='2pt', mark_size='.9pt')
+            current_plot.add_plot(x, y + 1.96 * std, name_path='upper', draw='none')
+            current_plot.add_plot(x, y - 1.96 * std, name_path='lower', draw='none')
+            current_plot.axis.append('\\addplot[fill=blue!10] fill between[of=upper and lower];')
+            current_plot.axis.kwoptions['y tick label style'] = '{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}'
+
+            current_plot.x_min = np.floor(x.min())
+            current_plot.x_max = np.ceil(x.max())
+            y_max, y_min = (y + 1.96 * std).max(), (y - 1.96 * std).min()
+            delta = y.max() - y.min()
+            current_plot.y_min = y_min - delta/2
+            current_plot.y_max = y_max + delta/2
+
+            current_plot.title = titles[language]
+            current_plot.plot_name += '_en_{}'.format(language)
+
+            if i > 0:
+                plot.tikzpicture += current_plot
 
     def write_CSLS(self, sec, output_path):
         experiment = self.experiments['CSLS']
         metrics = experiment.aggregate_runs()
         mean_metrics, std_metrics = self._compute_mean_std_metrics(metrics)
 
-        for language in metrics['accuracies']:
-            title = 'CSLS Hyperparameter Search (en-{})'.format(language)
-            file_name = 'csls_en_{}'.format(language)
-            self.plot_to_latex(sec, mean_metrics, std_metrics, x_label='CSLS', language=language, title=title, file_path=output_path, file_name=file_name)
+        file_name = 'csls'
+        caption = r'Accuracy percentage results for values of $k$ in the \textbf{CSLS} procedure on the various language pairs. All reported results are obtained after a total of 10 runs per value of $k$ and the shaded region represents a 95 \% confidence interval on the accuracy.'
+        self.plot_all_to_latex(sec, mean_metrics, std_metrics, caption, output_path, file_name)
 
 
     def write_vocabulary_cutoff(self, sec, output_path):
@@ -436,10 +450,9 @@ class Table4(Table):
         metrics = experiment.aggregate_runs()
         mean_metrics, std_metrics = self._compute_mean_std_metrics(metrics)
 
-        for language in metrics['accuracies']:
-            title = 'Vocabulary Cutoff Hyperparameter Search (en-{})'.format(language)
-            file_name = 'voc_cutoff_en_{}'.format(language)
-            self.plot_to_latex(sec, mean_metrics, std_metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=output_path, file_name=file_name)
+        file_name = 'voc_cutoff'
+        caption = r'Accuracy percentage results for values of $k$ in the \textbf{vocabulary cutoff} method on the various language pairs. All reported results are obtained after a total of 10 runs per value of $k$ and the shaded region represents a 95 \% confidence interval on the accuracy.'
+        self.plot_all_to_latex(sec, mean_metrics, std_metrics, caption, output_path, file_name)
 
 
     def heatmap_to_latex(self, experiment, sec, mean_metrics, x_label, y_label, language, title, file_path, file_name):
@@ -510,7 +523,7 @@ class Table4(Table):
 
         self.write_CSLS(sec, output_path)
         self.write_vocabulary_cutoff(sec, output_path)
-        self.write_stochastic(sec, output_path)
+        # self.write_stochastic(sec, output_path)
 
         doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
 
