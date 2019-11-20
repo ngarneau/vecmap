@@ -153,9 +153,12 @@ class OtherLanguagesOriginalExperiment(OriginalExperiment):
     def __init__(self, base_config):
         super().__init__(base_config)
 
+    def get_sbatch_args(self, run_params):
+        return {'time': '0-1:00'}
 
-class OtherLanguagesStochasticExperiment(OriginalExperiment):
-    EXPERIMENT_NAME = 'other_languages_stochastic'
+
+class OtherLanguagesStochasticAblationExperiment(OriginalExperiment):
+    EXPERIMENT_NAME = 'other_languages_stochastic_ablation'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
     CHANGING_PARAMS = {
         'stochastic_initial': [1.0],
@@ -163,6 +166,75 @@ class OtherLanguagesStochasticExperiment(OriginalExperiment):
 
     def __init__(self, base_config):
         super().__init__(base_config)
+
+    def get_sbatch_args(self, run_params):
+        return {'time': '0-1:00'}
+
+
+class OtherLanguagesCSLSAblationExperiment(OriginalExperiment):
+    EXPERIMENT_NAME = 'csls_ablation'
+    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
+    CHANGING_PARAMS = {
+        'csls': [0],
+    }
+
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+    def get_sbatch_args(self, run_params):
+        return {'time': '0-1:00'}
+
+
+class OtherLanguagesDirectionAblationExperiment(OriginalExperiment):
+    EXPERIMENT_NAME = 'direction_ablation'
+    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
+    CHANGING_PARAMS = {
+        'direction': ['forward'],
+    }
+
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+    def get_sbatch_args(self, run_params):
+        return {'time': '0-1:00'}
+
+
+class OtherLanguagesReweightAblationExperiment(OriginalExperiment):
+    EXPERIMENT_NAME = 'reweight_ablation'
+    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
+    CHANGING_PARAMS = {
+        'reweight': [1.0],
+    }
+
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+    def get_sbatch_args(self, run_params):
+        return {'time': '0-1:00'}
+
+
+class OtherLanguagesRandomSeedDictionaryAblationExperiment(OriginalExperiment):
+    EXPERIMENT_NAME = 'random_seed_dictionary_ablation'
+    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
+    CHANGING_PARAMS = {'seed_dictionary_method': ['random_raw']}
+
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+    def get_sbatch_args(self, run_params):
+        return {'time': '0-1:00'}
+
+
+class OtherLanguagesRandomCutoffSeedDictionaryAblationExperiment(OriginalExperiment):
+    EXPERIMENT_NAME = 'random_cutoff_seed_dictionary_ablation'
+    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
+    CHANGING_PARAMS = {'seed_dictionary_method': ['random_cutoff']}
+
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+    def get_sbatch_args(self, run_params):
+        return {'time': '0-1:00'}
 
 
 class GridSearchExperiment(OriginalExperiment):

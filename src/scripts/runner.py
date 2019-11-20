@@ -103,15 +103,15 @@ def main(args):
     # launcher.run_experiment_for_table(table2)
     # logging.info("Done.")
 
-    # logging.info("Lauching experiments for Table 3")
-    # table3 = get_table3(base_configs)
-    # launcher.run_experiment_for_table(table3)
-    # logging.info("Done.")
-
-    logging.info("Lauching experiments for Table 4")
-    table4 = get_table4(base_configs)
-    launcher.run_experiment_for_table(table4)
+    logging.info("Lauching experiments for Table 3")
+    table3 = get_table3(base_configs)
+    launcher.run_experiment_for_table(table3)
     logging.info("Done.")
+
+    # logging.info("Lauching experiments for Table 4")
+    # table4 = get_table4(base_configs)
+    # launcher.run_experiment_for_table(table4)
+    # logging.info("Done.")
 
 
 if __name__ == '__main__':

@@ -516,6 +516,12 @@ class Table4(Table):
         doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
 
 
+class Table5(Table):
+
+    def write(self, output_path):
+        pass
+
+
 def get_table1(configs) -> Table:
     return Table1({"Reproduced Results": OriginalExperiment(configs)})
 
@@ -532,9 +538,14 @@ def get_table2(configs):
     })
 
 def get_table3(configs) -> Table:
-    return Table3({
-        "Other Languages": OtherLanguagesOriginalExperiment(configs),
-        "Other Languages Stochastic": OtherLanguagesStochasticExperiment(configs),
+    return Table5({
+        "Full System": OtherLanguagesOriginalExperiment(configs),
+        "Unsup. Init (Random)": OtherLanguagesRandomSeedDictionaryAblationExperiment(configs),
+        "Unsup. Init (Random Cutoff)": OtherLanguagesRandomCutoffSeedDictionaryAblationExperiment(configs),
+        "Stochastic": OtherLanguagesStochasticAblationExperiment(configs),
+        "CSLS": OtherLanguagesCSLSAblationExperiment(configs),
+        "Bidrectional": OtherLanguagesDirectionAblationExperiment(configs),
+        "Re-weighting": OtherLanguagesReweightAblationExperiment(configs)
     })
 
 def get_table4(configs) -> Table:
