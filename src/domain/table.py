@@ -404,8 +404,8 @@ class Table4(Table):
         x, y, std = x[sorting], y[sorting], std[sorting]
 
         plot.add_plot(x, y, 'blue', 'ylabel near ticks', mark='*', line_width='3pt', mark_size='3pt')
-        plot.add_plot(x, y+std, name_path='upper', draw='none')
-        plot.add_plot(x, y-std, name_path='lower', draw='none')
+        plot.add_plot(x, y + 1.96 * std, name_path='upper', draw='none')
+        plot.add_plot(x, y - 1.96 * std, name_path='lower', draw='none')
         plot.axis.append('\\addplot[fill=blue!10] fill between[of=upper and lower];')
         plot.axis.kwoptions['y tick label style'] = '{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}'
         plot.legend_position = 'south east'
