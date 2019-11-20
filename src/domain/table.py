@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from src.domain.experiment import *
 
+
 class Table:
     def __init__(self, experiments: Dict[str, Experiment]):
         self.experiments = experiments
@@ -23,10 +24,30 @@ class Table:
 class Table1(Table):
 
     ORIGINAL_RESULTS = {
-        'de': {'best': 48.47, 'avg': 48.19, 'time': 7.3, 'successful': 1.0},
-        'es': {'best': 37.60, 'avg': 37.33, 'time': 9.1, 'successful': 1.0},
-        'fi': {'best': 33.50, 'avg': 32.63, 'time': 12.9, 'successful': 1.0},
-        'it': {'best': 48.53, 'avg': 48.13, 'time': 8.9, 'successful': 1.0},
+        'de': {
+            'best': 48.47,
+            'avg': 48.19,
+            'time': 7.3,
+            'successful': 1.0
+        },
+        'es': {
+            'best': 37.60,
+            'avg': 37.33,
+            'time': 9.1,
+            'successful': 1.0
+        },
+        'fi': {
+            'best': 33.50,
+            'avg': 32.63,
+            'time': 12.9,
+            'successful': 1.0
+        },
+        'it': {
+            'best': 48.53,
+            'avg': 48.13,
+            'time': 8.9,
+            'successful': 1.0
+        },
     }
     CAPTION = 'The original results were taken from the original paper of \cite{artetxe-etal-2018-robust}. The reproduced results have been generated using the codebase of \cite{artetxe-etal-2018-robust} wrapped around the \texttt{reproduce\_original.sh} from our codebase.'
 
@@ -36,26 +57,27 @@ class Table1(Table):
         experiment = self.experiments['Reproduced Results']
         metrics = experiment.aggregate_runs()
 
-        doc = Document(filename='table1', filepath=output_path, doc_type='article', options=('12pt',))
+        doc = Document(filename='table1', filepath=output_path, doc_type='article', options=('12pt', ))
         sec = doc.new_section('Table 1')
         col, row = 17, 4
-        table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='original_results'))
+        table = sec.new(
+            LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='original_results'))
         table.caption = self.CAPTION
         table.label_pos = 'bottom'
 
         # Main header
-        table[0,1:5].multicell(bold('EN-DE'), h_align='c')
-        table[0,5:9].multicell(bold('EN-ES'), h_align='c')
-        table[0,9:13].multicell(bold('EN-FI'), h_align='c')
-        table[0,13:17].multicell(bold('EN-IT'), h_align='c')
-        table[0,1:5].add_rule(trim_left=True, trim_right='.3em')
-        table[0,5:9].add_rule(trim_left='.3em', trim_right='.3em')
-        table[0,9:13].add_rule(trim_left='.3em', trim_right='.3em')
-        table[0,13:17].add_rule(trim_left='.3em', trim_right=True)
+        table[0, 1:5].multicell(bold('EN-DE'), h_align='c')
+        table[0, 5:9].multicell(bold('EN-ES'), h_align='c')
+        table[0, 9:13].multicell(bold('EN-FI'), h_align='c')
+        table[0, 13:17].multicell(bold('EN-IT'), h_align='c')
+        table[0, 1:5].add_rule(trim_left=True, trim_right='.3em')
+        table[0, 5:9].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0, 9:13].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0, 13:17].add_rule(trim_left='.3em', trim_right=True)
 
         # Sub header
-        table[1,1:17] = (['best', 'avg', 's', 't'] * 4)
-        table[1,0:17].add_rule(trim_left=True, trim_right=True)
+        table[1, 1:17] = (['best', 'avg', 's', 't'] * 4)
+        table[1, 0:17].add_rule(trim_left=True, trim_right=True)
 
         table[2, 0] = 'Original'
         table[2, 1] = self.ORIGINAL_RESULTS['de']['best']
@@ -78,19 +100,19 @@ class Table1(Table):
         table[3, 0] = bold('Reproduced')
         table[3, 1] = np.max(metrics['accuracies']['de'])
         table[3, 2] = np.average(metrics['accuracies']['de'])
-        table[3, 3] = np.sum(np.array(metrics['accuracies']['de']) > 1.0)/len(metrics['accuracies']['de'])
+        table[3, 3] = np.sum(np.array(metrics['accuracies']['de']) > 1.0) / len(metrics['accuracies']['de'])
         table[3, 4] = np.average(metrics['times']['de'])
         table[3, 5] = np.max(metrics['accuracies']['es'])
         table[3, 6] = np.average(metrics['accuracies']['es'])
-        table[3, 7] = np.sum(np.array(metrics['accuracies']['es']) > 1.0)/len(metrics['accuracies']['es'])
+        table[3, 7] = np.sum(np.array(metrics['accuracies']['es']) > 1.0) / len(metrics['accuracies']['es'])
         table[3, 8] = np.average(metrics['times']['es'])
         table[3, 9] = np.max(metrics['accuracies']['fi'])
         table[3, 10] = np.average(metrics['accuracies']['fi'])
-        table[3, 11] = np.sum(np.array(metrics['accuracies']['fi']) > 1.0)/len(metrics['accuracies']['fi'])
+        table[3, 11] = np.sum(np.array(metrics['accuracies']['fi']) > 1.0) / len(metrics['accuracies']['fi'])
         table[3, 12] = np.average(metrics['times']['fi'])
         table[3, 13] = np.max(metrics['accuracies']['it'])
         table[3, 14] = np.average(metrics['accuracies']['it'])
-        table[3, 15] = np.sum(np.array(metrics['accuracies']['it']) > 1.0)/len(metrics['accuracies']['it'])
+        table[3, 15] = np.sum(np.array(metrics['accuracies']['it']) > 1.0) / len(metrics['accuracies']['it'])
         table[3, 16] = np.average(metrics['times']['it'])
 
         # Columns that check for higher values
@@ -108,46 +130,186 @@ class Table2(Table1):
 
     ORIGINAL_RESULTS = {
         'Full System': {
-            'de': {'best': 48.47, 'avg': 48.19, 'time': 7.3, 'successful': 1.0},
-            'es': {'best': 37.60, 'avg': 37.33, 'time': 9.1, 'successful': 1.0},
-            'fi': {'best': 33.50, 'avg': 32.63, 'time': 12.9, 'successful': 1.0},
-            'it': {'best': 48.53, 'avg': 48.13, 'time': 8.9, 'successful': 1.0},
+            'de': {
+                'best': 48.47,
+                'avg': 48.19,
+                'time': 7.3,
+                'successful': 1.0
+            },
+            'es': {
+                'best': 37.60,
+                'avg': 37.33,
+                'time': 9.1,
+                'successful': 1.0
+            },
+            'fi': {
+                'best': 33.50,
+                'avg': 32.63,
+                'time': 12.9,
+                'successful': 1.0
+            },
+            'it': {
+                'best': 48.53,
+                'avg': 48.13,
+                'time': 8.9,
+                'successful': 1.0
+            },
         },
         'Unsup. Init': {
-            'de': {'best': 0.00, 'avg': 0.00, 'time': 17.3, 'successful': 0.0},
-            'es': {'best': 0.13, 'avg': 0.02, 'time': 15.9, 'successful': 0.0},
-            'fi': {'best': 0.07, 'avg': 0.01, 'time': 13.8, 'successful': 0.0},
-            'it': {'best': 0.07, 'avg': 0.02, 'time': 16.5, 'successful': 0.0},
+            'de': {
+                'best': 0.00,
+                'avg': 0.00,
+                'time': 17.3,
+                'successful': 0.0
+            },
+            'es': {
+                'best': 0.13,
+                'avg': 0.02,
+                'time': 15.9,
+                'successful': 0.0
+            },
+            'fi': {
+                'best': 0.07,
+                'avg': 0.01,
+                'time': 13.8,
+                'successful': 0.0
+            },
+            'it': {
+                'best': 0.07,
+                'avg': 0.02,
+                'time': 16.5,
+                'successful': 0.0
+            },
         },
         'Stochastic': {
-            'de': {'best': 48.13, 'avg': 48.13, 'time': 2.5, 'successful': 1.0},
-            'es': {'best': 37.80, 'avg': 37.80, 'time': 2.6, 'successful': 1.0},
-            'fi': {'best': 0.28, 'avg': 0.28, 'time': 4.3, 'successful': 0.0},
-            'it': {'best': 48.20, 'avg': 48.20, 'time': 2.7, 'successful': 1.0},
+            'de': {
+                'best': 48.13,
+                'avg': 48.13,
+                'time': 2.5,
+                'successful': 1.0
+            },
+            'es': {
+                'best': 37.80,
+                'avg': 37.80,
+                'time': 2.6,
+                'successful': 1.0
+            },
+            'fi': {
+                'best': 0.28,
+                'avg': 0.28,
+                'time': 4.3,
+                'successful': 0.0
+            },
+            'it': {
+                'best': 48.20,
+                'avg': 48.20,
+                'time': 2.7,
+                'successful': 1.0
+            },
         },
         'Cutoff (k=100k)': {
-            'de': {'best': 48.27, 'avg': 48.12, 'time': 105.3, 'successful': 1.0},
-            'es': {'best': 35.47, 'avg': 34.88, 'time': 185.2, 'successful': 1.0},
-            'fi': {'best': 31.95, 'avg': 30.78, 'time': 162.5, 'successful': 1.0},
-            'it': {'best': 46.87, 'avg': 46.46, 'time': 114.5, 'successful': 1.0},
+            'de': {
+                'best': 48.27,
+                'avg': 48.12,
+                'time': 105.3,
+                'successful': 1.0
+            },
+            'es': {
+                'best': 35.47,
+                'avg': 34.88,
+                'time': 185.2,
+                'successful': 1.0
+            },
+            'fi': {
+                'best': 31.95,
+                'avg': 30.78,
+                'time': 162.5,
+                'successful': 1.0
+            },
+            'it': {
+                'best': 46.87,
+                'avg': 46.46,
+                'time': 114.5,
+                'successful': 1.0
+            },
         },
         'CSLS': {
-            'de': {'best': 0.0, 'avg': 0.0, 'time': 13.8, 'successful': 0.0},
-            'es': {'best': 0.0, 'avg': 0.0, 'time': 14.1, 'successful': 0.0},
-            'fi': {'best': 0.0, 'avg': 0.0, 'time': 13.1, 'successful': 0.0},
-            'it': {'best': 0.0, 'avg': 0.0, 'time': 15.0, 'successful': 0.0},
+            'de': {
+                'best': 0.0,
+                'avg': 0.0,
+                'time': 13.8,
+                'successful': 0.0
+            },
+            'es': {
+                'best': 0.0,
+                'avg': 0.0,
+                'time': 14.1,
+                'successful': 0.0
+            },
+            'fi': {
+                'best': 0.0,
+                'avg': 0.0,
+                'time': 13.1,
+                'successful': 0.0
+            },
+            'it': {
+                'best': 0.0,
+                'avg': 0.0,
+                'time': 15.0,
+                'successful': 0.0
+            },
         },
         'Bidrectional': {
-            'de': {'best': 48.27, 'avg': 48.02, 'time': 5.5, 'successful': 1.0},
-            'es': {'best': 36.20, 'avg': 35.77, 'time': 7.3, 'successful': 1.0},
-            'fi': {'best': 31.39, 'avg': 24.86, 'time': 7.8, 'successful': .8},
-            'it': {'best': 46.00, 'avg': 45.37, 'time': 5.6, 'successful': 1.0},
+            'de': {
+                'best': 48.27,
+                'avg': 48.02,
+                'time': 5.5,
+                'successful': 1.0
+            },
+            'es': {
+                'best': 36.20,
+                'avg': 35.77,
+                'time': 7.3,
+                'successful': 1.0
+            },
+            'fi': {
+                'best': 31.39,
+                'avg': 24.86,
+                'time': 7.8,
+                'successful': .8
+            },
+            'it': {
+                'best': 46.00,
+                'avg': 45.37,
+                'time': 5.6,
+                'successful': 1.0
+            },
         },
         'Re-weighting': {
-            'de': {'best': 48.13, 'avg': 47.41, 'time': 7.0, 'successful': 1.0},
-            'es': {'best': 36.00, 'avg': 35.45, 'time': 9.1, 'successful': 1.0},
-            'fi': {'best': 32.94, 'avg': 31.77, 'time': 11.2, 'successful': 1.0},
-            'it': {'best': 46.07, 'avg': 45.61, 'time': 8.4, 'successful': 1.0},
+            'de': {
+                'best': 48.13,
+                'avg': 47.41,
+                'time': 7.0,
+                'successful': 1.0
+            },
+            'es': {
+                'best': 36.00,
+                'avg': 35.45,
+                'time': 9.1,
+                'successful': 1.0
+            },
+            'fi': {
+                'best': 32.94,
+                'avg': 31.77,
+                'time': 11.2,
+                'successful': 1.0
+            },
+            'it': {
+                'best': 46.07,
+                'avg': 45.61,
+                'time': 8.4,
+                'successful': 1.0
+            },
         },
     }
     CAPTION = 'The original results were taken from the original paper of \cite{artetxe-etal-2018-robust}. The reproduced results have been generated using the codebase of \cite{artetxe-etal-2018-robust} wrapped around the \texttt{reproduce\_original.sh} from our codebase.'
@@ -174,45 +336,46 @@ class Table2(Table1):
     def write_new_row(self, table, row, metrics):
         table[row, 1] = np.max(metrics['accuracies']['de'])
         table[row, 2] = np.average(metrics['accuracies']['de'])
-        table[row, 3] = np.sum(np.array(metrics['accuracies']['de']) > 1.0)/len(metrics['accuracies']['de'])
+        table[row, 3] = np.sum(np.array(metrics['accuracies']['de']) > 1.0) / len(metrics['accuracies']['de'])
         table[row, 4] = np.average(metrics['times']['de'])
         table[row, 5] = np.max(metrics['accuracies']['es'])
         table[row, 6] = np.average(metrics['accuracies']['es'])
-        table[row, 7] = np.sum(np.array(metrics['accuracies']['es']) > 1.0)/len(metrics['accuracies']['es'])
+        table[row, 7] = np.sum(np.array(metrics['accuracies']['es']) > 1.0) / len(metrics['accuracies']['es'])
         table[row, 8] = np.average(metrics['times']['es'])
         table[row, 9] = np.max(metrics['accuracies']['fi'])
         table[row, 10] = np.average(metrics['accuracies']['fi'])
-        table[row, 11] = np.sum(np.array(metrics['accuracies']['fi']) > 1.0)/len(metrics['accuracies']['fi'])
+        table[row, 11] = np.sum(np.array(metrics['accuracies']['fi']) > 1.0) / len(metrics['accuracies']['fi'])
         table[row, 12] = np.average(metrics['times']['fi'])
         table[row, 13] = np.max(metrics['accuracies']['it'])
         table[row, 14] = np.average(metrics['accuracies']['it'])
-        table[row, 15] = np.sum(np.array(metrics['accuracies']['it']) > 1.0)/len(metrics['accuracies']['it'])
+        table[row, 15] = np.sum(np.array(metrics['accuracies']['it']) > 1.0) / len(metrics['accuracies']['it'])
         table[row, 16] = np.average(metrics['times']['it'])
         return table
 
     def write(self, output_path):
         if not os.path.exists(output_path):
             os.makedirs(output_path)
-        doc = Document(filename='table2', filepath=output_path, doc_type='article', options=('12pt',))
+        doc = Document(filename='table2', filepath=output_path, doc_type='article', options=('12pt', ))
         sec = doc.new_section('Table 2')
         col, row = 17, 17
-        table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='ablation_study'))
+        table = sec.new(
+            LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='ablation_study'))
         table.caption = self.CAPTION
         table.label_pos = 'bottom'
 
         # Main header
-        table[0,1:5].multicell(bold('EN-DE'), h_align='c')
-        table[0,5:9].multicell(bold('EN-ES'), h_align='c')
-        table[0,9:13].multicell(bold('EN-FI'), h_align='c')
-        table[0,13:17].multicell(bold('EN-IT'), h_align='c')
-        table[0,1:5].add_rule(trim_left=True, trim_right='.3em')
-        table[0,5:9].add_rule(trim_left='.3em', trim_right='.3em')
-        table[0,9:13].add_rule(trim_left='.3em', trim_right='.3em')
-        table[0,13:17].add_rule(trim_left='.3em', trim_right=True)
+        table[0, 1:5].multicell(bold('EN-DE'), h_align='c')
+        table[0, 5:9].multicell(bold('EN-ES'), h_align='c')
+        table[0, 9:13].multicell(bold('EN-FI'), h_align='c')
+        table[0, 13:17].multicell(bold('EN-IT'), h_align='c')
+        table[0, 1:5].add_rule(trim_left=True, trim_right='.3em')
+        table[0, 5:9].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0, 9:13].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0, 13:17].add_rule(trim_left='.3em', trim_right=True)
 
         # Sub header
-        table[1,1:17] = (['best', 'avg', 's', 't'] * 4)
-        table[1,0:17].add_rule(trim_left=True, trim_right=True)
+        table[1, 1:17] = (['best', 'avg', 's', 't'] * 4)
+        table[1, 0:17].add_rule(trim_left=True, trim_right=True)
 
         ### Full system metrics
         table[2, 0] = 'Full System'
@@ -221,7 +384,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[3, 0] = bold('Reproduced')
         table = self.write_new_row(table, 3, metrics)
-        table[3,0:17].add_rule(trim_left=True, trim_right=True)
+        table[3, 0:17].add_rule(trim_left=True, trim_right=True)
         # Columns that check for higher values
         for col in [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15]:
             table[2:4, col].highlight_best('high', 'bold')
@@ -240,7 +403,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[6, 0] = bold('Rand. Cut.')
         table = self.write_new_row(table, 6, metrics)
-        table[6,0:17].add_rule(trim_left=True, trim_right=True)
+        table[6, 0:17].add_rule(trim_left=True, trim_right=True)
         # Columns that check for higher values
         for col in [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15]:
             table[4:7, col].highlight_best('high', 'bold')
@@ -255,7 +418,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[8, 0] = bold('Reproduced')
         table = self.write_new_row(table, 8, metrics)
-        table[8,0:17].add_rule(trim_left=True, trim_right=True)
+        table[8, 0:17].add_rule(trim_left=True, trim_right=True)
         # Columns that check for higher values
         for col in [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15]:
             table[7:9, col].highlight_best('high', 'bold')
@@ -270,7 +433,7 @@ class Table2(Table1):
         # metrics = experiment.aggregate_runs()
         table[10, 0] = bold('Reproduced')
         # table = self.write_new_row(table, 10, metrics)
-        table[10,0:17].add_rule(trim_left=True, trim_right=True)
+        table[10, 0:17].add_rule(trim_left=True, trim_right=True)
         # # Columns that check for higher values
         # for col in [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15]:
         #     table[9:11, col].highlight_best('high', 'bold')
@@ -285,7 +448,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[12, 0] = bold('Reproduced')
         table = self.write_new_row(table, 12, metrics)
-        table[12,0:17].add_rule(trim_left=True, trim_right=True)
+        table[12, 0:17].add_rule(trim_left=True, trim_right=True)
         # Columns that check for higher values
         for col in [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15]:
             table[11:13, col].highlight_best('high', 'bold')
@@ -300,7 +463,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[14, 0] = bold('Reproduced')
         table = self.write_new_row(table, 14, metrics)
-        table[14,0:17].add_rule(trim_left=True, trim_right=True)
+        table[14, 0:17].add_rule(trim_left=True, trim_right=True)
         # Columns that check for higher values
         for col in [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15]:
             table[13:15, col].highlight_best('high', 'bold')
@@ -322,7 +485,6 @@ class Table2(Table1):
         for col in [4, 8, 12, 16]:
             table[15:17, col].highlight_best('low', 'bold')
 
-
         tex = doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
 
 
@@ -336,50 +498,53 @@ class Table3(Table):
         experiment = self.experiments['Other Languages']
         metrics = experiment.aggregate_runs()
 
-        doc = Document(filename='table3', filepath=output_path, doc_type='article', options=('12pt',))
+        doc = Document(filename='table3', filepath=output_path, doc_type='article', options=('12pt', ))
         sec = doc.new_section('Table 3')
         col, row = 17, 3
-        table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='other_languages_results'))
+        table = sec.new(
+            LatexTable(shape=(row, col),
+                       alignment=['l'] + ['c'] * 16,
+                       float_format='.1f',
+                       label='other_languages_results'))
         table.caption = self.CAPTION
         table.label_pos = 'bottom'
 
         # Main header
-        table[0,1:5].multicell(bold('EN-ET'), h_align='c')
-        table[0,5:9].multicell(bold('EN-FA'), h_align='c')
-        table[0,9:13].multicell(bold('EN-LV'), h_align='c')
-        table[0,13:17].multicell(bold('EN-VI'), h_align='c')
-        table[0,1:5].add_rule(trim_left=True, trim_right='.3em')
-        table[0,5:9].add_rule(trim_left='.3em', trim_right='.3em')
-        table[0,9:13].add_rule(trim_left='.3em', trim_right='.3em')
-        table[0,13:17].add_rule(trim_left='.3em', trim_right=True)
+        table[0, 1:5].multicell(bold('EN-ET'), h_align='c')
+        table[0, 5:9].multicell(bold('EN-FA'), h_align='c')
+        table[0, 9:13].multicell(bold('EN-LV'), h_align='c')
+        table[0, 13:17].multicell(bold('EN-VI'), h_align='c')
+        table[0, 1:5].add_rule(trim_left=True, trim_right='.3em')
+        table[0, 5:9].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0, 9:13].add_rule(trim_left='.3em', trim_right='.3em')
+        table[0, 13:17].add_rule(trim_left='.3em', trim_right=True)
 
         # Sub header
-        table[1,1:17] = (['best', 'avg', 's', 't'] * 4)
-        table[1,0:17].add_rule(trim_left=True, trim_right=True)
+        table[1, 1:17] = (['best', 'avg', 's', 't'] * 4)
+        table[1, 0:17].add_rule(trim_left=True, trim_right=True)
 
         table[2, 0] = bold('Vecmap')
         table[2, 1] = np.max(metrics['accuracies']['et'])
         table[2, 2] = np.average(metrics['accuracies']['et'])
-        table[2, 3] = np.sum(np.array(metrics['accuracies']['et']) > 1.0)/len(metrics['accuracies']['et'])
+        table[2, 3] = np.sum(np.array(metrics['accuracies']['et']) > 1.0) / len(metrics['accuracies']['et'])
         table[2, 4] = np.average(metrics['times']['et'])
         table[2, 5] = np.max(metrics['accuracies']['fa'])
         table[2, 6] = np.average(metrics['accuracies']['fa'])
-        table[2, 7] = np.sum(np.array(metrics['accuracies']['fa']) > 1.0)/len(metrics['accuracies']['fa'])
+        table[2, 7] = np.sum(np.array(metrics['accuracies']['fa']) > 1.0) / len(metrics['accuracies']['fa'])
         table[2, 8] = np.average(metrics['times']['fa'])
         table[2, 9] = np.max(metrics['accuracies']['lv'])
         table[2, 10] = np.average(metrics['accuracies']['lv'])
-        table[2, 11] = np.sum(np.array(metrics['accuracies']['lv']) > 1.0)/len(metrics['accuracies']['lv'])
+        table[2, 11] = np.sum(np.array(metrics['accuracies']['lv']) > 1.0) / len(metrics['accuracies']['lv'])
         table[2, 12] = np.average(metrics['times']['lv'])
         table[2, 13] = np.max(metrics['accuracies']['vi'])
         table[2, 14] = np.average(metrics['accuracies']['vi'])
-        table[2, 15] = np.sum(np.array(metrics['accuracies']['vi']) > 1.0)/len(metrics['accuracies']['vi'])
+        table[2, 15] = np.sum(np.array(metrics['accuracies']['vi']) > 1.0) / len(metrics['accuracies']['vi'])
         table[2, 16] = np.average(metrics['times']['vi'])
 
         tex = doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
 
 
 class Table4(Table):
-
     def _compute_mean_std_metrics(self, metrics):
         mean_metrics = {}
         std_metrics = {}
@@ -396,23 +561,57 @@ class Table4(Table):
         return mean_metrics, std_metrics
 
     def plot_all_to_latex(self, sec, mean_metrics, std_metrics, caption, file_path, file_name):
-        plot = sec.new(Plot(plot_name=file_name, plot_path=file_path, position='th!', width=r'.3\textwidth', height=r'.3\textwidth', label=file_name, name='plot0', xshift=r'-.14\textwidth'))
+        plot = sec.new(
+            Plot(plot_name=file_name,
+                 plot_path=file_path,
+                 position='th!',
+                 width=r'.3\textwidth',
+                 height=r'.3\textwidth',
+                 label=file_name,
+                 name='plot0',
+                 xshift=r'-.14\textwidth'))
         plot.caption = caption
 
-        kwargs_per_plot = {1: {'as_float_env':False, 'at':'(plot0.south east)', 'anchor':'south west', 'xshift':r'-.06\textwidth', 'name': 'plot1'},
-                           2: {'as_float_env':False, 'at':'(plot1.south east)', 'anchor':'south west', 'xshift':r'0.01\textwidth', 'name': 'plot2'},
-                           3: {'as_float_env':False, 'at':'(plot2.south east)', 'anchor':'south west', 'xshift':r'.09\textwidth', 'name': 'plot3'}}
-        titles = {'de': 'English-Deutsch', 'it': 'English-Italian', 'fi': 'English-Finnish', 'es':'English-Spanish'}
+        kwargs_per_plot = {
+            1: {
+                'as_float_env': False,
+                'at': '(plot0.south east)',
+                'anchor': 'south west',
+                'xshift': r'-.06\textwidth',
+                'name': 'plot1'
+            },
+            2: {
+                'as_float_env': False,
+                'at': '(plot1.south east)',
+                'anchor': 'south west',
+                'xshift': r'0.01\textwidth',
+                'name': 'plot2'
+            },
+            3: {
+                'as_float_env': False,
+                'at': '(plot2.south east)',
+                'anchor': 'south west',
+                'xshift': r'.09\textwidth',
+                'name': 'plot3'
+            }
+        }
+        titles = {'de': 'English-Deutsch', 'it': 'English-Italian', 'fi': 'English-Finnish', 'es': 'English-Spanish'}
 
         for i, language in enumerate(mean_metrics['accuracies']):
             if i == 0:
                 current_plot = plot
             else:
-                current_plot = Plot(plot_name=file_name, plot_path=file_path, width=r'.3\textwidth', height=r'.3\textwidth', **kwargs_per_plot[i])
+                current_plot = Plot(plot_name=file_name,
+                                    plot_path=file_path,
+                                    width=r'.3\textwidth',
+                                    height=r'.3\textwidth',
+                                    **kwargs_per_plot[i])
                 current_plot.tikzpicture.head = ''
                 current_plot.tikzpicture.tail = ''
 
-            x, y, std = np.array(list(mean_metrics['accuracies'][language].keys())).astype(int), np.array(list(mean_metrics['accuracies'][language].values())).astype(float), np.array(list(std_metrics['accuracies'][language].values())).astype(float)
+            x, y, std = np.array(list(mean_metrics['accuracies'][language].keys())).astype(int), np.array(
+                list(mean_metrics['accuracies'][language].values())).astype(float), np.array(
+                    list(std_metrics['accuracies'][language].values())).astype(float)
             sorting = x.argsort()
             x, y, std = x[sorting], y[sorting], std[sorting]
 
@@ -420,14 +619,15 @@ class Table4(Table):
             current_plot.add_plot(x, y + 1.96 * std, name_path='upper', draw='none')
             current_plot.add_plot(x, y - 1.96 * std, name_path='lower', draw='none')
             current_plot.axis.append('\\addplot[fill=blue!10] fill between[of=upper and lower];')
-            current_plot.axis.kwoptions['y tick label style'] = '{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}'
+            current_plot.axis.kwoptions[
+                'y tick label style'] = '{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}'
 
             current_plot.x_min = np.floor(x.min())
             current_plot.x_max = np.ceil(x.max())
             y_max, y_min = (y + 1.96 * std).max(), (y - 1.96 * std).min()
             delta = y.max() - y.min()
-            current_plot.y_min = y_min - delta/2
-            current_plot.y_max = y_max + delta/2
+            current_plot.y_min = y_min - delta / 2
+            current_plot.y_max = y_max + delta / 2
 
             current_plot.title = titles[language]
             current_plot.plot_name += '_en_{}'.format(language)
@@ -436,34 +636,62 @@ class Table4(Table):
                 plot.tikzpicture += current_plot
 
     def heatmap_all_to_latex(self, experiment, sec, mean_metrics, x_label, y_label, caption, file_path, file_name):
-        plot = sec.new(Plot(plot_name=file_name, plot_path=file_path,
-                    grid=False, lines=False,
-                    enlargelimits='false',
-                    width=r'.4\textwidth', height=r'.4\textwidth',
-                    position='th!',
-                    label=file_name,
-                    name='plot0'
-                    ))
+        plot = sec.new(
+            Plot(plot_name=file_name,
+                 plot_path=file_path,
+                 grid=False,
+                 lines=False,
+                 enlargelimits='false',
+                 width=r'.4\textwidth',
+                 height=r'.4\textwidth',
+                 position='th!',
+                 label=file_name,
+                 name='plot0'))
         plot.caption = caption
 
-        kwargs_per_plot = {1: {'as_float_env':False, 'at':'(plot0.south east)', 'anchor':'south west', 'xshift':r'.14\textwidth', 'name': 'plot1'},
-                           2: {'as_float_env':False, 'at':'(plot0.south west)', 'anchor':'north west', 'yshift':r'-0.07\textwidth', 'name': 'plot2'},
-                           3: {'as_float_env':False, 'at':'(plot2.south east)', 'anchor':'south west', 'xshift':r'.14\textwidth', 'name': 'plot3'}}
-        titles = {'de': 'English-Deutsch', 'it': 'English-Italian', 'fi': 'English-Finnish', 'es':'English-Spanish'}
-
+        kwargs_per_plot = {
+            1: {
+                'as_float_env': False,
+                'at': '(plot0.south east)',
+                'anchor': 'south west',
+                'xshift': r'.14\textwidth',
+                'name': 'plot1'
+            },
+            2: {
+                'as_float_env': False,
+                'at': '(plot0.south west)',
+                'anchor': 'north west',
+                'yshift': r'-0.07\textwidth',
+                'name': 'plot2'
+            },
+            3: {
+                'as_float_env': False,
+                'at': '(plot2.south east)',
+                'anchor': 'south west',
+                'xshift': r'.14\textwidth',
+                'name': 'plot3'
+            }
+        }
+        titles = {'de': 'English-Deutsch', 'it': 'English-Italian', 'fi': 'English-Finnish', 'es': 'English-Spanish'}
 
         for i, language in enumerate(mean_metrics['accuracies']):
             if i == 0:
                 current_plot = plot
             else:
-                current_plot = Plot(plot_name=file_name, plot_path=file_path,  grid=False, lines=False,
-                    enlargelimits='false',
-                    width=r'.4\textwidth', height=r'.4\textwidth',
-                    position='th!', **kwargs_per_plot[i])
+                current_plot = Plot(plot_name=file_name,
+                                    plot_path=file_path,
+                                    grid=False,
+                                    lines=False,
+                                    enlargelimits='false',
+                                    width=r'.4\textwidth',
+                                    height=r'.4\textwidth',
+                                    position='th!',
+                                    **kwargs_per_plot[i])
                 current_plot.tikzpicture.head = ''
                 current_plot.tikzpicture.tail = ''
 
-            x_values, y_values = sorted(experiment.CHANGING_PARAMS[x_label]), sorted(experiment.CHANGING_PARAMS[y_label])
+            x_values, y_values = sorted(experiment.CHANGING_PARAMS[x_label]), sorted(
+                experiment.CHANGING_PARAMS[y_label])
             z = np.zeros((len(x_values), len(y_values)), dtype=float)
 
             for x_idx, x_value in enumerate(x_values):
@@ -491,16 +719,17 @@ class Table4(Table):
             current_plot.y_ticks = y_values
 
             delta = z.max() - z.min()
-            point_min = z.min() - delta/2
-            point_max = z.max() + delta/2
+            point_min = z.min() - delta / 2
+            point_max = z.max() + delta / 2
 
             current_plot.add_matrix_plot(x_values, y_values, z, point_meta_min=point_min, point_meta_max=point_max)
             current_plot.axis.options += (
-                                    r'nodes near coords={\pgfmathprintnumber\pgfplotspointmeta\,\%}',
-                                    r'every node near coord/.append style={xshift=0pt,yshift=-7pt, black, font=\footnotesize}',
-                                )
+                r'nodes near coords={\pgfmathprintnumber\pgfplotspointmeta\,\%}',
+                r'every node near coord/.append style={xshift=0pt,yshift=-7pt, black, font=\footnotesize}',
+            )
 
-            current_plot.axis.kwoptions['colorbar_style'] = '{{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}}'
+            current_plot.axis.kwoptions[
+                'colorbar_style'] = '{{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}}'
 
             current_plot.title = titles[language]
             current_plot.plot_name += '_en_{}'.format(language)
@@ -533,14 +762,20 @@ class Table4(Table):
 
         file_name = 'stochastic'
         caption = r'Accuracy percentage results for values of $p_0$ and $p_{factor}$ in the \textbf{stochastic dictionary induction} procedure on the various language pairs. All reported results are obtained after a total of 10 runs per ($p_0$, $p_{factor}$) pair.'
-        self.heatmap_all_to_latex(experiment, sec, mean_metrics, x_label='stochastic_initial', y_label='stochastic_multiplier', caption=caption, file_path=output_path, file_name=file_name)
-
+        self.heatmap_all_to_latex(experiment,
+                                  sec,
+                                  mean_metrics,
+                                  x_label='stochastic_initial',
+                                  y_label='stochastic_multiplier',
+                                  caption=caption,
+                                  file_path=output_path,
+                                  file_name=file_name)
 
     def write(self, output_path):
         if not os.path.exists(output_path):
             os.makedirs(output_path)
 
-        doc = Document(filename='table4', filepath=output_path, doc_type='article', options=('12pt',))
+        doc = Document(filename='table4', filepath=output_path, doc_type='article', options=('12pt', ))
         doc.add_to_preamble(r"\usepgfplotslibrary{fillbetween}")
         doc.add_to_preamble(r'\usepgfplotslibrary{colorbrewer}')
         doc.add_to_preamble(r'\pgfplotsset{compat=1.15, colormap/Blues}')
@@ -557,6 +792,7 @@ class Table4(Table):
 def get_table1(configs) -> Table:
     return Table1({"Reproduced Results": OriginalExperiment(configs)})
 
+
 def get_table2(configs):
     return Table2({
         "Full System": OriginalExperiment(configs),
@@ -569,6 +805,7 @@ def get_table2(configs):
         "Re-weighting": ReweightAblationExperiment(configs),
     })
 
+
 def get_table3(configs) -> Table:
     return Table3({
         "Full System": OtherLanguagesOriginalExperiment(configs),
@@ -579,6 +816,7 @@ def get_table3(configs) -> Table:
         "Bidrectional": OtherLanguagesDirectionAblationExperiment(configs),
         "Re-weighting": OtherLanguagesReweightAblationExperiment(configs)
     })
+
 
 def get_table4(configs) -> Table:
     return Table4({
