@@ -259,6 +259,8 @@ class GridSearchExperiment(OriginalExperiment):
                 run_params = self.__get_run_params(run)
                 accuracies[run.data.params['target_language']][run_params].append(run.data.metrics['accuracy'] * 100)
                 times[run.data.params['target_language']][run_params].append(minutes)
+
+                if 'num_iters' in run.data.metrics:
                 num_iters[run.data.params['target_language']][run_params].append(int(run.data.metrics['num_iters']))
 
                 # If part of runs without the iter_duration logging, we approximate
@@ -267,8 +269,8 @@ class GridSearchExperiment(OriginalExperiment):
                     avg_iter_times[run.data.params['target_language']][run_params].append(
                         np.mean(run.data.metrics['iter_duration']))
                 else:
-                    avg_iter_times[run.data.params['target_language']][run_params].append(minutes * 60 /
-                                                                                          run.data.metrics['num_iters'])
+                        avg_iter_times[run.data.params['target_language']][run_params].append(
+                            minutes * 60 / run.data.metrics['num_iters'])
 
         return {'accuracies': accuracies, 'times': times, 'num_iters': num_iters, 'avg_iter_times': avg_iter_times}
 
