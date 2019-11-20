@@ -415,8 +415,10 @@ class Table4(Table):
 
         plot.x_min = np.floor(x.min())
         plot.x_max = np.ceil(x.max())
-        plot.y_min = np.floor((y - std).min())
-        plot.y_max = np.ceil((y + std).max())
+        y_max, y_min = (y + 1.96 * std).max(), (y - 1.96 * std).min()
+        delta = y.max() - y.min()
+        plot.y_min = y_min - delta/2
+        plot.y_max = y_max + delta/2
 
     def write_CSLS(self, sec, output_path):
         experiment = self.experiments['CSLS']
@@ -426,8 +428,7 @@ class Table4(Table):
         for language in metrics['accuracies']:
             title = 'CSLS Hyperparameter Search (en-{})'.format(language)
             file_name = 'csls_en_{}'.format(language)
-            file_path = os.path.join(output_path, file_name)
-            self.plot_to_latex(sec, mean_metrics, std_metrics, x_label='CSLS', language=language, title=title, file_path=file_path, file_name=file_name)
+            self.plot_to_latex(sec, mean_metrics, std_metrics, x_label='CSLS', language=language, title=title, file_path=output_path, file_name=file_name)
 
 
     def write_vocabulary_cutoff(self, sec, output_path):
@@ -438,8 +439,7 @@ class Table4(Table):
         for language in metrics['accuracies']:
             title = 'Vocabulary Cutoff Hyperparameter Search (en-{})'.format(language)
             file_name = 'voc_cutoff_en_{}'.format(language)
-            file_path = os.path.join(output_path, file_name)
-            self.plot_to_latex(sec, mean_metrics, std_metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=file_path, file_name=file_name)
+            self.plot_to_latex(sec, mean_metrics, std_metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=output_path, file_name=file_name)
 
 
     def heatmap_to_latex(self, experiment, sec, mean_metrics, x_label, y_label, language, title, file_path, file_name):
@@ -494,8 +494,7 @@ class Table4(Table):
         for language in metrics['accuracies']:
             title = 'Stochastic Hyperparameter Search (en-{})'.format(language)
             file_name = 'stochastic_en_{}'.format(language)
-            file_path = os.path.join(output_path, file_name)
-            self.heatmap_to_latex(experiment, sec, mean_metrics, x_label='stochastic_initial', y_label='stochastic_multiplier', language=language, title=title, file_path=file_path, file_name=file_name)
+            self.heatmap_to_latex(experiment, sec, mean_metrics, x_label='stochastic_initial', y_label='stochastic_multiplier', language=language, title=title, file_path=output_path, file_name=file_name)
 
 
     def write(self, output_path):
