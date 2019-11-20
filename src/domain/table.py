@@ -395,8 +395,8 @@ class Table4(Table):
 
         return mean_metrics, std_metrics
 
-    def plot_to_latex(self, sec, mean_metrics, std_metrics, x_label, language, title, file_path):
-        plot = sec.new(Plot(plot_name=title, plot_path=file_path, position='th!'))
+    def plot_to_latex(self, sec, mean_metrics, std_metrics, x_label, language, title, file_path, file_name):
+        plot = sec.new(Plot(plot_name=file_name, plot_path=file_path, position='th!', width=r'\columnwidth', height=r'.9\columnwidth', label=file_name))
         plot.caption = title
 
         x, y, std = np.array(list(mean_metrics['accuracies'][language].keys())).astype(int), np.array(list(mean_metrics['accuracies'][language].values())).astype(float), np.array(list(std_metrics['accuracies'][language].values())).astype(float)
@@ -425,8 +425,9 @@ class Table4(Table):
 
         for language in metrics['accuracies']:
             title = 'CSLS Hyperparameter Search (en-{})'.format(language)
-            file_path = os.path.join(output_path, 'csls_en_{}'.format(language))
-            self.plot_to_latex(sec, mean_metrics, std_metrics, x_label='CSLS', language=language, title=title, file_path=file_path)
+            file_name = 'csls_en_{}'.format(language)
+            file_path = os.path.join(output_path, file_name)
+            self.plot_to_latex(sec, mean_metrics, std_metrics, x_label='CSLS', language=language, title=title, file_path=file_path, file_name=file_name)
 
 
     def write_vocabulary_cutoff(self, sec, output_path):
@@ -436,16 +437,18 @@ class Table4(Table):
 
         for language in metrics['accuracies']:
             title = 'Vocabulary Cutoff Hyperparameter Search (en-{})'.format(language)
-            file_path = os.path.join(output_path, 'voc_cutoff_en_{}'.format(language))
-            self.plot_to_latex(sec, mean_metrics, std_metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=file_path)
+            file_name = 'voc_cutoff_en_{}'.format(language)
+            file_path = os.path.join(output_path, file_name)
+            self.plot_to_latex(sec, mean_metrics, std_metrics, x_label='Vocabulary Cutoff', language=language, title=title, file_path=file_path, file_name=file_name)
 
 
     def heatmap_to_latex(self, experiment, sec, mean_metrics, x_label, y_label, language, title, file_path, file_name):
         plot = sec.new(Plot(plot_name=file_name, plot_path=file_path,
                     grid=False, lines=False,
                     enlargelimits='false',
-                    width=r'.8\textwidth', height=r'.8\textwidth',
-                    position='th!'
+                    width=r'.9\columnwidth', height=r'.9\columnwidth',
+                    position='th!',
+                    label=file_name
                     ))
         plot.caption = title
 
