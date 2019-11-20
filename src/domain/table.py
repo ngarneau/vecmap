@@ -515,12 +515,6 @@ class Table4(Table):
         doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
 
 
-class Table5(Table):
-
-    def write(self, output_path):
-        pass
-
-
 def get_table1(configs) -> Table:
     return Table1({"Reproduced Results": OriginalExperiment(configs)})
 
