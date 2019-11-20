@@ -49,7 +49,6 @@ def is_same_configuration(config: Dict, config_filter: Dict):
 def run_experiment(_config):
     logging.info(_config)
     mlflow.log_params(_config)
-    mlflow.log_metric('test', 0.9)
 
     whitening_arguments_validation(_config)
 
