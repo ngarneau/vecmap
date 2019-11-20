@@ -531,7 +531,7 @@ def get_table2(configs):
     })
 
 def get_table3(configs) -> Table:
-    return Table5({
+    return Table3({
         "Full System": OtherLanguagesOriginalExperiment(configs),
         "Unsup. Init (Random)": OtherLanguagesRandomSeedDictionaryAblationExperiment(configs),
         "Unsup. Init (Random Cutoff)": OtherLanguagesRandomCutoffSeedDictionaryAblationExperiment(configs),
