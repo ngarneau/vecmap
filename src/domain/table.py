@@ -565,11 +565,11 @@ class Table4(Table):
             Plot(plot_name=file_name,
                  plot_path=file_path,
                  position='th!',
-                 width=r'.3\textwidth',
-                 height=r'.3\textwidth',
+                 width=r'.27\textwidth',
+                 height=r'.25\textwidth',
                  label=file_name,
                  name='plot0',
-                 xshift=r'-.14\textwidth'))
+                 xshift=r'-.115\textwidth'))
         plot.caption = caption
 
         kwargs_per_plot = {
@@ -577,21 +577,21 @@ class Table4(Table):
                 'as_float_env': False,
                 'at': '(plot0.south east)',
                 'anchor': 'south west',
-                'xshift': r'-.06\textwidth',
+                'xshift': r'-.04\textwidth',
                 'name': 'plot1'
             },
             2: {
                 'as_float_env': False,
                 'at': '(plot1.south east)',
                 'anchor': 'south west',
-                'xshift': r'0.01\textwidth',
+                'xshift': r'0.035\textwidth',
                 'name': 'plot2'
             },
             3: {
                 'as_float_env': False,
                 'at': '(plot2.south east)',
                 'anchor': 'south west',
-                'xshift': r'.09\textwidth',
+                'xshift': r'.11\textwidth',
                 'name': 'plot3'
             }
         }
@@ -603,8 +603,8 @@ class Table4(Table):
             else:
                 current_plot = Plot(plot_name=file_name,
                                     plot_path=file_path,
-                                    width=r'.3\textwidth',
-                                    height=r'.3\textwidth',
+                                    width=r'.27\textwidth',
+                                    height=r'.25\textwidth',
                                     **kwargs_per_plot[i])
                 current_plot.tikzpicture.head = ''
                 current_plot.tikzpicture.tail = ''
@@ -615,7 +615,7 @@ class Table4(Table):
             sorting = x.argsort()
             x, y, std = x[sorting], y[sorting], std[sorting]
 
-            current_plot.add_plot(x, y, 'blue', 'ylabel near ticks', mark='*', line_width='2pt', mark_size='.9pt')
+            current_plot.add_plot(x, y, 'blue', 'ylabel near ticks', mark='*', line_width='1.2pt', mark_size='.9pt')
             current_plot.add_plot(x, y + 1.96 * std, name_path='upper', draw='none')
             current_plot.add_plot(x, y - 1.96 * std, name_path='lower', draw='none')
             current_plot.axis.append('\\addplot[fill=blue!10] fill between[of=upper and lower];')
