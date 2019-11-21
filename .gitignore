@@ -16,3 +16,4 @@ venv/
 .vscode
 /output/
 /mlruns/
+dataset.tar.gz
