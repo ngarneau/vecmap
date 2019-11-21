@@ -1,8 +1,0 @@
-2019-11-07 16:01:16,686 : INFO : {'seed': 42, 'iteration': 0, 'source_language': 'en', 'target_language': 'de', 'encoding': 'utf-8', 'precision': 'float32', 'cuda': False, 'supervised': False, 'semi_supervised': False, 'identical': False, 'aaai2018': False, 'acl2017': False, 'acl2017_seed': False, 'emnlp2016': False, 'num_runs': 10, 'csls': 10, 'seed_dictionary_method': 'unsupervised', 'batch_size': 10000, 'dim_reduction': False, 'orthogonal': False, 'unconstrained': False, 'direction': 'union', 'threshold': 1e-06, 'stochastic_initial': 0.1, 'stochastic_multiplier': 2.0, 'stochastic_interval': 50, 'unsupervised': True, 'acl2018': True, 'unsupervised_vocab': 4000, 'normalize': ['unit', 'center', 'unit'], 'whiten': True, 'reweight': 0.5, 'src_dewhiten': 'src', 'trg_dewhiten': 'trg', 'self_learning': True, 'vocabulary_cutoff': 20000, 'experiment_name': 'vecmap', 'embeddings_path': './data/embeddings/{}.emb.txt', 'retrieval': 'csls', 'inv_temperature': 1, 'inv_sample': 'None', 'dot': False, 'test': True, 'supercomputer': False, 'mlflow_output_uri': 'file:./mlruns/', 'embedding_output_uri': './output'}
-2019-11-07 16:01:17,034 : INFO : Loading file ./data/embeddings/en_slim.emb.txt
-2019-11-07 16:01:17,758 : INFO : Loaded 9999 words of dimension 300
-2019-11-07 16:01:17,767 : INFO : Loading file ./data/embeddings/de_slim.emb.txt
-2019-11-07 16:01:18,128 : INFO : Loaded 9999 words of dimension 300
-2019-11-07 16:01:18,137 : INFO : Normalize embeddings
-2019-11-07 16:01:18,190 : INFO : Allocating memory
-2019-11-07 16:01:22,360 : INFO : Coverage: 18.93%  Accuracy:  0.00%
