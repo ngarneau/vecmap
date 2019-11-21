@@ -597,7 +597,7 @@ class Table4(Table):
         }
         titles = {'de': 'English-Deutsch', 'it': 'English-Italian', 'fi': 'English-Finnish', 'es': 'English-Spanish'}
 
-        for i, language in enumerate(mean_metrics['accuracies']):
+        for i, language in enumerate(sorted(mean_metrics['accuracies'])):
             if i == 0:
                 current_plot = plot
             else:
@@ -674,7 +674,7 @@ class Table4(Table):
         }
         titles = {'de': 'English-Deutsch', 'it': 'English-Italian', 'fi': 'English-Finnish', 'es': 'English-Spanish'}
 
-        for i, language in enumerate(mean_metrics['accuracies']):
+        for i, language in enumerate(sorted(mean_metrics['accuracies'])):
             if i == 0:
                 current_plot = plot
             else:
