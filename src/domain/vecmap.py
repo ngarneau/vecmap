@@ -66,7 +66,7 @@ class VecMap:
         self.xw = self.compute_engine.engine.empty_like(self.x)
         self.zw = self.compute_engine.engine.empty_like(self.z)
 
-        self.src_size, self.trg_size = compute_matrix_size(self.x, self.z, self._config['vocabulary_cutoff'])
+        self.src_size, self.trg_size = self._frequency_based_vocabulary_cutoff()
         self.simfwd = self.compute_engine.engine.empty((self._config['batch_size'], self.trg_size), dtype=self.dtype)
         self.simbwd = self.compute_engine.engine.empty((self._config['batch_size'], self.src_size), dtype=self.dtype)
 
@@ -106,18 +106,7 @@ class VecMap:
 
             # Update the embedding mapping
             if self._config['orthogonal'] or not end:  # orthogonal mapping
-                u, s, vt = self.compute_engine.engine.linalg.svd(
-                    self.z[self.trg_indices].T.dot(self.x[self.src_indices]))
-                w = vt.T.dot(u.T)
-                self.x.dot(w, out=self.xw)
-                self.zw[:] = self.z
-            elif self._config['unconstrained']:  # unconstrained mapping
-                x_pseudoinv = self.compute_engine.engine.linalg.inv(
-                    self.x[self.src_indices].T.dot(self.x[self.src_indices])).dot(
-                    self.x[self.src_indices].T)
-                w = x_pseudoinv.dot(self.z[self.trg_indices])
-                self.x.dot(w, out=self.xw)
-                self.zw[:] = self.z
+                self._compute_optimal_orthogonal_mapping()
             else:  # advanced mapping
                 self.symmetric_re_weighting()
 
@@ -351,3 +340,13 @@ class VecMap:
                 (self.src_indices_forward, self.src_indices_backward))
             self.trg_indices = self.compute_engine.engine.concatenate(
                 (self.trg_indices_forward, self.trg_indices_backward))
+
+    def _compute_optimal_orthogonal_mapping(self):
+        u, s, vt = self.compute_engine.engine.linalg.svd(
+            self.z[self.trg_indices].T.dot(self.x[self.src_indices]))
+        w = vt.T.dot(u.T)
+        self.x.dot(w, out=self.xw)
+        self.zw[:] = self.z
+
+    def _frequency_based_vocabulary_cutoff(self):
+        return compute_matrix_size(self.x, self.z, self._config['vocabulary_cutoff'])
