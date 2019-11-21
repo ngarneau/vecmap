@@ -743,7 +743,7 @@ class Table4(Table):
         mean_metrics, std_metrics = self._compute_mean_std_metrics(metrics)
 
         file_name = 'csls'
-        caption = r'Accuracy percentage results for values of $k$ in the \textbf{CSLS} procedure on the various language pairs. All reported results are obtained after a total of 10 runs per value of $k$ and the shaded region represents a 95 \% confidence interval on the accuracy.'
+        caption = r'Average accuracy percentage results per number of considered neighbors in the \textbf{CSLS} procedure on the various language pairs. All reported results are obtained after a total of 10 runs per value of $k$ and the shaded region represents a 95 \% confidence interval on the accuracy mean.'
         self.plot_all_to_latex(sec, mean_metrics, std_metrics, caption, output_path, file_name)
 
     def write_vocabulary_cutoff(self, sec, output_path):
@@ -752,7 +752,7 @@ class Table4(Table):
         mean_metrics, std_metrics = self._compute_mean_std_metrics(metrics)
 
         file_name = 'voc_cutoff'
-        caption = r'Accuracy percentage results for values of $k$ in the \textbf{vocabulary cutoff} method on the various language pairs. All reported results are obtained after a total of 10 runs per value of $k$ and the shaded region represents a 95 \% confidence interval on the accuracy.'
+        caption = r'Average accuracy percentage results per number of retained words in the frequency-based vocabulary \textbf{cutoff method} on the various language pairs. All reported results are obtained after a total of 10 runs per value of $k$ and the shaded region represents a 95 \% confidence interval on the accuracy mean.'
         self.plot_all_to_latex(sec, mean_metrics, std_metrics, caption, output_path, file_name)
 
     def write_stochastic(self, sec, output_path):
@@ -761,7 +761,7 @@ class Table4(Table):
         mean_metrics, _ = self._compute_mean_std_metrics(metrics)
 
         file_name = 'stochastic'
-        caption = r'Accuracy percentage results for values of $p_{factor}$ and $p_0$ in the \textbf{stochastic dictionary induction} procedure on the various language pairs. All reported results are obtained after a total of 10 runs per ($p_{factor}$, $p_0$) pair.'
+        caption = r'Average accuracy percentage results per initial value of \textit{p} ($p_0$) and its growing factor ($p_{factor}$) in the \textbf{stochastic dictionary} induction on the various language pairs. All reported results are obtained after a total of 10 runs per ($p_0$, $p_{factor}$) pair.'
         self.heatmap_all_to_latex(experiment,
                                   sec,
                                   mean_metrics,
