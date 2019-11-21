@@ -15,4 +15,4 @@ venv/
 *.out*
 .vscode
 /output/
-./mlruns/
+/mlruns/
