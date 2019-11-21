@@ -93,25 +93,25 @@ def main(args):
 
     launcher = Launcher(run_launcher, num_runs, cuda)
 
-    # logging.info("Lauching experiments for Table 1")
-    # table1 = get_table1(base_configs)
-    # launcher.run_experiment_for_table(table1)
-    # logging.info("Done.")
+    logging.info("Lauching experiments for Table 1")
+    table1 = get_table1(base_configs)
+    launcher.run_experiment_for_table(table1)
+    logging.info("Done.")
 
-    # logging.info("Lauching experiments for Table 2")
-    # table2 = get_table2(base_configs)
-    # launcher.run_experiment_for_table(table2)
-    # logging.info("Done.")
+    logging.info("Lauching experiments for Table 2")
+    table2 = get_table2(base_configs)
+    launcher.run_experiment_for_table(table2)
+    logging.info("Done.")
 
     logging.info("Lauching experiments for Table 3")
     table3 = get_table3(base_configs)
     launcher.run_experiment_for_table(table3)
     logging.info("Done.")
 
-    # logging.info("Lauching experiments for Table 4")
-    # table4 = get_table4(base_configs)
-    # launcher.run_experiment_for_table(table4)
-    # logging.info("Done.")
+    logging.info("Lauching experiments for Table 4")
+    table4 = get_table4(base_configs)
+    launcher.run_experiment_for_table(table4)
+    logging.info("Done.")
 
 
 if __name__ == '__main__':
