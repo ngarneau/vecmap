@@ -642,8 +642,8 @@ class Table4(Table):
                  grid=False,
                  lines=False,
                  enlargelimits='false',
-                 width=r'.4\textwidth',
-                 height=r'.4\textwidth',
+                 width=r'.42\textwidth',
+                 height=r'.42\textwidth',
                  position='th!',
                  label=file_name,
                  name='plot0'))
@@ -654,7 +654,7 @@ class Table4(Table):
                 'as_float_env': False,
                 'at': '(plot0.south east)',
                 'anchor': 'south west',
-                'xshift': r'.14\textwidth',
+                'xshift': r'.12\textwidth',
                 'name': 'plot1'
             },
             2: {
@@ -668,7 +668,7 @@ class Table4(Table):
                 'as_float_env': False,
                 'at': '(plot2.south east)',
                 'anchor': 'south west',
-                'xshift': r'.14\textwidth',
+                'xshift': r'.12\textwidth',
                 'name': 'plot3'
             }
         }
@@ -683,8 +683,8 @@ class Table4(Table):
                                     grid=False,
                                     lines=False,
                                     enlargelimits='false',
-                                    width=r'.4\textwidth',
-                                    height=r'.4\textwidth',
+                                    width=r'.42\textwidth',
+                                    height=r'.42\textwidth',
                                     position='th!',
                                     **kwargs_per_plot[i])
                 current_plot.tikzpicture.head = ''
@@ -696,19 +696,19 @@ class Table4(Table):
 
             for x_idx, x_value in enumerate(x_values):
                 for y_idx, y_value in enumerate(y_values):
-                    # temp
-                    y_value = float(y_value)
-                    z[x_idx, y_idx] = float(mean_metrics['accuracies'][language][(str(x_value), str(y_value))])
+                    z[x_idx, y_idx] = float(mean_metrics['accuracies'][language][(str(y_value), str(x_value))])
+
+            z = np.around(z, 2)
 
             if i >= 2:
-                current_plot.x_label = r'$p_0$'
-                current_plot.x_ticks_labels = ['{:.2f}'.format(x) for x in x_values]
+                current_plot.x_label = r'$p_{factor}$'
+                current_plot.x_ticks_labels = ['{:.1f}'.format(x) for x in x_values]
             else:
                 current_plot.x_ticks_labels = [r'\empty']
 
             if i % 2 == 0:
-                current_plot.y_label = r'$p_{factor}$'
-                current_plot.y_ticks_labels = ['{:.1f}'.format(y) for y in y_values]
+                current_plot.y_label = r'$p_0$'
+                current_plot.y_ticks_labels = ['{:.2f}'.format(y) for y in y_values]
             else:
                 current_plot.y_ticks_labels = [r'\empty']
 
@@ -724,7 +724,7 @@ class Table4(Table):
 
             current_plot.add_matrix_plot(x_values, y_values, z, point_meta_min=point_min, point_meta_max=point_max)
             current_plot.axis.options += (
-                r'nodes near coords={\pgfmathprintnumber\pgfplotspointmeta\,\%}',
+                r'nodes near coords={\pgfmathprintnumber\pgfplotspointmeta}',
                 r'every node near coord/.append style={xshift=0pt,yshift=-7pt, black, font=\footnotesize}',
             )
 
@@ -761,12 +761,12 @@ class Table4(Table):
         mean_metrics, _ = self._compute_mean_std_metrics(metrics)
 
         file_name = 'stochastic'
-        caption = r'Accuracy percentage results for values of $p_0$ and $p_{factor}$ in the \textbf{stochastic dictionary induction} procedure on the various language pairs. All reported results are obtained after a total of 10 runs per ($p_0$, $p_{factor}$) pair.'
+        caption = r'Accuracy percentage results for values of $p_{factor}$ and $p_0$ in the \textbf{stochastic dictionary induction} procedure on the various language pairs. All reported results are obtained after a total of 10 runs per ($p_{factor}$, $p_0$) pair.'
         self.heatmap_all_to_latex(experiment,
                                   sec,
                                   mean_metrics,
-                                  x_label='stochastic_initial',
-                                  y_label='stochastic_multiplier',
+                                  x_label='stochastic_multiplier',
+                                  y_label='stochastic_initial',
                                   caption=caption,
                                   file_path=output_path,
                                   file_name=file_name)
