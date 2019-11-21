@@ -119,14 +119,9 @@ class VecMap:
                 self._bidirectional_dictionary_induction()
 
                 # Objective function evaluation
-                if self._config['direction'] == 'forward':
-                    objective = self.compute_engine.engine.mean(self.best_sim_forward).tolist()
-                elif self._config['direction'] == 'backward':
-                    objective = self.compute_engine.engine.mean(self.best_sim_backward).tolist()
-                elif self._config['direction'] == 'union':
-                    objective = (self.compute_engine.engine.mean(
-                        self.best_sim_forward) + self.compute_engine.engine.mean(
-                        self.best_sim_backward)).tolist() / 2
+                objective = (self.compute_engine.engine.mean(
+                    self.best_sim_forward) + self.compute_engine.engine.mean(
+                    self.best_sim_backward)).tolist() / 2
                 if objective - best_objective >= self._config['threshold']:
                     last_improvement = it
                     best_objective = objective
@@ -329,17 +324,10 @@ class VecMap:
                                                                                                            i:j])
 
     def _bidirectional_dictionary_induction(self):
-        if self._config['direction'] == 'forward':
-            self.src_indices = self.src_indices_forward
-            self.trg_indices = self.trg_indices_forward
-        elif self._config['direction'] == 'backward':
-            self.src_indices = self.src_indices_backward
-            self.trg_indices = self.trg_indices_backward
-        elif self._config['direction'] == 'union':
-            self.src_indices = self.compute_engine.engine.concatenate(
-                (self.src_indices_forward, self.src_indices_backward))
-            self.trg_indices = self.compute_engine.engine.concatenate(
-                (self.trg_indices_forward, self.trg_indices_backward))
+        self.src_indices = self.compute_engine.engine.concatenate(
+            (self.src_indices_forward, self.src_indices_backward))
+        self.trg_indices = self.compute_engine.engine.concatenate(
+            (self.trg_indices_forward, self.trg_indices_backward))
 
     def _compute_optimal_orthogonal_mapping(self):
         u, s, vt = self.compute_engine.engine.linalg.svd(
