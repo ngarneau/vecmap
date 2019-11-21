@@ -2,11 +2,11 @@
 
 This is a fork from the original open source implementation of the framework to learn cross-lingual word embedding mappings.
 
-This repository is strictly limited to the reproduction of the original paper of Artetxe et al. 2018 (ACL)
+This repository is strictly limited to the reproduction of the original paper of [Artetxe et al. 2018 (ACL)](https://aclweb.org/anthology/P18-1073)
 
 
 ## Dataset
-- The dataset is available here: TODO
+- The dataset is available here: https://vecmap-submission.s3.amazonaws.com/dataset.tar.gz
 - The checksum of the dataset is: 69409adb48f668ce8872d924caec4519
 - Untar the dataset using the following command: ```tar -xvf dataset.tar.gz```
 
@@ -19,7 +19,8 @@ First, create the output directories on the host:
 mkdir -p output/tables_and_plots
 ```
 
-It is mandatory to have a GPU on the host. Otherwise the docker image will crash.
+It is mandatory to have a GPU on the host with [NVIDIA Docker](https://github.com/NVIDIA/nvidia-docker).
+Otherwise the docker image will crash.
 One can generate the tables with the following command;
 
 ```
