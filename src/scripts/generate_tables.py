@@ -37,9 +37,9 @@ def generate_table_4(configs):
 
 def main():
     base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
-    # generate_table_1(base_configs)
-    # generate_table_2(base_configs)
-    # generate_table_3(base_configs)
+    generate_table_1(base_configs)
+    generate_table_2(base_configs)
+    generate_table_3(base_configs)
     generate_table_4(base_configs)
 
 
