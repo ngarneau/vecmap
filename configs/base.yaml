@@ -44,7 +44,6 @@ trg_dewhiten: 'trg'
 self_learning: True
 vocabulary_cutoff: 20000
 experiment_name: "vecmap"
-embeddings_path: "./data/embeddings/{}.emb.txt"
 
 # Evaluation parameters
 retrieval: 'csls' # choices: ['nn', 'invnn', 'invsoftmax', 'csls'], help='the retrieval method (nn: standard nearest neighbor; invnn: inverted nearest neighbor; invsoftmax: inverted softmax; csls: cross-domain similarity local scaling)'
@@ -56,4 +55,8 @@ dot: False  # use the dot product in the similarity computations instead of the 
 test: False
 supercomputer: False
 mlflow_output_uri: 'file:./mlruns/'
-embedding_output_uri: './output'
+
+# Paths:
+input_path: "./data"
+embeddings_path: "embeddings/{}.emb.txt"
+output_path: "./output"

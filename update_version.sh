@@ -1,0 +1,1 @@
+build-script/update_version_noop.sh

@@ -170,40 +170,61 @@ class OtherLanguagesStochasticAblationExperiment(OriginalExperiment):
     def get_sbatch_args(self, run_params):
         return {'time': '0-1:00'}
 
+class OtherLanguagesStochasticExperiment(StochasticAblationExperiment):
+    EXPERIMENT_NAME = 'other_languages_stochastic'
+    LANGUAGE_PARAMS = {
+        'source_language': ['en'],
+        'target_language': ['et', 'fa', 'lv', 'vi']
+    }
+    def __init__(self, base_config):
+        super().__init__(base_config)
 
-class OtherLanguagesCSLSAblationExperiment(OriginalExperiment):
+
+class OtherLanguagesCSLSAblationExperiment(CSLSAblationExperiment):
     EXPERIMENT_NAME = 'other_languages_csls_ablation'
-    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
-    CHANGING_PARAMS = {
-        'csls': [0],
+    LANGUAGE_PARAMS = {
+        'source_language': ['en'],
+        'target_language': ['et', 'fa', 'lv', 'vi']
     }
-
     def __init__(self, base_config):
         super().__init__(base_config)
 
-    def get_sbatch_args(self, run_params):
-        return {'time': '0-1:00'}
 
-
-class OtherLanguagesDirectionAblationExperiment(OriginalExperiment):
+class OtherLanguagesDirectionAblationExperiment(DirectionAblationExperiment):
     EXPERIMENT_NAME = 'other_languages_direction_ablation'
-    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
-    CHANGING_PARAMS = {
-        'direction': ['forward'],
+    LANGUAGE_PARAMS = {
+        'source_language': ['en'],
+        'target_language': ['et', 'fa', 'lv', 'vi']
     }
-
     def __init__(self, base_config):
         super().__init__(base_config)
 
-    def get_sbatch_args(self, run_params):
-        return {'time': '0-1:00'}
 
-
-class OtherLanguagesReweightAblationExperiment(OriginalExperiment):
+class OtherLanguagesReweightAblationExperiment(ReweightAblationExperiment):
     EXPERIMENT_NAME = 'other_languages_reweight_ablation'
-    LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['et', 'fa', 'lv', 'vi']}
-    CHANGING_PARAMS = {
-        'reweight': [1.0],
+    LANGUAGE_PARAMS = {
+        'source_language': ['en'],
+        'target_language': ['et', 'fa', 'lv', 'vi']
+    }
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+
+class OtherLanguagesRandomSeedDictionaryAblationExperiment(RandomSeedDictionaryAblationExperiment):
+    EXPERIMENT_NAME = 'other_languages_random_seed_dictionary_ablation'
+    LANGUAGE_PARAMS = {
+        'source_language': ['en'],
+        'target_language': ['et', 'fa', 'lv', 'vi']
+    }
+    def __init__(self, base_config):
+        super().__init__(base_config)
+
+
+class OtherLanguagesRandomCutoffSeedDictionaryAblationExperiment(RandomCutoffSeedDictionaryAblationExperiment):
+    EXPERIMENT_NAME = 'other_languages_random_cutoff_seed_dictionary_ablation'
+    LANGUAGE_PARAMS = {
+        'source_language': ['en'],
+        'target_language': ['et', 'fa', 'lv', 'vi']
     }
 
     def __init__(self, base_config):

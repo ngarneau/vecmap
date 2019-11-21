@@ -49,7 +49,6 @@ def is_same_configuration(config: Dict, config_filter: Dict):
 def run_experiment(_config):
     logging.info(_config)
     mlflow.log_params(_config)
-    mlflow.log_metric('test', 0.9)
 
     whitening_arguments_validation(_config)
 
@@ -59,15 +58,28 @@ def run_experiment(_config):
     else:
         source_language = _config['source_language']
         target_language = _config['target_language']
-
-    test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(_config['source_language'],
-                                                                  _config['target_language'])
+        
+    test_dictionary = os.path.join(
+        _config['input_path'],
+        'dictionaries/{}-{}.test.txt'.format(_config['source_language'], _config['target_language'])
+    )
 
     compute_engine = init_computing_engine(_config['cuda'], _config['seed'])
     dtype = _config['precision']
 
-    src_words, x = load_embeddings(_config['embeddings_path'], source_language, _config['encoding'], dtype)
-    trg_vocab, z = load_embeddings(_config['embeddings_path'], target_language, _config['encoding'], dtype)
+    embeddings_path = os.path.join(_config['input_path'], _config['embeddings_path'])
+    src_words, x = load_embeddings(
+        embeddings_path,
+        source_language,
+        _config['encoding'],
+        dtype
+    )
+    trg_vocab, z = load_embeddings(
+        embeddings_path,
+        target_language,
+        _config['encoding'],
+        dtype
+    )
 
     x = compute_engine.send_to_device(x)
     z = compute_engine.send_to_device(z)
@@ -381,7 +393,7 @@ def run_main(configs):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(message)s')
-    path_to_log_directory = './output/logs'
+    path_to_log_directory = os.path.join(configs['output_path'], 'logs')
     mlflow_logging_handler = get_mlflow_logging_handler(path_to_log_directory, logging.INFO, formatter)
     logger.addHandler(mlflow_logging_handler)
 
