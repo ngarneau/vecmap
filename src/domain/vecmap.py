@@ -1,3 +1,4 @@
+import os
 import collections
 import logging
 import time
@@ -154,7 +155,7 @@ class VecMap:
         trg_word2ind = {word: i for i, word in enumerate(self.trg_vocab)}
 
         # Read dictionary and compute coverage
-        test_dictionary = './data/dictionaries/{}-{}.test.txt'.format(
+        test_dictionary = os.path.join(self._config['input_path'], 'dictionaries/{}-{}.test.txt').format(
             self._config['source_language'], self._config['target_language'])
         f = open(test_dictionary, encoding=self._config['encoding'], errors='surrogateescape')
         src2trg = collections.defaultdict(set)
