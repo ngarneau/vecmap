@@ -1,14 +1,16 @@
-import argparse
-import logging
 import os
+import logging
+import datetime
+import argparse
 import subprocess
-import sys
-
 import mlflow
+from copy import deepcopy
+import sys
 import yaml
+from mlflow.tracking import MlflowClient
 
-from src.domain.table import get_table1, get_table2, get_table3, get_table4
 from src.scripts.main_loop import run_main
+from src.domain.table import get_table1, get_table2, get_table3
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
 DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/mlflow'
@@ -17,22 +19,23 @@ DEFAULT_LOCAL_MLFLOW_OUTPUT = 'mlruns'
 EXPERIMENT_NAME = 'ablation_study'
 
 
-def args_formatter(run_args):
-    return ['--{}={}'.format(name, value) for name, value in run_args.items() if name != 'normalize']
+def run_args_formatter(run_args):
+    return ['--{}={}'.format(name, value) for name, value in run_args.items()]
 
 
-def supercomputer_launcher(run_args, num_runs, cuda, sbatch_args={}):
+def supercomputer_launcher(run_args, num_runs, cuda):
     run_args['supercomputer'] = True
+    run_args['num_runs'] = 1
     run_args['cuda'] = cuda
     run_args['embedding_output_uri'] = DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT
     run_args['mlflow_output_uri'] = DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT
-    run_args['num_runs'] = 1  # Override the number of runs to do from the command line
-    if 'seed' in run_args: del run_args['seed']
-    sbatch_args.update({'array': '1-{}'.format(num_runs)})
-    subprocess.Popen(['sbatch', *args_formatter(sbatch_args), 'generic_beluga_launcher.sh', *args_formatter(run_args)])
+    for run_number in range(num_runs):
+        run_args['seed'] = run_number
+        run_args['num_runs'] = 1  # Override the number of runs to do from the command line
+        subprocess.Popen(['sbatch', 'generic_beluga_launcher.sh', *run_args_formatter(run_args)])
 
 
-def default_launcher(run_args, num_runs, cuda, sbatch_args={}):
+def default_launcher(run_args, num_runs, cuda):
     run_args['num_runs'] = num_runs
     run_args['cuda'] = cuda
     run_args['embedding_output_uri'] = DEFAULT_LOCAL_EMBEDDING_OUTPUT
@@ -56,7 +59,7 @@ def configure_logging(path_to_log_directory, log_level):
     sh = logging.StreamHandler(sys.stdout)
     sh.setLevel(log_level)
     sh.setFormatter(formatter)
-    logger.addHandler(sh)
+    logger.addHandler(sh) 
 
 
 class Launcher:
@@ -68,14 +71,13 @@ class Launcher:
     def run_experiment_for_table(self, table):
         for name, experiment in table.get_experiments():
             logging.info("Running experiment: {}".format(experiment.EXPERIMENT_NAME))
-            for config, sbatch_args in experiment.get_parameters_combinations():
+            for config in experiment.get_parameters_combinations():
                 config['experiment_name'] = experiment.EXPERIMENT_NAME
-                if 'cuda' in experiment.CHANGING_PARAMS:
-                    self.run_launcher(config, self.num_runs, cuda=config['cuda'], sbatch_args=sbatch_args)
+                if 'vocabulary_cutoff' in experiment.EXPERIMENT_NAME:
+                    self.run_launcher(config, self.num_runs, cuda=False)
                 else:
-                    self.run_launcher(config, self.num_runs, cuda=self.cuda, sbatch_args=sbatch_args)
-                logging.info("Done running experiment: {} with override {} and sbatch_args {}".format(
-                    experiment.EXPERIMENT_NAME, config, sbatch_args))
+                    self.run_launcher(config, self.num_runs, self.cuda)
+                logging.info("Done running experiment: {} with override {}".format(experiment.EXPERIMENT_NAME, config))
 
 
 def main(args):
@@ -104,11 +106,6 @@ def main(args):
     logging.info("Lauching experiments for Table 3")
     table3 = get_table3(args)
     launcher.run_experiment_for_table(table3)
-    logging.info("Done.")
-
-    logging.info("Lauching experiments for Table 4")
-    table4 = get_table4(base_configs)
-    launcher.run_experiment_for_table(table4)
     logging.info("Done.")
 
 
