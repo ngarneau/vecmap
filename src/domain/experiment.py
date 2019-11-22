@@ -62,8 +62,11 @@ class OriginalExperiment(Experiment):
         super().__init__(base_config)
 
     def _is_a_valid_run(self, run):
-        return (run.data.params['target_language'] in self.LANGUAGE_PARAMS['target_language']
+        return ('target_language' in run.data.params
+                and 'source_language' in run.data.params
+                and run.data.params['target_language'] in self.LANGUAGE_PARAMS['target_language']
                 and run.data.params['source_language'] in self.LANGUAGE_PARAMS['source_language']
+                and 'accuracy' in run.data.metrics
                 and run.info.status == 'FINISHED')
 
     def aggregate_runs(self):
