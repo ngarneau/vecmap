@@ -25,7 +25,6 @@ from typing import Dict
 import mlflow
 import numpy as np
 import yaml
-from mlflow.tracking import MlflowClient
 
 from cupy_utils import *
 from embeddings import load_embeddings, embeddings_normalization, length_normalize
@@ -113,8 +112,7 @@ def run_experiment(_config):
     t = time.time()
     end = not _config['self_learning']
     src_indices, trg_indices = get_seed_dictionary_indices(_config['seed_dictionary_method'], compute_engine.engine,
-                                                           src_words, trg_vocab, x,
-                                                           z, _config)
+                                                           src_words, trg_vocab, x, z, _config)
     while True:
 
         logging.info("Iteration number {}".format(it))
@@ -129,15 +127,12 @@ def run_experiment(_config):
 
         # Update the embedding mapping
         if _config['orthogonal'] or not end:  # orthogonal mapping
-            u, s, vt = compute_engine.engine.linalg.svd(
-                z[trg_indices].T.dot(x[src_indices]))
+            u, s, vt = compute_engine.engine.linalg.svd(z[trg_indices].T.dot(x[src_indices]))
             w = vt.T.dot(u.T)
             x.dot(w, out=xw)
             zw[:] = z
         elif _config['unconstrained']:  # unconstrained mapping
-            x_pseudoinv = compute_engine.engine.linalg.inv(
-                x[src_indices].T.dot(x[src_indices])).dot(
-                x[src_indices].T)
+            x_pseudoinv = compute_engine.engine.linalg.inv(x[src_indices].T.dot(x[src_indices])).dot(x[src_indices].T)
             w = x_pseudoinv.dot(z[trg_indices])
             x.dot(w, out=xw)
             zw[:] = z
@@ -194,9 +189,8 @@ def run_experiment(_config):
                     xw[i:j].dot(zw[:trg_size].T, out=simfwd[:j - i])
                     simfwd[:j - i].max(axis=1, out=best_sim_forward[i:j])
                     simfwd[:j - i] -= knn_sim_bwd / 2  # Equivalent to the real CSLS scores for NN
-                    dropout(simfwd[:j - i], 1 - keep_prob, compute_engine=compute_engine).argmax(axis=1,
-                                                                                                 out=trg_indices_forward[
-                                                                                                     i:j])
+                    dropout(simfwd[:j - i], 1 - keep_prob,
+                            compute_engine=compute_engine).argmax(axis=1, out=trg_indices_forward[i:j])
             if _config['direction'] in ('backward', 'union'):
                 if _config['csls'] > 0:
                     for i in range(0, src_size, simfwd.shape[0]):
@@ -208,9 +202,8 @@ def run_experiment(_config):
                     zw[i:j].dot(xw[:src_size].T, out=simbwd[:j - i])
                     simbwd[:j - i].max(axis=1, out=best_sim_backward[i:j])
                     simbwd[:j - i] -= knn_sim_fwd / 2  # Equivalent to the real CSLS scores for NN
-                    dropout(simbwd[:j - i], 1 - keep_prob, compute_engine=compute_engine).argmax(axis=1,
-                                                                                                 out=src_indices_backward[
-                                                                                                     i:j])
+                    dropout(simbwd[:j - i], 1 - keep_prob,
+                            compute_engine=compute_engine).argmax(axis=1, out=src_indices_backward[i:j])
             if _config['direction'] == 'forward':
                 src_indices = src_indices_forward
                 trg_indices = trg_indices_forward
@@ -227,8 +220,8 @@ def run_experiment(_config):
             elif _config['direction'] == 'backward':
                 objective = compute_engine.engine.mean(best_sim_backward).tolist()
             elif _config['direction'] == 'union':
-                objective = (compute_engine.engine.mean(best_sim_forward) + compute_engine.engine.mean(
-                    best_sim_backward)).tolist() / 2
+                objective = (compute_engine.engine.mean(best_sim_forward) +
+                             compute_engine.engine.mean(best_sim_backward)).tolist() / 2
             if objective - best_objective >= _config['threshold']:
                 last_improvement = it
                 best_objective = objective
@@ -238,6 +231,7 @@ def run_experiment(_config):
             logging.info('ITERATION {0} ({1:.2f}s)'.format(it, duration))
             logging.info('\t- Objective:        {0:9.4f}%'.format(100 * objective))
             logging.info('\t- Drop probability: {0:9.4f}%'.format(100 - 100 * keep_prob))
+            mlflow.log_metric('iter_duration', duration, step=it)
 
         t = time.time()
         it += 1
@@ -310,18 +304,16 @@ def run_experiment(_config):
                         best_sim[l] = sim
                         translation[src[l]] = k
     elif _config['retrieval'] == 'invsoftmax':  # Inverted softmax
-        sample = compute_engine.engine.arange(x.shape[0]) if _config[
-                                                                 'inv_sample'] is None else compute_engine.engine.random.randint(
+        sample = compute_engine.engine.arange(
+            x.shape[0]) if _config['inv_sample'] is None else compute_engine.engine.random.randint(
             0, x.shape[0], _config['inv_sample'])
         partition = compute_engine.engine.zeros(z.shape[0])
         for i in range(0, len(sample), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(sample))
-            partition += compute_engine.engine.exp(
-                _config['inv_temperature'] * z.dot(x[sample[i:j]].T)).sum(axis=1)
+            partition += compute_engine.engine.exp(_config['inv_temperature'] * z.dot(x[sample[i:j]].T)).sum(axis=1)
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
-            p = compute_engine.engine.exp(
-                _config['inv_temperature'] * x[src[i:j]].dot(z.T)) / partition
+            p = compute_engine.engine.exp(_config['inv_temperature'] * x[src[i:j]].dot(z.T)) / partition
             nn = p.argmax(axis=1).tolist()
             for k in range(j - i):
                 translation[src[i + k]] = nn[k]
@@ -329,12 +321,10 @@ def run_experiment(_config):
         knn_sim_bwd = compute_engine.engine.zeros(z.shape[0])
         for i in range(0, z.shape[0], BATCH_SIZE):
             j = min(i + BATCH_SIZE, z.shape[0])
-            knn_sim_bwd[i:j] = topk_mean(z[i:j].dot(x.T), k=_config['csls'],
-                                         inplace=True)
+            knn_sim_bwd[i:j] = topk_mean(z[i:j].dot(x.T), k=_config['csls'], inplace=True)
         for i in range(0, len(src), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(src))
-            similarities = 2 * x[src[i:j]].dot(
-                z.T) - knn_sim_bwd  # Equivalent to the real CSLS scores for NN
+            similarities = 2 * x[src[i:j]].dot(z.T) - knn_sim_bwd  # Equivalent to the real CSLS scores for NN
             nn = similarities.argmax(axis=1).tolist()
             for k in range(j - i):
                 translation[src[i + k]] = nn[k]
@@ -343,6 +333,7 @@ def run_experiment(_config):
     accuracy = np.mean([1 if translation[i] in src2trg[i] else 0 for i in src])
     mlflow.log_metric('coverage', coverage)
     mlflow.log_metric('accuracy', accuracy)
+    mlflow.log_metric('num_iters', it)
     logging.info('Coverage:{0:7.2%}  Accuracy:{1:7.2%}'.format(coverage, accuracy))
 
 
@@ -405,11 +396,11 @@ def run_main(configs):
     mlflow_logging_handler = get_mlflow_logging_handler(path_to_log_directory, logging.INFO, formatter)
     logger.addHandler(mlflow_logging_handler)
 
+    mlflow.set_tracking_uri(configs['mlflow_output_uri'])
     mlflow.set_experiment(configs['experiment_name'])  # Create the experiment if it did not already existed
-    mlflow_client = MlflowClient(tracking_uri=configs['mlflow_output_uri'])
-    mlflow_experiment = mlflow_client.get_experiment_by_name(configs['experiment_name'])
+    os.makedirs('{}/mapped_embeddings'.format(configs['embedding_output_uri']), exist_ok=True)
 
-    with mlflow.start_run(experiment_id=mlflow_experiment.experiment_id):
+    with mlflow.start_run():
         try:
             run_experiment(configs)
         except KeyboardInterrupt:
@@ -428,7 +419,13 @@ if __name__ == '__main__':
     base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
     argument_parser = argparse.ArgumentParser()
     for config, value in base_configs.items():
-        argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
+        if type(value) is bool:
+            # Hack as per https://stackoverflow.com/a/46951029
+            argument_parser.add_argument('--{}'.format(config),
+                                         type=lambda x: (str(x).lower() in ['true', '1', 'yes']),
+                                         default=value)
+        else:
+            argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
     options = argument_parser.parse_args()
     configs = vars(options)
     run_main(configs)
