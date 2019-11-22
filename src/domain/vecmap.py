@@ -50,9 +50,11 @@ class VecMap:
 
     def load_embeddings(self):
         source_language, target_language = resolve_language_source(self._config)
-        self.src_words, x = load_embeddings(self._config['embeddings_path'], source_language,
+        self.src_words, x = load_embeddings(self._config['input_path'], self._config['embeddings_path'],
+                                            source_language,
                                             self._config['encoding'], self.dtype)
-        self.trg_vocab, z = load_embeddings(self._config['embeddings_path'], target_language,
+        self.trg_vocab, z = load_embeddings(self._config['input_path'], self._config['embeddings_path'],
+                                            target_language,
                                             self._config['encoding'], self.dtype)
 
         self.x = self.compute_engine.send_to_device(x)

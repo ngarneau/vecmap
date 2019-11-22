@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
+import os
 
 import numpy as np
 
@@ -64,7 +65,8 @@ def mean_center_embeddingwise(matrix):
     matrix -= avg[:, xp.newaxis]
 
 
-def load_embeddings(embeddings_path, language, encoding, dtype):
+def load_embeddings(input_path, embeddings_path, language, encoding, dtype):
+    embeddings_path = os.path.join(input_path, embeddings_path)
     input_filename = embeddings_path.format(language)
     logging.info("Loading file {}".format(input_filename))
     input_file = open(input_filename, encoding=encoding, errors='surrogateescape')

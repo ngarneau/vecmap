@@ -57,7 +57,6 @@ def run_main(configs):
 
     mlflow.set_tracking_uri(configs['mlflow_output_uri'])
     mlflow.set_experiment(configs['experiment_name'])  # Create the experiment if it did not already existed
-    os.makedirs('{}/mapped_embeddings'.format(configs['embedding_output_uri']), exist_ok=True)
 
     with mlflow.start_run():
         try:
