@@ -1,5 +1,6 @@
 import argparse
 import os
+
 import yaml
 
 from src.domain.table import get_table1, get_table2, get_table3, get_table4

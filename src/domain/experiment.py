@@ -1,12 +1,11 @@
 from collections import defaultdict
 from itertools import product
-import mlflow
-from mlflow.tracking import MlflowClient
+
 import numpy as np
+from mlflow.tracking import MlflowClient
 
 
 class Experiment:
-
     EXPERIMENT_NAME = 'None'
     FIXED_PARAMS = {}
     LANGUAGE_PARAMS = {}
@@ -91,7 +90,7 @@ class StochasticAblationExperiment(OriginalExperiment):
 
 class VocabularyCutOffAblationExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'vocabulary_cutoff_ablation'
-    CHANGING_PARAMS = {'vocabulary_cutoff': [10**5], 'cuda': [False]}
+    CHANGING_PARAMS = {'vocabulary_cutoff': [10 ** 5], 'cuda': [False]}
 
     def __init__(self, base_config):
         super().__init__(base_config)
@@ -170,12 +169,14 @@ class OtherLanguagesStochasticAblationExperiment(OriginalExperiment):
     def get_sbatch_args(self, run_params):
         return {'time': '0-1:00'}
 
+
 class OtherLanguagesStochasticExperiment(StochasticAblationExperiment):
     EXPERIMENT_NAME = 'other_languages_stochastic'
     LANGUAGE_PARAMS = {
         'source_language': ['en'],
         'target_language': ['et', 'fa', 'lv', 'vi']
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -186,6 +187,7 @@ class OtherLanguagesCSLSAblationExperiment(CSLSAblationExperiment):
         'source_language': ['en'],
         'target_language': ['et', 'fa', 'lv', 'vi']
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -196,6 +198,7 @@ class OtherLanguagesDirectionAblationExperiment(DirectionAblationExperiment):
         'source_language': ['en'],
         'target_language': ['et', 'fa', 'lv', 'vi']
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -206,6 +209,7 @@ class OtherLanguagesReweightAblationExperiment(ReweightAblationExperiment):
         'source_language': ['en'],
         'target_language': ['et', 'fa', 'lv', 'vi']
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -216,6 +220,7 @@ class OtherLanguagesRandomSeedDictionaryAblationExperiment(RandomSeedDictionaryA
         'source_language': ['en'],
         'target_language': ['et', 'fa', 'lv', 'vi']
     }
+
     def __init__(self, base_config):
         super().__init__(base_config)
 
@@ -310,7 +315,7 @@ class VocabularyCutoffGridSearchExperiment(GridSearchExperiment):
     EXPERIMENT_NAME = 'vocabulary_cutoff_grid_search'
     LANGUAGE_PARAMS = {'source_language': ['en'], 'target_language': ['de', 'es', 'fi', 'it']}
 
-    CHANGING_PARAMS = {'vocabulary_cutoff': [int(factor * 10**3) for factor in range(10, 31)]}
+    CHANGING_PARAMS = {'vocabulary_cutoff': [int(factor * 10 ** 3) for factor in range(10, 31)]}
 
     def __init__(self, base_config):
         super().__init__(base_config)

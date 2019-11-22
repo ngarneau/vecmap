@@ -25,7 +25,6 @@ from typing import Dict
 import mlflow
 import numpy as np
 import yaml
-from mlflow.tracking import MlflowClient
 
 from cupy_utils import *
 from embeddings import load_embeddings, embeddings_normalization, length_normalize
@@ -58,7 +57,7 @@ def run_experiment(_config):
     else:
         source_language = _config['source_language']
         target_language = _config['target_language']
-        
+
     test_dictionary = os.path.join(
         _config['input_path'],
         'dictionaries/{}-{}.test.txt'.format(_config['source_language'], _config['target_language'])
@@ -156,8 +155,8 @@ def run_experiment(_config):
             zw = zw.dot(wz2)
 
             # STEP 3: Re-weighting
-            xw *= s**_config['reweight']
-            zw *= s**_config['reweight']
+            xw *= s ** _config['reweight']
+            zw *= s ** _config['reweight']
 
             # STEP 4: De-whitening
             if _config['src_dewhiten'] == 'src':
@@ -307,7 +306,7 @@ def run_experiment(_config):
     elif _config['retrieval'] == 'invsoftmax':  # Inverted softmax
         sample = compute_engine.engine.arange(
             x.shape[0]) if _config['inv_sample'] is None else compute_engine.engine.random.randint(
-                0, x.shape[0], _config['inv_sample'])
+            0, x.shape[0], _config['inv_sample'])
         partition = compute_engine.engine.zeros(z.shape[0])
         for i in range(0, len(sample), BATCH_SIZE):
             j = min(i + BATCH_SIZE, len(sample))

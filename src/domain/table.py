@@ -1,10 +1,7 @@
-from typing import Dict, List, Iterable, Tuple
-
-import numpy as np
 import os
-import mlflow
-from python2latex import Document, Plot, Table as LatexTable, build, bold
-import matplotlib.pyplot as plt
+from typing import Dict, Iterable, Tuple
+
+from python2latex import Document, Plot, Table as LatexTable, bold
 
 from src.domain.experiment import *
 
@@ -22,7 +19,6 @@ class Table:
 
 
 class Table1(Table):
-
     ORIGINAL_RESULTS = {
         'de': {
             'best': 48.47,
@@ -57,7 +53,7 @@ class Table1(Table):
         experiment = self.experiments['Reproduced Results']
         metrics = experiment.aggregate_runs()
 
-        doc = Document(filename='table1', filepath=output_path, doc_type='article', options=('12pt', ))
+        doc = Document(filename='table1', filepath=output_path, doc_type='article', options=('12pt',))
         sec = doc.new_section('Table 1')
         col, row = 17, 4
         table = sec.new(
@@ -127,7 +123,6 @@ class Table1(Table):
 
 
 class Table2(Table1):
-
     ORIGINAL_RESULTS = {
         'Full System': {
             'de': {
@@ -355,7 +350,7 @@ class Table2(Table1):
     def write(self, output_path):
         if not os.path.exists(output_path):
             os.makedirs(output_path)
-        doc = Document(filename='table2', filepath=output_path, doc_type='article', options=('12pt', ))
+        doc = Document(filename='table2', filepath=output_path, doc_type='article', options=('12pt',))
         sec = doc.new_section('Table 2')
         col, row = 17, 17
         table = sec.new(
@@ -489,7 +484,6 @@ class Table2(Table1):
 
 
 class Table3(Table):
-
     CAPTION = 'The original results were taken from the original paper of \cite{artetxe-etal-2018-robust}. The reproduced results have been generated using the codebase of \cite{artetxe-etal-2018-robust} wrapped around the \texttt{reproduce\_original.sh} from our codebase.'
 
     def write(self, output_path):
@@ -497,14 +491,15 @@ class Table3(Table):
             os.makedirs(output_path)
         experiment = self.experiments['Other Languages']
         metrics = experiment.aggregate_runs()
-        
+
         stochastic_experiment = self.experiments['Other Languages Stochastic']
         stochastic_metrics = stochastic_experiment.aggregate_runs()
 
         doc = Document(filename='table3', filepath=output_path, doc_type='article', options=('12pt',))
         sec = doc.new_section('Table 3')
         col, row = 17, 4
-        table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='other_languages_results'))
+        table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f',
+                                   label='other_languages_results'))
         table.caption = self.CAPTION
         table.label_pos = 'bottom'
 
@@ -543,19 +538,19 @@ class Table3(Table):
         table[3, 0] = bold('Stochastic')
         table[3, 1] = np.max(stochastic_metrics['accuracies']['et'])
         table[3, 2] = np.average(stochastic_metrics['accuracies']['et'])
-        table[3, 3] = np.sum(np.array(stochastic_metrics['accuracies']['et']) > 1.0)/len(metrics['accuracies']['et'])
+        table[3, 3] = np.sum(np.array(stochastic_metrics['accuracies']['et']) > 1.0) / len(metrics['accuracies']['et'])
         table[3, 4] = np.average(stochastic_metrics['times']['et'])
         table[3, 5] = np.max(stochastic_metrics['accuracies']['fa'])
         table[3, 6] = np.average(stochastic_metrics['accuracies']['fa'])
-        table[3, 7] = np.sum(np.array(stochastic_metrics['accuracies']['fa']) > 1.0)/len(metrics['accuracies']['fa'])
+        table[3, 7] = np.sum(np.array(stochastic_metrics['accuracies']['fa']) > 1.0) / len(metrics['accuracies']['fa'])
         table[3, 8] = np.average(stochastic_metrics['times']['fa'])
         table[3, 9] = np.max(stochastic_metrics['accuracies']['lv'])
         table[3, 10] = np.average(stochastic_metrics['accuracies']['lv'])
-        table[3, 11] = np.sum(np.array(stochastic_metrics['accuracies']['lv']) > 1.0)/len(metrics['accuracies']['lv'])
+        table[3, 11] = np.sum(np.array(stochastic_metrics['accuracies']['lv']) > 1.0) / len(metrics['accuracies']['lv'])
         table[3, 12] = np.average(stochastic_metrics['times']['lv'])
         table[3, 13] = np.max(stochastic_metrics['accuracies']['vi'])
         table[3, 14] = np.average(stochastic_metrics['accuracies']['vi'])
-        table[3, 15] = np.sum(np.array(stochastic_metrics['accuracies']['vi']) > 1.0)/len(metrics['accuracies']['vi'])
+        table[3, 15] = np.sum(np.array(stochastic_metrics['accuracies']['vi']) > 1.0) / len(metrics['accuracies']['vi'])
         table[3, 16] = np.average(stochastic_metrics['times']['vi'])
 
         tex = doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
@@ -628,7 +623,7 @@ class Table4(Table):
 
             x, y, std = np.array(list(mean_metrics['accuracies'][language].keys())).astype(int), np.array(
                 list(mean_metrics['accuracies'][language].values())).astype(float), np.array(
-                    list(std_metrics['accuracies'][language].values())).astype(float)
+                list(std_metrics['accuracies'][language].values())).astype(float)
             sorting = x.argsort()
             x, y, std = x[sorting], y[sorting], std[sorting]
 
@@ -792,7 +787,7 @@ class Table4(Table):
         if not os.path.exists(output_path):
             os.makedirs(output_path)
 
-        doc = Document(filename='table4', filepath=output_path, doc_type='article', options=('12pt', ))
+        doc = Document(filename='table4', filepath=output_path, doc_type='article', options=('12pt',))
         doc.add_to_preamble(r"\usepgfplotslibrary{fillbetween}")
         doc.add_to_preamble(r'\usepgfplotslibrary{colorbrewer}')
         doc.add_to_preamble(r'\pgfplotsset{compat=1.15, colormap/Blues}')
@@ -827,7 +822,8 @@ def get_table3(configs) -> Table:
     return Table3({
         "Other Languages": OtherLanguagesOriginalExperiment(configs),
         "Other Languages Unsup. Init (Random)": OtherLanguagesRandomSeedDictionaryAblationExperiment(configs),
-        "Other Languages Unsup. Init (Random Cutoff)": OtherLanguagesRandomCutoffSeedDictionaryAblationExperiment(configs),
+        "Other Languages Unsup. Init (Random Cutoff)": OtherLanguagesRandomCutoffSeedDictionaryAblationExperiment(
+            configs),
         "Other Languages Stochastic": OtherLanguagesStochasticExperiment(configs),
         "Other Languages CSLS": OtherLanguagesCSLSAblationExperiment(configs),
         "Other Languages Bidrectional": OtherLanguagesDirectionAblationExperiment(configs),

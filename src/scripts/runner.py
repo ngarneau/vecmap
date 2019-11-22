@@ -1,15 +1,14 @@
-import os
-import logging
-import datetime
 import argparse
+import logging
+import os
 import subprocess
-import mlflow
-from copy import deepcopy
 import sys
+
+import mlflow
 import yaml
 
-from src.scripts.main_loop import run_main
 from src.domain.table import get_table1, get_table2, get_table3, get_table4
+from src.scripts.main_loop import run_main
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
 DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/mlflow'
