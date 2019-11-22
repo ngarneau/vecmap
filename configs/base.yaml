@@ -17,9 +17,6 @@ csls: 10  # use CSLS for dictionary induction
 
 
 seed_dictionary_method: 'unsupervised'
-# init_unsupervised: False  # use unsupervised initialization
-# init_identical: False  # use identical words as the seed dictionary
-# init_numerals: False  # use latin numerals (i.e. words matching [0-9]+) as the seed dictionary
 
 batch_size: 10000 # Batch size (defaults to 10000); does not affect results, larger is usually faster but uses more memory
 
@@ -34,7 +31,6 @@ stochastic_interval: 50  # stochastic dictionary induction interval (defaults to
 
 unsupervised: True # recommended if you have no seed dictionary and do not want to rely on identical words
 acl2018: True # reproduce our ACL 2018 system
-# init_unsupervised: True
 unsupervised_vocab: 4000 # restrict the vocabulary to the top k entries for unsupervised initialization
 normalize: ['unit', 'center', 'unit']
 whiten: True # whiten the embeddings

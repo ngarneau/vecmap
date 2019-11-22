@@ -7,11 +7,11 @@ import sys
 import mlflow
 import yaml
 
-from src.domain.table import get_table1, get_table2, get_table3, get_table4
+from src.domain.table_generator.table import get_table1, get_table2, get_table3, get_table4
 from src.scripts.main_loop import run_main
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
-DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/mlflow'
+DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/handler'
 DEFAULT_LOCAL_EMBEDDING_OUTPUT = 'output'
 DEFAULT_LOCAL_MLFLOW_OUTPUT = 'mlruns'
 EXPERIMENT_NAME = 'ablation_study'
@@ -42,11 +42,10 @@ def default_launcher(run_args, num_runs, cuda, sbatch_args={}):
         run_main(run_args)
 
 
-def configure_logging(path_to_log_directory, log_level):
+def configure_logging(log_level):
     """
     Configure logger
 
-    :param path_to_log_directory:  path to directory to write log file in
     :return:
     """
     logger = logging.getLogger()
@@ -122,6 +121,6 @@ if __name__ == '__main__':
 
     logging_path = os.path.join(base_configs['output_path'], 'logs')
     os.makedirs(logging_path, exist_ok=True)
-    configure_logging(logging_path, logging.INFO)
+    configure_logging(logging.INFO)
 
     main(base_configs)

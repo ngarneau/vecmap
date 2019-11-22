@@ -1,4 +1,4 @@
-from cupy_utils import *
+from src.cupy_utils import *
 
 
 def topk_mean(m, k, inplace=False):  # TODO Assuming that axis is 1
@@ -27,5 +27,11 @@ def compute_matrix_size(src_embedding_matrix, trg_embedding_matrix, vocabulary_c
     return src_size, trg_size
 
 
-def get_ml_query_string(configs):
-    return " and ".join(["params.{}='{}'".format(config, value) for config, value in configs.items()])
+def resolve_language_source(_config):
+    if _config['test']:
+        source_language = _config['source_language'] + '_slim'
+        target_language = _config['target_language'] + '_slim'
+    else:
+        source_language = _config['source_language']
+        target_language = _config['target_language']
+    return source_language, target_language

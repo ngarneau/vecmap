@@ -13,13 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
+import os
 
 import numpy as np
 
-from cupy_utils import *
+from src.cupy_utils import *
 
 
-def embeddings_normalization(src_embedding_matrix, trg_embedding_matrix, normalization_method):
+def embeddings_normalization_step(src_embedding_matrix, trg_embedding_matrix, normalization_method):
     logging.info("Normalize embeddings")
 
     normalize(src_embedding_matrix, normalization_method)
@@ -64,7 +65,8 @@ def mean_center_embeddingwise(matrix):
     matrix -= avg[:, xp.newaxis]
 
 
-def load_embeddings(embeddings_path, language, encoding, dtype):
+def load_embeddings(input_path, embeddings_path, language, encoding, dtype):
+    embeddings_path = os.path.join(input_path, embeddings_path)
     input_filename = embeddings_path.format(language)
     logging.info("Loading file {}".format(input_filename))
     input_file = open(input_filename, encoding=encoding, errors='surrogateescape')

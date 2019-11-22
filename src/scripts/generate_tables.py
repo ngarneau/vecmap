@@ -3,7 +3,7 @@ import os
 
 import yaml
 
-from src.domain.table import get_table1, get_table2, get_table3, get_table4
+from src.domain.table_generator.table import get_table1, get_table2, get_table3, get_table4
 
 
 def generate_table_1(configs):

@@ -5,7 +5,7 @@ import os
 import mlflow
 import yaml
 
-from src.domain.table import get_table1, get_table2
+from src.domain.table_generator.table import get_table1, get_table2
 from src.scripts.runner import default_launcher, Launcher, configure_logging
 
 DEFAULT_LOCAL_MLFLOW_OUTPUT = 'mlruns'

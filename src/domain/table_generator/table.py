@@ -371,7 +371,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[3, 0] = bold('Reproduced')
         table = self.write_new_row(table, 3, metrics)
-        table[3,0:17].add_rule(trim_left=True, trim_right=True)
+        table[3, 0:17].add_rule(trim_left=True, trim_right=True)
 
         ### Unsup. Init
         table[4, 0] = '- Unsup. Init.'
@@ -384,7 +384,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[6, 0] = bold('Rand. Cut.')
         table = self.write_new_row(table, 6, metrics)
-        table[6,0:17].add_rule(trim_left=True, trim_right=True)
+        table[6, 0:17].add_rule(trim_left=True, trim_right=True)
 
         ### Stochastic
         table[7, 0] = '- Stochastic'
@@ -393,7 +393,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[8, 0] = bold('Reproduced')
         table = self.write_new_row(table, 8, metrics)
-        table[8,0:17].add_rule(trim_left=True, trim_right=True)
+        table[8, 0:17].add_rule(trim_left=True, trim_right=True)
 
         ### Cutoff
         table[9, 0] = '- Cutoff (k=100k)'
@@ -403,7 +403,7 @@ class Table2(Table1):
         table[10, 0] = bold('Reproduced')
         # table = self.write_new_row(table, 10, metrics)
         table[10, 1:] = ['-'] * 16
-        table[10,0:17].add_rule(trim_left=True, trim_right=True)
+        table[10, 0:17].add_rule(trim_left=True, trim_right=True)
 
         ### CSLS
         table[11, 0] = '- CSLS'
@@ -412,7 +412,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[12, 0] = bold('Reproduced')
         table = self.write_new_row(table, 12, metrics)
-        table[12,0:17].add_rule(trim_left=True, trim_right=True)
+        table[12, 0:17].add_rule(trim_left=True, trim_right=True)
 
         ### Bidrectional
         table[13, 0] = '- Bidrectional'
@@ -421,7 +421,7 @@ class Table2(Table1):
         metrics = experiment.aggregate_runs()
         table[14, 0] = bold('Reproduced')
         table = self.write_new_row(table, 14, metrics)
-        table[14,0:17].add_rule(trim_left=True, trim_right=True)
+        table[14, 0:17].add_rule(trim_left=True, trim_right=True)
 
         ### Re-weighting
         table[15, 0] = '- Re-weighting'
@@ -463,8 +463,10 @@ class Table3(Table):
 
         doc = Document(filename='table3', filepath=output_path, doc_type='article', options=('12pt',))
         sec = doc.new_section('Table 3')
+
         col, row = 17, 9
-        table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f', label='other_languages_results'))
+        table = sec.new(LatexTable(shape=(row, col), alignment=['l'] + ['c'] * 16, float_format='.1f',
+                                   label='other_languages_results'))
         table.caption = self.CAPTION
         table.label_pos = 'bottom'
 
@@ -503,109 +505,119 @@ class Table3(Table):
         table[3, 0] = bold('- Unsupervised (Random)')
         table[3, 1] = np.max(random_metrics['accuracies']['et'])
         table[3, 2] = np.average(random_metrics['accuracies']['et'])
-        table[3, 3] = np.sum(np.array(random_metrics['accuracies']['et']) > 1.0)/len(metrics['accuracies']['et'])
+        table[3, 3] = np.sum(np.array(random_metrics['accuracies']['et']) > 1.0) / len(metrics['accuracies']['et'])
         table[3, 4] = np.average(random_metrics['times']['et'])
         table[3, 5] = np.max(random_metrics['accuracies']['fa'])
         table[3, 6] = np.average(random_metrics['accuracies']['fa'])
-        table[3, 7] = np.sum(np.array(random_metrics['accuracies']['fa']) > 1.0)/len(metrics['accuracies']['fa'])
+        table[3, 7] = np.sum(np.array(random_metrics['accuracies']['fa']) > 1.0) / len(metrics['accuracies']['fa'])
         table[3, 8] = np.average(random_metrics['times']['fa'])
         table[3, 9] = np.max(random_metrics['accuracies']['lv'])
         table[3, 10] = np.average(random_metrics['accuracies']['lv'])
-        table[3, 11] = np.sum(np.array(random_metrics['accuracies']['lv']) > 1.0)/len(metrics['accuracies']['lv'])
+        table[3, 11] = np.sum(np.array(random_metrics['accuracies']['lv']) > 1.0) / len(metrics['accuracies']['lv'])
         table[3, 12] = np.average(random_metrics['times']['lv'])
         table[3, 13] = np.max(random_metrics['accuracies']['vi'])
         table[3, 14] = np.average(random_metrics['accuracies']['vi'])
-        table[3, 15] = np.sum(np.array(random_metrics['accuracies']['vi']) > 1.0)/len(metrics['accuracies']['vi'])
+        table[3, 15] = np.sum(np.array(random_metrics['accuracies']['vi']) > 1.0) / len(metrics['accuracies']['vi'])
         table[3, 16] = np.average(random_metrics['times']['vi'])
 
         table[4, 0] = bold('- Unsupervised (Random Cutoff)')
         table[4, 1] = np.max(random_cutoff_metrics['accuracies']['et'])
         table[4, 2] = np.average(random_cutoff_metrics['accuracies']['et'])
-        table[4, 3] = np.sum(np.array(random_cutoff_metrics['accuracies']['et']) > 1.0)/len(metrics['accuracies']['et'])
+        table[4, 3] = np.sum(np.array(random_cutoff_metrics['accuracies']['et']) > 1.0) / len(
+            metrics['accuracies']['et'])
         table[4, 4] = np.average(random_cutoff_metrics['times']['et'])
         table[4, 5] = np.max(random_cutoff_metrics['accuracies']['fa'])
         table[4, 6] = np.average(random_cutoff_metrics['accuracies']['fa'])
-        table[4, 7] = np.sum(np.array(random_cutoff_metrics['accuracies']['fa']) > 1.0)/len(metrics['accuracies']['fa'])
+        table[4, 7] = np.sum(np.array(random_cutoff_metrics['accuracies']['fa']) > 1.0) / len(
+            metrics['accuracies']['fa'])
         table[4, 8] = np.average(random_cutoff_metrics['times']['fa'])
         table[4, 9] = np.max(random_cutoff_metrics['accuracies']['lv'])
         table[4, 10] = np.average(random_cutoff_metrics['accuracies']['lv'])
-        table[4, 11] = np.sum(np.array(random_cutoff_metrics['accuracies']['lv']) > 1.0)/len(metrics['accuracies']['lv'])
+        table[4, 11] = np.sum(np.array(random_cutoff_metrics['accuracies']['lv']) > 1.0) / len(
+            metrics['accuracies']['lv'])
         table[4, 12] = np.average(random_cutoff_metrics['times']['lv'])
         table[4, 13] = np.max(random_cutoff_metrics['accuracies']['vi'])
         table[4, 14] = np.average(random_cutoff_metrics['accuracies']['vi'])
-        table[4, 15] = np.sum(np.array(random_cutoff_metrics['accuracies']['vi']) > 1.0)/len(metrics['accuracies']['vi'])
+        table[4, 15] = np.sum(np.array(random_cutoff_metrics['accuracies']['vi']) > 1.0) / len(
+            metrics['accuracies']['vi'])
         table[4, 16] = np.average(random_cutoff_metrics['times']['vi'])
 
         table[5, 0] = bold('- Stochastic')
         table[5, 1] = np.max(stochastic_metrics['accuracies']['et'])
         table[5, 2] = np.average(stochastic_metrics['accuracies']['et'])
-        table[5, 3] = np.sum(np.array(stochastic_metrics['accuracies']['et']) > 1.0)/len(metrics['accuracies']['et'])
+        table[5, 3] = np.sum(np.array(stochastic_metrics['accuracies']['et']) > 1.0) / len(metrics['accuracies']['et'])
         table[5, 4] = np.average(stochastic_metrics['times']['et'])
         table[5, 5] = np.max(stochastic_metrics['accuracies']['fa'])
         table[5, 6] = np.average(stochastic_metrics['accuracies']['fa'])
-        table[5, 7] = np.sum(np.array(stochastic_metrics['accuracies']['fa']) > 1.0)/len(metrics['accuracies']['fa'])
+        table[5, 7] = np.sum(np.array(stochastic_metrics['accuracies']['fa']) > 1.0) / len(metrics['accuracies']['fa'])
         table[5, 8] = np.average(stochastic_metrics['times']['fa'])
         table[5, 9] = np.max(stochastic_metrics['accuracies']['lv'])
         table[5, 10] = np.average(stochastic_metrics['accuracies']['lv'])
-        table[5, 11] = np.sum(np.array(stochastic_metrics['accuracies']['lv']) > 1.0)/len(metrics['accuracies']['lv'])
+        table[5, 11] = np.sum(np.array(stochastic_metrics['accuracies']['lv']) > 1.0) / len(metrics['accuracies']['lv'])
         table[5, 12] = np.average(stochastic_metrics['times']['lv'])
         table[5, 13] = np.max(stochastic_metrics['accuracies']['vi'])
         table[5, 14] = np.average(stochastic_metrics['accuracies']['vi'])
-        table[5, 15] = np.sum(np.array(stochastic_metrics['accuracies']['vi']) > 1.0)/len(metrics['accuracies']['vi'])
+        table[5, 15] = np.sum(np.array(stochastic_metrics['accuracies']['vi']) > 1.0) / len(metrics['accuracies']['vi'])
         table[5, 16] = np.average(stochastic_metrics['times']['vi'])
 
         table[6, 0] = bold('- CSLS')
         table[6, 1] = np.max(csls_metrics['accuracies']['et'])
         table[6, 2] = np.average(csls_metrics['accuracies']['et'])
-        table[6, 3] = np.sum(np.array(csls_metrics['accuracies']['et']) > 1.0)/len(metrics['accuracies']['et'])
+        table[6, 3] = np.sum(np.array(csls_metrics['accuracies']['et']) > 1.0) / len(metrics['accuracies']['et'])
         table[6, 4] = np.average(csls_metrics['times']['et'])
         table[6, 5] = np.max(csls_metrics['accuracies']['fa'])
         table[6, 6] = np.average(csls_metrics['accuracies']['fa'])
-        table[6, 7] = np.sum(np.array(csls_metrics['accuracies']['fa']) > 1.0)/len(metrics['accuracies']['fa'])
+        table[6, 7] = np.sum(np.array(csls_metrics['accuracies']['fa']) > 1.0) / len(metrics['accuracies']['fa'])
         table[6, 8] = np.average(csls_metrics['times']['fa'])
         table[6, 9] = np.max(csls_metrics['accuracies']['lv'])
         table[6, 10] = np.average(csls_metrics['accuracies']['lv'])
-        table[6, 11] = np.sum(np.array(csls_metrics['accuracies']['lv']) > 1.0)/len(metrics['accuracies']['lv'])
+        table[6, 11] = np.sum(np.array(csls_metrics['accuracies']['lv']) > 1.0) / len(metrics['accuracies']['lv'])
         table[6, 12] = np.average(csls_metrics['times']['lv'])
         table[6, 13] = np.max(csls_metrics['accuracies']['vi'])
         table[6, 14] = np.average(csls_metrics['accuracies']['vi'])
-        table[6, 15] = np.sum(np.array(csls_metrics['accuracies']['vi']) > 1.0)/len(metrics['accuracies']['vi'])
+        table[6, 15] = np.sum(np.array(csls_metrics['accuracies']['vi']) > 1.0) / len(metrics['accuracies']['vi'])
         table[6, 16] = np.average(csls_metrics['times']['vi'])
 
         table[7, 0] = bold('- Bidirectional')
         table[7, 1] = np.max(bidirectional_metrics['accuracies']['et'])
         table[7, 2] = np.average(bidirectional_metrics['accuracies']['et'])
-        table[7, 3] = np.sum(np.array(bidirectional_metrics['accuracies']['et']) > 1.0)/len(metrics['accuracies']['et'])
+        table[7, 3] = np.sum(np.array(bidirectional_metrics['accuracies']['et']) > 1.0) / len(
+            metrics['accuracies']['et'])
         table[7, 4] = np.average(bidirectional_metrics['times']['et'])
         table[7, 5] = np.max(bidirectional_metrics['accuracies']['fa'])
         table[7, 6] = np.average(bidirectional_metrics['accuracies']['fa'])
-        table[7, 7] = np.sum(np.array(bidirectional_metrics['accuracies']['fa']) > 1.0)/len(metrics['accuracies']['fa'])
+        table[7, 7] = np.sum(np.array(bidirectional_metrics['accuracies']['fa']) > 1.0) / len(
+            metrics['accuracies']['fa'])
         table[7, 8] = np.average(bidirectional_metrics['times']['fa'])
         table[7, 9] = np.max(bidirectional_metrics['accuracies']['lv'])
         table[7, 10] = np.average(bidirectional_metrics['accuracies']['lv'])
-        table[7, 11] = np.sum(np.array(bidirectional_metrics['accuracies']['lv']) > 1.0)/len(metrics['accuracies']['lv'])
+        table[7, 11] = np.sum(np.array(bidirectional_metrics['accuracies']['lv']) > 1.0) / len(
+            metrics['accuracies']['lv'])
         table[7, 12] = np.average(bidirectional_metrics['times']['lv'])
         table[7, 13] = np.max(bidirectional_metrics['accuracies']['vi'])
         table[7, 14] = np.average(bidirectional_metrics['accuracies']['vi'])
-        table[7, 15] = np.sum(np.array(bidirectional_metrics['accuracies']['vi']) > 1.0)/len(metrics['accuracies']['vi'])
+        table[7, 15] = np.sum(np.array(bidirectional_metrics['accuracies']['vi']) > 1.0) / len(
+            metrics['accuracies']['vi'])
         table[7, 16] = np.average(bidirectional_metrics['times']['vi'])
 
         table[8, 0] = bold('- Reweighting')
         table[8, 1] = np.max(reweighting_metrics['accuracies']['et'])
         table[8, 2] = np.average(reweighting_metrics['accuracies']['et'])
-        table[8, 3] = np.sum(np.array(reweighting_metrics['accuracies']['et']) > 1.0)/len(metrics['accuracies']['et'])
+        table[8, 3] = np.sum(np.array(reweighting_metrics['accuracies']['et']) > 1.0) / len(metrics['accuracies']['et'])
         table[8, 4] = np.average(reweighting_metrics['times']['et'])
         table[8, 5] = np.max(reweighting_metrics['accuracies']['fa'])
         table[8, 6] = np.average(reweighting_metrics['accuracies']['fa'])
-        table[8, 7] = np.sum(np.array(reweighting_metrics['accuracies']['fa']) > 1.0)/len(metrics['accuracies']['fa'])
+        table[8, 7] = np.sum(np.array(reweighting_metrics['accuracies']['fa']) > 1.0) / len(metrics['accuracies']['fa'])
         table[8, 8] = np.average(reweighting_metrics['times']['fa'])
         table[8, 9] = np.max(reweighting_metrics['accuracies']['lv'])
         table[8, 10] = np.average(reweighting_metrics['accuracies']['lv'])
-        table[8, 11] = np.sum(np.array(reweighting_metrics['accuracies']['lv']) > 1.0)/len(metrics['accuracies']['lv'])
+        table[8, 11] = np.sum(np.array(reweighting_metrics['accuracies']['lv']) > 1.0) / len(
+            metrics['accuracies']['lv'])
         table[8, 12] = np.average(reweighting_metrics['times']['lv'])
         table[8, 13] = np.max(reweighting_metrics['accuracies']['vi'])
         table[8, 14] = np.average(reweighting_metrics['accuracies']['vi'])
-        table[8, 15] = np.sum(np.array(reweighting_metrics['accuracies']['vi']) > 1.0)/len(metrics['accuracies']['vi'])
+        table[8, 15] = np.sum(np.array(reweighting_metrics['accuracies']['vi']) > 1.0) / len(
+            metrics['accuracies']['vi'])
         table[8, 16] = np.average(reweighting_metrics['times']['vi'])
 
         tex = doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
