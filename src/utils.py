@@ -18,6 +18,7 @@ def topk_mean(m, k, inplace=False):  # TODO Assuming that axis is 1
         m[ind0, ind1] = minimum
     return ans / k
 
+
 def compute_matrix_size(src_embedding_matrix, trg_embedding_matrix, vocabulary_cutoff):
     src_size = src_embedding_matrix.shape[0] if vocabulary_cutoff <= 0 else min(
         src_embedding_matrix.shape[0], vocabulary_cutoff)

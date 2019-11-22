@@ -1,17 +1,15 @@
-import os
-import logging
-import datetime
 import argparse
-import subprocess
+import logging
+import os
+
 import mlflow
-from copy import deepcopy
-import sys
 import yaml
 
-from src.scripts.runner import default_launcher, Launcher, configure_logging
 from src.domain.table import get_table1, get_table2
+from src.scripts.runner import default_launcher, Launcher, configure_logging
 
 DEFAULT_LOCAL_MLFLOW_OUTPUT = 'mlruns'
+
 
 def main(args):
     run_launcher = default_launcher
