@@ -42,6 +42,6 @@ if __name__ == '__main__':
 
     logging_path = os.path.join(base_configs['output_path'], 'logs')
     os.makedirs(logging_path, exist_ok=True)
-    configure_logging(logging_path, logging.INFO)
+    configure_logging(logging.INFO)
 
     main(base_configs)
