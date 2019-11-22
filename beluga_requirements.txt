@@ -1,7 +1,7 @@
 numpy
 scipy
-dvc[s3]
 PyYAML
 mlflow
 python2latex
+cupy
 matplotlib

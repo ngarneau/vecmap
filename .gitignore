@@ -12,3 +12,8 @@ __pycache__/
 venv/
 /data
 /mlruns/
+*.out*
+.vscode
+/output/
+/mlruns/
+dataset.tar.gz

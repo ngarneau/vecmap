@@ -20,17 +20,15 @@ import sys
 
 import mlflow
 import yaml
-from mlflow.tracking import MlflowClient
 
-from src.handler.mlflow_handler import get_mlflow_logging_handler
 from src.domain.vecmap import VecMap
+from src.handler.mlflow_handler import get_mlflow_logging_handler
 from src.validations import whitening_arguments_validation
 
 
 def run_experiment(_config):
     logging.info(_config)
     mlflow.log_params(_config)
-    mlflow.log_metric('test', 0.9)
 
     whitening_arguments_validation(_config)
 
@@ -53,16 +51,15 @@ def run_main(configs):
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s : %(levelname)s : %(message)s')
-    path_to_log_directory = './output/logs'
+    path_to_log_directory = os.path.join(configs['output_path'], 'logs')
     mlflow_logging_handler = get_mlflow_logging_handler(path_to_log_directory, logging.INFO, formatter)
     logger.addHandler(mlflow_logging_handler)
 
+    mlflow.set_tracking_uri(configs['mlflow_output_uri'])
     mlflow.set_experiment(configs['experiment_name'])  # Create the experiment if it did not already existed
-    mlflow_client = MlflowClient(tracking_uri=configs['mlflow_output_uri'])
-    mlflow_experiment = mlflow_client.get_experiment_by_name(configs['experiment_name'])
     os.makedirs('{}/mapped_embeddings'.format(configs['embedding_output_uri']), exist_ok=True)
 
-    with mlflow.start_run(experiment_id=mlflow_experiment.experiment_id):
+    with mlflow.start_run():
         try:
             run_experiment(configs)
         except KeyboardInterrupt:
@@ -81,7 +78,13 @@ if __name__ == '__main__':
     base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
     argument_parser = argparse.ArgumentParser()
     for config, value in base_configs.items():
-        argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
+        if type(value) is bool:
+            # Hack as per https://stackoverflow.com/a/46951029
+            argument_parser.add_argument('--{}'.format(config),
+                                         type=lambda x: (str(x).lower() in ['true', '1', 'yes']),
+                                         default=value)
+        else:
+            argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
     options = argument_parser.parse_args()
     configs = vars(options)
     run_main(configs)

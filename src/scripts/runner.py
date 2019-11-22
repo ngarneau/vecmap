@@ -7,7 +7,7 @@ import sys
 import mlflow
 import yaml
 
-from src.domain.table_generator.table import get_table1, get_table2, get_table3
+from src.domain.table_generator.table import get_table1, get_table2, get_table3, get_table4
 from src.scripts.main_loop import run_main
 
 DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
@@ -17,23 +17,22 @@ DEFAULT_LOCAL_MLFLOW_OUTPUT = 'mlruns'
 EXPERIMENT_NAME = 'ablation_study'
 
 
-def run_args_formatter(run_args):
-    return ['--{}={}'.format(name, value) for name, value in run_args.items()]
+def args_formatter(run_args):
+    return ['--{}={}'.format(name, value) for name, value in run_args.items() if name != 'normalize']
 
 
-def supercomputer_launcher(run_args, num_runs, cuda):
+def supercomputer_launcher(run_args, num_runs, cuda, sbatch_args={}):
     run_args['supercomputer'] = True
-    run_args['num_runs'] = 1
     run_args['cuda'] = cuda
     run_args['embedding_output_uri'] = DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT
     run_args['mlflow_output_uri'] = DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT
-    for run_number in range(num_runs):
-        run_args['seed'] = run_number
-        run_args['num_runs'] = 1  # Override the number of runs to do from the command line
-        subprocess.Popen(['sbatch', 'generic_beluga_launcher.sh', *run_args_formatter(run_args)])
+    run_args['num_runs'] = 1  # Override the number of runs to do from the command line
+    if 'seed' in run_args: del run_args['seed']
+    sbatch_args.update({'array': '1-{}'.format(num_runs)})
+    subprocess.Popen(['sbatch', *args_formatter(sbatch_args), 'generic_beluga_launcher.sh', *args_formatter(run_args)])
 
 
-def default_launcher(run_args, num_runs, cuda):
+def default_launcher(run_args, num_runs, cuda, sbatch_args={}):
     run_args['num_runs'] = num_runs
     run_args['cuda'] = cuda
     run_args['embedding_output_uri'] = DEFAULT_LOCAL_EMBEDDING_OUTPUT
@@ -68,56 +67,60 @@ class Launcher:
     def run_experiment_for_table(self, table):
         for name, experiment in table.get_experiments():
             logging.info("Running experiment: {}".format(experiment.EXPERIMENT_NAME))
-            for config in experiment.get_parameters_combinations():
+            for config, sbatch_args in experiment.get_parameters_combinations():
                 config['experiment_name'] = experiment.EXPERIMENT_NAME
-                if 'vocabulary_cutoff' in experiment.EXPERIMENT_NAME:
-                    self.run_launcher(config, self.num_runs, cuda=False)
+                if 'cuda' in experiment.CHANGING_PARAMS:
+                    self.run_launcher(config, self.num_runs, cuda=config['cuda'], sbatch_args=sbatch_args)
                 else:
-                    self.run_launcher(config, self.num_runs, self.cuda)
-                logging.info("Done running experiment: {} with override {}".format(experiment.EXPERIMENT_NAME, config))
+                    self.run_launcher(config, self.num_runs, cuda=self.cuda, sbatch_args=sbatch_args)
+                logging.info("Done running experiment: {} with override {} and sbatch_args {}".format(
+                    experiment.EXPERIMENT_NAME, config, sbatch_args))
 
 
 def main(args):
-    if args.supercomputer:
+    if args['supercomputer']:
         run_launcher = supercomputer_launcher
         mlflow.set_tracking_uri(DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT)
     else:
         run_launcher = default_launcher
         mlflow.set_tracking_uri(DEFAULT_LOCAL_MLFLOW_OUTPUT)
 
-    num_runs = args.num_runs
-    cuda = args.cuda
-    base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
+    num_runs = args['num_runs']
+    cuda = args['cuda']
 
     launcher = Launcher(run_launcher, num_runs, cuda)
 
-    # Run table1 experiments
     logging.info("Lauching experiments for Table 1")
-    table1 = get_table1(base_configs)
+    table1 = get_table1(args)
     launcher.run_experiment_for_table(table1)
     logging.info("Done.")
 
     logging.info("Lauching experiments for Table 2")
-    table2 = get_table2(base_configs)
+    table2 = get_table2(args)
     launcher.run_experiment_for_table(table2)
     logging.info("Done.")
 
     logging.info("Lauching experiments for Table 3")
-    table3 = get_table3(base_configs)
+    table3 = get_table3(args)
     launcher.run_experiment_for_table(table3)
+    logging.info("Done.")
+
+    logging.info("Lauching experiments for Table 4")
+    table4 = get_table4(base_configs)
+    launcher.run_experiment_for_table(table4)
     logging.info("Done.")
 
 
 if __name__ == '__main__':
-    logging_path = './output/logs'
+    base_configs = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
+    argument_parser = argparse.ArgumentParser()
+    for config, value in base_configs.items():
+        argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
+    base_configs = argument_parser.parse_args()
+    base_configs = vars(base_configs)
+
+    logging_path = os.path.join(base_configs['output_path'], 'logs')
     os.makedirs(logging_path, exist_ok=True)
     configure_logging(logging.INFO)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--num_runs', type=int, default=10, help='The number of runs to execute per configuration.')
-    parser.add_argument('--supercomputer',
-                        action='store_true',
-                        help='Wether or not the ablation study has to be parallelized on a supercomputer.')
-    parser.add_argument('--cuda', action='store_true', help='Wether or not to use a GPU to run the ablation study.')
-    args = parser.parse_args()
-    main(args)
+    main(base_configs)

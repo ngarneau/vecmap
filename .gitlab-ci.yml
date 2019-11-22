@@ -1,0 +1,33 @@
+image: docker:17.05.0
+services:
+  - docker:17.05.0-dind
+
+variables:
+    GIT_SUBMODULE_STRATEGY: recursive
+
+before_script:
+- apk add --no-cache openssl curl wget
+
+stages:
+  - build
+  - release
+
+build:
+  artifacts:
+    untracked: true
+  script: timeout -t 1440 sh -x ./build.sh --build
+  stage: build
+  tags:
+    - docker
+
+release:
+  artifacts:
+    untracked: true
+  only:
+    - tags
+    - triggers
+  script: timeout -t 1440 sh -x ./build.sh --release
+  stage: release
+  tags:
+    - docker
+
