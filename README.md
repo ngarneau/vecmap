@@ -55,8 +55,7 @@ docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and
 It is also possible to build the Docker image using the following command:
 
 ```shell script
-docker build -t registry.gitlab.com/nicolasgarneau/vecmap ./image
-docker push registry.gitlab.com/nicolasgarneau/vecmap
+./build.sh
 ```
 
 
