@@ -1,4 +1,4 @@
-# REPROLANG 2020 @ LREC - Task A.1: VecMap, Cross-Lingual Word Embedding Mappings
+# [REPROLANG 2020](https://lrec2020.lrec-conf.org/en/reprolang2020/call-for-papers/) @ [LREC](https://lrec2020.lrec-conf.org/en/) - [Task A.1](https://lrec2020.lrec-conf.org/en/reprolang2020/selected-tasks/): VecMap, Cross-Lingual Word Embedding Mappings
 
 This is a fork from the original open source [implementation](https://github.com/artetxem/vecmap) of the framework to learn cross-lingual word embedding mappings.
 
