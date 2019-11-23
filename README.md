@@ -41,6 +41,13 @@ Using the source code, it is possible to create *all* the tables and plots with 
 python -m src.scripts.runner --cuda=True
 ```
 
+It is also possible to launch the script in test mode using the following command:
+
+```
+python -m src.scripts.runner --cuda=True --test=True --stochastic_interval=1 --num_runs=1
+```
+
+
 ## Publications
 
 If you use this software for academic research, please cite the relevant paper(s) as follows for the original model:
