@@ -1,6 +1,6 @@
-import os
 import collections
 import logging
+import os
 import time
 
 import mlflow
@@ -8,8 +8,7 @@ import numpy as np
 
 from src.cupy_utils import get_cupy
 from src.domain.compute_engine import CuPyEngine, NumPyEngine
-from src.domain.embeddings import load_embeddings, embeddings_normalization_step, length_normalize, asnumpy, \
-    supports_cupy
+from src.domain.embeddings import load_embeddings, embeddings_normalization_step, length_normalize, supports_cupy
 from src.domain.matrix_operations import whitening_transformation, dropout
 from src.initialization import get_seed_dictionary_indices
 from src.utils import resolve_language_source, compute_matrix_size, topk_mean
@@ -176,59 +175,18 @@ class VecMap:
 
         # Find translations
         translation = collections.defaultdict(int)
-        if self._config['retrieval'] == 'nn':  # Standard nearest neighbor
-            for i in range(0, len(src), BATCH_SIZE):
-                j = min(i + BATCH_SIZE, len(src))
-                similarities = self.x[src[i:j]].dot(self.z.T)
-                nn = similarities.argmax(axis=1).tolist()
-                for k in range(j - i):
-                    translation[src[i + k]] = nn[k]
-        elif self._config['retrieval'] == 'invnn':  # Inverted nearest neighbor
-            best_rank = np.full(len(src), self.x.shape[0], dtype=int)
-            best_sim = np.full(len(src), -100, dtype=self.dtype)
-            for i in range(0, self.z.shape[0], BATCH_SIZE):
-                j = min(i + BATCH_SIZE, self.z.shape[0])
-                similarities = self.z[i:j].dot(self.x.T)
-                ind = (-similarities).argsort(axis=1)
-                ranks = asnumpy(ind.argsort(axis=1)[:, src])
-                sims = asnumpy(similarities[:, src])
-                for k in range(i, j):
-                    for l in range(len(src)):
-                        rank = ranks[k - i, l]
-                        sim = sims[k - i, l]
-                        if rank < best_rank[l] or (rank == best_rank[l] and sim > best_sim[l]):
-                            best_rank[l] = rank
-                            best_sim[l] = sim
-                            translation[src[l]] = k
-        elif self._config['retrieval'] == 'invsoftmax':  # Inverted softmax
-            sample = self.compute_engine.engine.arange(self.x.shape[0]) if self._config[
-                                                                               'inv_sample'] is None else self.compute_engine.engine.random.randint(
-                0, self.x.shape[0], self._config['inv_sample'])
-            partition = self.compute_engine.engine.zeros(self.z.shape[0])
-            for i in range(0, len(sample), BATCH_SIZE):
-                j = min(i + BATCH_SIZE, len(sample))
-                partition += self.compute_engine.engine.exp(
-                    self._config['inv_temperature'] * self.z.dot(self.x[sample[i:j]].T)).sum(axis=1)
-            for i in range(0, len(src), BATCH_SIZE):
-                j = min(i + BATCH_SIZE, len(src))
-                p = self.compute_engine.engine.exp(
-                    self._config['inv_temperature'] * self.x[src[i:j]].dot(self.z.T)) / partition
-                nn = p.argmax(axis=1).tolist()
-                for k in range(j - i):
-                    translation[src[i + k]] = nn[k]
-        elif self._config['retrieval'] == 'csls':  # Cross-domain similarity local scaling
-            knn_sim_bwd = self.compute_engine.engine.zeros(self.z.shape[0])
-            for i in range(0, self.z.shape[0], BATCH_SIZE):
-                j = min(i + BATCH_SIZE, self.z.shape[0])
-                knn_sim_bwd[i:j] = topk_mean(self.z[i:j].dot(self.x.T), k=self._config['csls'],
-                                             inplace=True)
-            for i in range(0, len(src), BATCH_SIZE):
-                j = min(i + BATCH_SIZE, len(src))
-                similarities = 2 * self.x[src[i:j]].dot(
-                    self.z.T) - knn_sim_bwd  # Equivalent to the real CSLS scores for NN
-                nn = similarities.argmax(axis=1).tolist()
-                for k in range(j - i):
-                    translation[src[i + k]] = nn[k]
+        knn_sim_bwd = self.compute_engine.engine.zeros(self.z.shape[0])
+        for i in range(0, self.z.shape[0], BATCH_SIZE):
+            j = min(i + BATCH_SIZE, self.z.shape[0])
+            knn_sim_bwd[i:j] = topk_mean(self.z[i:j].dot(self.x.T), k=self._config['csls'],
+                                         inplace=True)
+        for i in range(0, len(src), BATCH_SIZE):
+            j = min(i + BATCH_SIZE, len(src))
+            similarities = 2 * self.x[src[i:j]].dot(
+                self.z.T) - knn_sim_bwd  # Equivalent to the real CSLS scores for NN
+            nn = similarities.argmax(axis=1).tolist()
+            for k in range(j - i):
+                translation[src[i + k]] = nn[k]
 
         # Compute accuracy
         accuracy = np.mean([1 if translation[i] in src2trg[i] else 0 for i in src])
