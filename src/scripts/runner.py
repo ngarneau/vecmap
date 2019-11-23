@@ -10,8 +10,6 @@ import yaml
 from src.domain.table_generator.table import get_table1, get_table2, get_table3, get_table4
 from src.scripts.main_loop import run_main
 
-DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT = '/scratch/magod/vecmap/output'
-DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT = 'file:/scratch/magod/vecmap/handler'
 DEFAULT_LOCAL_EMBEDDING_OUTPUT = 'output'
 DEFAULT_LOCAL_MLFLOW_OUTPUT = 'mlruns'
 EXPERIMENT_NAME = 'ablation_study'
@@ -19,16 +17,6 @@ EXPERIMENT_NAME = 'ablation_study'
 
 def args_formatter(run_args):
     return ['--{}={}'.format(name, value) for name, value in run_args.items() if name != 'normalize']
-
-
-def supercomputer_launcher(run_args, num_runs, cuda):
-    run_args['supercomputer'] = True
-    run_args['cuda'] = cuda
-    run_args['embedding_output_uri'] = DEFAULT_SUPERCOMPUTER_EMBEDDING_OUTPUT
-    run_args['mlflow_output_uri'] = DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT
-    run_args['num_runs'] = 1  # Override the number of runs to do from the command line
-    if 'seed' in run_args: del run_args['seed']
-    subprocess.Popen(['sbatch', 'generic_beluga_launcher.sh', *args_formatter(run_args)])
 
 
 def default_launcher(run_args, num_runs, cuda):
@@ -76,12 +64,8 @@ class Launcher:
 
 
 def main(args):
-    if args['supercomputer']:
-        run_launcher = supercomputer_launcher
-        mlflow.set_tracking_uri(DEFAULT_SUPERCOMPUTER_MLFLOW_OUTPUT)
-    else:
-        run_launcher = default_launcher
-        mlflow.set_tracking_uri(DEFAULT_LOCAL_MLFLOW_OUTPUT)
+    run_launcher = default_launcher
+    mlflow.set_tracking_uri(DEFAULT_LOCAL_MLFLOW_OUTPUT)
 
     num_runs = args['num_runs']
     cuda = args['cuda']

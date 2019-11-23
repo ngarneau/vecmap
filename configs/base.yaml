@@ -49,7 +49,6 @@ dot: False  # use the dot product in the similarity computations instead of the 
 
 
 test: False
-supercomputer: False
 mlflow_output_uri: 'file:./mlruns/'
 
 # Paths:
