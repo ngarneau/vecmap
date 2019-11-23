@@ -50,10 +50,6 @@ It is also possible to launch the script in test mode, as describe previously, u
 docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and_plots:/output/tables_and_plots registry.gitlab.com/nicolasgarneau/vecmap /run_all.sh "--test=True"
 ```
 
-## About the repository
-One can find in the `master branch` all the source code, the Docker file and the DVC to reproduce our results. We also have the `beluga_run branch` allowing us to run on a Compute Canada supercomputer ([Beluga](https://docs.computecanada.ca/wiki/B%C3%A9luga/en)).
-
-
 ## Publications
 
 If you use this software for academic research, please cite the relevant paper(s) as follows for the original model:
