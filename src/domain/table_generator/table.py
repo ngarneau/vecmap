@@ -878,7 +878,6 @@ def get_table2(configs):
         "Unsup. Init (Random)": RandomSeedDictionaryAblationExperiment(configs),
         "Unsup. Init (Random Cutoff)": RandomCutoffSeedDictionaryAblationExperiment(configs),
         "Stochastic": StochasticAblationExperiment(configs),
-        "Cutoff (k=100k)": VocabularyCutOffAblationExperiment(configs),
         "CSLS": CSLSAblationExperiment(configs),
         "Bidrectional": DirectionAblationExperiment(configs),
         "Re-weighting": ReweightAblationExperiment(configs),
