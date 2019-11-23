@@ -639,7 +639,7 @@ class GridSearchExperiments(Table):
 
         return mean_metrics, std_metrics
 
-    def plot_all_to_latex(self, sec, mean_metrics, std_metrics, caption, file_path, file_name):
+    def plot_all_to_latex(self, sec, mean_metrics, std_metrics, caption, file_path, file_name, x_reduction_factor=1):
         plot = sec.new(
             Plot(plot_name=file_name,
                  plot_path=file_path,
@@ -648,7 +648,7 @@ class GridSearchExperiments(Table):
                  height=r'.25\textwidth',
                  label=file_name,
                  name='plot0',
-                 xshift=r'-.115\textwidth'))
+                 xshift=r'-.1\textwidth'))
         plot.caption = caption
 
         kwargs_per_plot = {
@@ -656,21 +656,21 @@ class GridSearchExperiments(Table):
                 'as_float_env': False,
                 'at': '(plot0.south east)',
                 'anchor': 'south west',
-                'xshift': r'-.04\textwidth',
+                'xshift': r'-.035\textwidth',
                 'name': 'plot1'
             },
             2: {
                 'as_float_env': False,
                 'at': '(plot1.south east)',
                 'anchor': 'south west',
-                'xshift': r'0.035\textwidth',
+                'xshift': r'0.03\textwidth',
                 'name': 'plot2'
             },
             3: {
                 'as_float_env': False,
                 'at': '(plot2.south east)',
                 'anchor': 'south west',
-                'xshift': r'.11\textwidth',
+                'xshift': r'.09\textwidth',
                 'name': 'plot3'
             }
         }
@@ -682,7 +682,7 @@ class GridSearchExperiments(Table):
             else:
                 current_plot = Plot(plot_name=file_name,
                                     plot_path=file_path,
-                                    width=r'.27\textwidth',
+                                    width=r'.28\textwidth',
                                     height=r'.25\textwidth',
                                     **kwargs_per_plot[i])
                 current_plot.tikzpicture.head = ''
@@ -693,6 +693,7 @@ class GridSearchExperiments(Table):
                 list(std_metrics['accuracies'][language].values())).astype(float)
             sorting = x.argsort()
             x, y, std = x[sorting], y[sorting], std[sorting]
+            x = x/x_reduction_factor
 
             current_plot.add_plot(x, y, 'blue', 'ylabel near ticks', mark='*', line_width='1.2pt', mark_size='.9pt')
             current_plot.add_plot(x, y + 1.96 * std, name_path='upper', draw='none')
@@ -808,7 +809,7 @@ class GridSearchExperiments(Table):
             )
 
             current_plot.axis.kwoptions[
-                'colorbar_style'] = '{{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}}'
+                'colorbar_style'] = r'{/pgf/number format/fixed zerofill, /pgf/number format/precision=1}'
 
             current_plot.title = titles[language]
             current_plot.plot_name += '_en_{}'.format(language)
@@ -831,8 +832,8 @@ class GridSearchExperiments(Table):
         mean_metrics, std_metrics = self._compute_mean_std_metrics(metrics)
 
         file_name = 'voc_cutoff'
-        caption = r'Average accuracy percentage results per number of retained words in the frequency-based vocabulary \textbf{cutoff method} on the various language pairs. All reported results are obtained after a total of 10 runs per value and the shaded region represents a 95 \% confidence interval on the accuracy mean.'
-        self.plot_all_to_latex(sec, mean_metrics, std_metrics, caption, output_path, file_name)
+        caption = r'Average accuracy percentage results per number of retained words (in tens of thousands) in the \textbf{frequency-based vocabulary cutoff} method on the various language pairs. All reported results are obtained after a total of 10 runs per value and the shaded region represents a 95 \% confidence interval on the accuracy mean.'
+        self.plot_all_to_latex(sec, mean_metrics, std_metrics, caption, output_path, file_name, x_reduction_factor=10000)
 
     def write_stochastic(self, sec, output_path):
         experiment = self.experiments['Stochastic']
@@ -854,10 +855,10 @@ class GridSearchExperiments(Table):
         if not os.path.exists(output_path):
             os.makedirs(output_path)
 
-        doc = Document(filename='table4', filepath=output_path, doc_type='article', options=('12pt',))
+        doc = Document(filename='grid_search_experiments', filepath=output_path, doc_type='article', options=('12pt',))
         doc.add_to_preamble(r"\usepgfplotslibrary{fillbetween}")
         doc.add_to_preamble(r'\usepgfplotslibrary{colorbrewer}')
-        doc.add_to_preamble(r'\pgfplotsset{compat=1.15, colormap/Blues}')
+        doc.add_to_preamble(r'\pgfplotsset{compat=1.15, colormap/Blues, every axis/.append style={label style=font=\footnotesize}, tick label style={font=\footnotesize}}}')
 
         sec = doc.new_section('All graphs')
 
