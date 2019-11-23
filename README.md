@@ -24,12 +24,12 @@ Otherwise the docker image will crash.
 One can generate the tables with the following command, but its takes about a **day** to generate all the results;
 
 ```
-docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and_plots:/output/tables_and_plots registry.gitlab.com/nicolasgarneau/vecmap
+docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and_plots:/output/tables_and_plots registry.gitlab.com/nicolasgarneau/vecmap 
 ```
 
 It is also possible to launch the script in test mode, which is a subset of only `1999` words, using the following command:
 ```
-docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and_plots:/output/tables_and_plots registry.gitlab.com/nicolasgarneau/vecmap /run_all.sh /run.sh "--test=True"
+docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and_plots:/output/tables_and_plots registry.gitlab.com/nicolasgarneau/vecmap /run.sh "--test=True"
 ```
 
 ## Reproducing all the results
@@ -38,7 +38,7 @@ In our analysis, we presented more results in order to assess the robustness of 
 
 To recreate these results, one should parallelize the computation otherwise it will take **many** days to gather the results.
 
-Using the same docker image that we provide, it is possible to create *all* the tables and plots with the following command (assuming the directory ...);
+Using the same docker image that we provide, it is possible to create *all* the tables and plots with the following command (assuming the directory `output/tables_and_plots` was previously created);
 
 ```
 docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and_plots:/output/tables_and_plots registry.gitlab.com/nicolasgarneau/vecmap /run_all.sh 
