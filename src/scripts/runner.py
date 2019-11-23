@@ -12,7 +12,6 @@ from src.scripts.main_loop import run_main
 
 DEFAULT_LOCAL_EMBEDDING_OUTPUT = 'output'
 DEFAULT_LOCAL_MLFLOW_OUTPUT = 'mlruns'
-EXPERIMENT_NAME = 'ablation_study'
 
 
 def args_formatter(run_args):
