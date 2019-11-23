@@ -37,12 +37,9 @@ class Experiment:
                                 for ablated_param, param_value in zip(ablated_params, params_combination)
                             }
                             run_params.update(new_params)
-                            yield run_params, self.get_sbatch_args(run_params)
+                            yield run_params
                     else:
-                        yield run_params, self.get_sbatch_args(run_params)
-
-    def get_sbatch_args(self, run_params):
-        return {}
+                        yield run_params
 
 
 class OriginalExperiment(Experiment):
@@ -98,9 +95,6 @@ class VocabularyCutOffAblationExperiment(OriginalExperiment):
     def __init__(self, base_config):
         super().__init__(base_config)
 
-    def get_sbatch_args(self, run_params):
-        return {'cpus-per-task': 20, 'mem': '30G', 'time': '7-0:00', 'gres': 'gpu:0'}
-
 
 class CSLSAblationExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'csls_ablation'
@@ -155,9 +149,6 @@ class OtherLanguagesOriginalExperiment(OriginalExperiment):
     def __init__(self, base_config):
         super().__init__(base_config)
 
-    def get_sbatch_args(self, run_params):
-        return {'time': '0-1:00'}
-
 
 class OtherLanguagesStochasticAblationExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'other_languages_stochastic_ablation'
@@ -168,9 +159,6 @@ class OtherLanguagesStochasticAblationExperiment(OriginalExperiment):
 
     def __init__(self, base_config):
         super().__init__(base_config)
-
-    def get_sbatch_args(self, run_params):
-        return {'time': '0-1:00'}
 
 
 class OtherLanguagesStochasticExperiment(StochasticAblationExperiment):
@@ -238,9 +226,6 @@ class OtherLanguagesRandomCutoffSeedDictionaryAblationExperiment(RandomCutoffSee
     def __init__(self, base_config):
         super().__init__(base_config)
 
-    def get_sbatch_args(self, run_params):
-        return {'time': '0-1:00'}
-
 
 class OtherLanguagesRandomSeedDictionaryAblationExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'other_languages_random_seed_dictionary_ablation'
@@ -250,9 +235,6 @@ class OtherLanguagesRandomSeedDictionaryAblationExperiment(OriginalExperiment):
     def __init__(self, base_config):
         super().__init__(base_config)
 
-    def get_sbatch_args(self, run_params):
-        return {'time': '0-1:00'}
-
 
 class OtherLanguagesRandomCutoffSeedDictionaryAblationExperiment(OriginalExperiment):
     EXPERIMENT_NAME = 'other_languages_random_cutoff_seed_dictionary_ablation'
@@ -261,9 +243,6 @@ class OtherLanguagesRandomCutoffSeedDictionaryAblationExperiment(OriginalExperim
 
     def __init__(self, base_config):
         super().__init__(base_config)
-
-    def get_sbatch_args(self, run_params):
-        return {'time': '0-1:00'}
 
 
 class GridSearchExperiment(OriginalExperiment):
@@ -323,9 +302,6 @@ class VocabularyCutoffGridSearchExperiment(GridSearchExperiment):
     def __init__(self, base_config):
         super().__init__(base_config)
 
-    def get_sbatch_args(self, run_params):
-        return {'time': '0-2:00'}
-
 
 class StochasticGridSearchExperiment(GridSearchExperiment):
     EXPERIMENT_NAME = 'stochastic_grid_search'
@@ -338,9 +314,6 @@ class StochasticGridSearchExperiment(GridSearchExperiment):
 
     def __init__(self, base_config):
         super().__init__(base_config)
-
-    def get_sbatch_args(self, run_params):
-        return {'time': '0-2:30'}
 
 
 class HyperparametersExperiment(OriginalExperiment):
