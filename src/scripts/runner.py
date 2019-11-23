@@ -45,9 +45,8 @@ def configure_logging(log_level):
 
 
 class Launcher:
-    def __init__(self, run_launcher, num_runs, cuda):
+    def __init__(self, run_launcher, cuda):
         self.run_launcher = run_launcher
-        self.num_runs = num_runs
         self.cuda = cuda
 
     def run_experiment_for_table(self, table):
@@ -56,9 +55,9 @@ class Launcher:
             for config in experiment.get_parameters_combinations():
                 config['experiment_name'] = experiment.EXPERIMENT_NAME
                 if 'cuda' in experiment.CHANGING_PARAMS:
-                    self.run_launcher(config, self.num_runs, cuda=config['cuda'])
+                    self.run_launcher(config, experiment.NUM_RUNS, cuda=config['cuda'])
                 else:
-                    self.run_launcher(config, self.num_runs, cuda=self.cuda)
+                    self.run_launcher(config, experiment.NUM_RUNS, cuda=self.cuda)
                 logging.info("Done running experiment: {} with override {}".format(experiment.EXPERIMENT_NAME, config))
 
 
@@ -66,10 +65,9 @@ def main(args):
     run_launcher = default_launcher
     mlflow.set_tracking_uri(DEFAULT_LOCAL_MLFLOW_OUTPUT)
 
-    num_runs = args['num_runs']
     cuda = args['cuda']
 
-    launcher = Launcher(run_launcher, num_runs, cuda)
+    launcher = Launcher(run_launcher, cuda)
 
     logging.info("Lauching experiments for Table 1")
     table1 = get_table1(args)
