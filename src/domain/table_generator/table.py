@@ -623,7 +623,7 @@ class Table3(Table):
         tex = doc.build(save_to_disk=True, compile_to_pdf=False, show_pdf=False)
 
 
-class Table4(Table):
+class GridSearchExperiments(Table):
     def _compute_mean_std_metrics(self, metrics):
         mean_metrics = {}
         std_metrics = {}
@@ -897,8 +897,8 @@ def get_table3(configs) -> Table:
     })
 
 
-def get_table4(configs) -> Table:
-    return Table4({
+def get_grid_search_experiments(configs) -> Table:
+    return GridSearchExperiments({
         "CSLS": CSLSGridSearchExperiment(configs),
         "Vocabulary Cutoff": VocabularyCutoffGridSearchExperiment(configs),
         "Stochastic": StochasticGridSearchExperiment(configs)

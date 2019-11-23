@@ -7,7 +7,7 @@ import sys
 import mlflow
 import yaml
 
-from src.domain.table_generator.table import get_table1, get_table2, get_table3, get_table4
+from src.domain.table_generator.table import get_table1, get_table2, get_table3, get_grid_search_experiments
 from src.scripts.main_loop import run_main
 
 DEFAULT_LOCAL_EMBEDDING_OUTPUT = 'output'
@@ -84,8 +84,8 @@ def main(args):
     launcher.run_experiment_for_table(table3)
     logging.info("Done.")
 
-    logging.info("Lauching experiments for Table 4")
-    table4 = get_table4(base_configs)
+    logging.info("Lauching experiments for grid search experiments")
+    table4 = get_grid_search_experiments(base_configs)
     launcher.run_experiment_for_table(table4)
     logging.info("Done.")
 

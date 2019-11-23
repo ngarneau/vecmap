@@ -3,7 +3,7 @@ import os
 
 import yaml
 
-from src.domain.table_generator.table import get_table1, get_table2, get_table3, get_table4
+from src.domain.table_generator.table import get_table1, get_table2, get_table3, get_grid_search_experiments
 
 
 def generate_table_1(configs):
@@ -30,12 +30,12 @@ def generate_table_3(configs):
     table.write(os.path.join(configs['output_path'], 'tables_and_plots/table3.tex'))
 
 
-def generate_table_4(configs):
+def generate_grid_search_figures(configs):
     """
-    This function generates the table 4 from the paper.
+    This function generates the figures 1, 2 and 3 from the paper.
     """
-    table = get_table4(configs)
-    table.write('./output/tables_and_plots/table4')
+    table = get_grid_search_experiments(configs)
+    table.write('./output/tables_and_plots/grid_search_figures')
 
 
 def main():
@@ -48,7 +48,7 @@ def main():
     generate_table_1(base_configs)
     generate_table_2(base_configs)
     generate_table_3(base_configs)
-    generate_table_4(base_configs)
+    generate_grid_search_figures(base_configs)
 
 
 if __name__ == '__main__':
