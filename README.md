@@ -10,7 +10,7 @@ This repository is strictly limited to the reproduction of the original paper of
 - The checksum of the dataset is: `69409adb48f668ce8872d924caec4519`
 - Untar the dataset using the following command: `tar -xvf dataset.tar.gz`
 
-## Usage
+## Original paper result reproduction
 The reproduction of the Table 1 and 2 of our paper can easily be done using the docker image that we provide.
 
 First, create the output directories on the host:
@@ -32,7 +32,7 @@ It is also possible to launch the script in test mode, which is a subset of only
 docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and_plots:/output/tables_and_plots registry.gitlab.com/nicolasgarneau/vecmap /run.sh "--test=True"
 ```
 
-## Reproducing all the results
+## Reproducing all the results of our paper
 
 In our analysis, we presented more results in order to assess the robustness of the algorithm.
 
@@ -49,6 +49,9 @@ It is also possible to launch the script in test mode, as describe previously, u
 ```
 docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and_plots:/output/tables_and_plots registry.gitlab.com/nicolasgarneau/vecmap /run_all.sh "--test=True"
 ```
+
+## About the repository
+One can find in the `master branch` all the source code, the Docker file and the DVC to reproduce our results. We also have the `beluga_run branch` allowing us to run on a Compute Canada supercomputer ([Beluga](https://docs.computecanada.ca/wiki/B%C3%A9luga/en)).
 
 
 ## Publications
