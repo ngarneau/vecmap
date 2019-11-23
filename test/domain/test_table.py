@@ -2,11 +2,10 @@ import unittest
 
 import yaml
 
-from src.domain.table import get_table1, get_table2
+from src.domain.table_generator.table import get_table1, get_table2
+
 
 class TestTableGeneration(unittest.TestCase):
-
-
     CONFIGS = yaml.load(open('./configs/base.yaml'), Loader=yaml.FullLoader)
 
     def test_table1_number_of_configs(self):

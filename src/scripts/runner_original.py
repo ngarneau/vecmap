@@ -1,17 +1,15 @@
-import os
-import logging
-import datetime
 import argparse
-import subprocess
+import logging
+import os
+
 import mlflow
-from copy import deepcopy
-import sys
 import yaml
 
+from src.domain.table_generator.table import get_table1, get_table2
 from src.scripts.runner import default_launcher, Launcher, configure_logging
-from src.domain.table import get_table1, get_table2
 
 DEFAULT_LOCAL_MLFLOW_OUTPUT = 'mlruns'
+
 
 def main(args):
     run_launcher = default_launcher
@@ -44,6 +42,6 @@ if __name__ == '__main__':
 
     logging_path = os.path.join(base_configs['output_path'], 'logs')
     os.makedirs(logging_path, exist_ok=True)
-    configure_logging(logging_path, logging.INFO)
+    configure_logging(logging.INFO)
 
     main(base_configs)

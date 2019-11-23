@@ -1,4 +1,4 @@
-from cupy_utils import get_array_module
+from src.cupy_utils import get_array_module
 
 
 def whitening_transformation(m, compute_engine):

@@ -19,9 +19,9 @@ class SeedDictionaryFactory:
         elif method == cls.IDENTICAL:
             return IdenticalSeedDictionary(src_words, trg_words)
         elif method == cls.RANDOM_RAW:
-            return RandomRawSeedDictionary(xp, src_words, trg_words, x, z, configurations)
+            return RandomRawSeedDictionary(src_words, trg_words, configurations)
         elif method == cls.RANDOM_CUTOFF:
-            return RandomCutoffSeedDictionary(xp, src_words, trg_words, x, z, configurations)
+            return RandomCutoffSeedDictionary(src_words, trg_words, configurations)
         elif method == cls.DEFAULT:
             return DefaultSeedDictionary(src_words, trg_words, configurations)
         else:
