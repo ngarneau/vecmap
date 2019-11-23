@@ -13,7 +13,7 @@ This repository is strictly limited to the reproduction of the original paper of
 ## Original paper result reproduction
 The reproduction of the Table 1 and 2 of our paper can easily be done using the docker image that we provide.
 
-First, create the output directories on the host:
+First, create the output directories on the host. assuming the data have been previously downloaded:
 
 ```shell script
 mkdir -p output/tables_and_plots
