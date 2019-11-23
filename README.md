@@ -15,7 +15,7 @@ The reproduction of the Table 1 and 2 of our paper can easily be done using the 
 
 First, create the output directories on the host:
 
-```
+```shell script
 mkdir -p output/tables_and_plots
 ```
 
@@ -23,12 +23,13 @@ It is mandatory to have a GPU on the host with [NVIDIA Docker](https://github.co
 Otherwise the docker image will crash.
 One can generate the tables with the following command, but its takes about a **day** to generate all the results;
 
-```
+```shell script
 docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and_plots:/output/tables_and_plots registry.gitlab.com/nicolasgarneau/vecmap 
 ```
 
 It is also possible to launch the script in test mode, which is a subset of only `1999` words, using the following command:
-```
+
+```shell script
 docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and_plots:/output/tables_and_plots registry.gitlab.com/nicolasgarneau/vecmap /run.sh "--test=True"
 ```
 
@@ -40,19 +41,29 @@ To recreate these results, one should parallelize the computation otherwise it w
 
 Using the same docker image that we provide, it is possible to create *all* the tables and plots with the following command (assuming the directory `output/tables_and_plots` was previously created);
 
-```
+```shell script
 docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and_plots:/output/tables_and_plots registry.gitlab.com/nicolasgarneau/vecmap /run_all.sh 
 ```
 
 It is also possible to launch the script in test mode, as describe previously, using the following command:
 
-```
+```shell script
 docker run --gpus all -ti --rm -v ${PWD}/data:/input -v ${PWD}/output/tables_and_plots:/output/tables_and_plots registry.gitlab.com/nicolasgarneau/vecmap /run_all.sh "--test=True"
 ```
+
+##  Build the Docker image
+It is also possible to build the Docker image using the following command:
+
+```shell script
+docker build -t registry.gitlab.com/nicolasgarneau/vecmap ./image
+docker push registry.gitlab.com/nicolasgarneau/vecmap
+```
+
 
 ## Publications
 
 If you use this software for academic research, please cite the relevant paper(s) as follows for the original model:
+
 ```
 @inproceedings{artetxe2018acl,
   author    = {Artetxe, Mikel  and  Labaka, Gorka  and  Agirre, Eneko},
