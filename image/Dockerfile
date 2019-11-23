@@ -13,4 +13,7 @@ VOLUME "/output/tables_and_plots"
 ADD run.sh /run.sh
 RUN chmod u+x /run.sh
 
+ADD run_all.sh /run_all.sh
+RUN chmod u+x /run_all.sh
+
 CMD /run.sh
