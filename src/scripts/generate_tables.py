@@ -45,9 +45,9 @@ def main():
         argument_parser.add_argument('--{}'.format(config), type=type(value), default=value)
     base_configs = argument_parser.parse_args()
     base_configs = vars(base_configs)
-    generate_table_1(base_configs)
-    generate_table_2(base_configs)
-    generate_table_3(base_configs)
+    # generate_table_1(base_configs)
+    # generate_table_2(base_configs)
+    # generate_table_3(base_configs)
     generate_grid_search_figures(base_configs)
 
 
