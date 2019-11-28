@@ -1,6 +1,7 @@
 FROM ngarneau/cupy-python3
 
 RUN apt install -y git
+RUN apt install -y texlive-latex-base
 
 RUN git clone https://github.com/ngarneau/vecmap.git /vecmap
 WORKDIR /vecmap
