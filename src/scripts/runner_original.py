@@ -17,7 +17,7 @@ def main(args):
     num_runs = args['num_runs']
     cuda = args['cuda']
 
-    launcher = Launcher(run_launcher, num_runs, cuda)
+    launcher = Launcher(run_launcher, cuda)
 
     logging.info("Lauching experiments for Table 1")
     table1 = get_table1(args)
