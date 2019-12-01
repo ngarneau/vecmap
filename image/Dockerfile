@@ -1,5 +1,6 @@
 FROM ngarneau/cupy-python3
 
+RUN apt update
 RUN apt install -y git
 RUN apt install -y texlive-latex-base
 
