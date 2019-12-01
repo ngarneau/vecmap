@@ -858,7 +858,7 @@ class GridSearchExperiments(Table):
         doc = Document(filename='grid_search_experiments', filepath=output_path, doc_type='article', options=('12pt',))
         doc.add_to_preamble(r"\usepgfplotslibrary{fillbetween}")
         doc.add_to_preamble(r'\usepgfplotslibrary{colorbrewer}')
-        doc.add_to_preamble(r'\pgfplotsset{compat=1.15, colormap/Blues, every axis/.append style={label style=font=\footnotesize}, tick label style={font=\footnotesize}}')
+        doc.add_to_preamble(r'\pgfplotsset{compat=1.15, colormap/Blues, every axis/.append style={label style={font=\footnotesize}, tick label style={font=\footnotesize}}}')
 
         sec = doc.new_section('All graphs')
 

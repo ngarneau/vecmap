@@ -3,5 +3,5 @@ scipy
 dvc[s3]
 PyYAML
 mlflow
-python2latex
+python2latex==0.2.0
 matplotlib
